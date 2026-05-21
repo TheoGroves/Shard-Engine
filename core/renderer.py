@@ -1,8 +1,9 @@
 import os
 import moderngl
-from maths.matrices import get_model_matrix, get_view_matrix, get_projection_matrix
+from maths.matrices import get_view_matrix, get_projection_matrix
 from core.camera import Camera
 from core.game_object import GameObject
+from core.scene import Scene
 
 shader_dir = "assets/shaders"
 
@@ -64,19 +65,19 @@ class Renderer:
         )
 
         self.program["light_dir"].value = (0.0, 1.0, 1.0)
-        self.program["shininess"].value = 32.0
         self.program["cam_pos"].value = tuple(self.camera.position)
 
-    def render(self, game_objects: list[GameObject]):
+    def render(self, scene: Scene):
         self.ctx.clear(0.05, 0.05, 0.08, 1.0)
         self.ctx.clear(depth=1.0)
 
         self.view = get_view_matrix(self.camera)
-        for game_object in game_objects:
+        for game_object in scene.game_objects:
             self.program["model"].write(game_object.model.astype("f4").T.tobytes())
             self.program["view"].write(self.view.astype("f4").T.tobytes())
             self.program["proj"].write(self.proj.astype("f4").T.tobytes())
             self.program["cam_pos"].value = tuple(self.camera.position)
+            self.program["roughness"].value = game_object.material.roughness
 
             if game_object.material.texture:
                 game_object.material.texture.use(location=0)

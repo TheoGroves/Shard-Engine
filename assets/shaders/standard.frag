@@ -5,7 +5,7 @@ uniform sampler2D normal_map;
 
 uniform vec3 light_dir;
 uniform vec3 cam_pos;
-uniform float shininess;
+uniform float roughness;
 
 in mat3 TBN;
 in mat4 out_model;
@@ -27,7 +27,7 @@ void main() {
     float diff = max(0.0, dot(n, l));
 
     vec3 h = normalize(l + v);
-    float spec = pow(max(dot(n, h), 0.0), shininess);
+    float spec = pow(max(dot(n, h), 0.0), roughness);
 
     vec3 texColour = pow(texture(tex, uv).rgb, vec3(2.2));
 
