@@ -1,5 +1,8 @@
 import os
 import moderngl
+import OpenEXR
+import Imath
+import numpy as np
 from maths.matrices import get_view_matrix, get_projection_matrix
 from core.camera import Camera
 from core.game_object import GameObject
@@ -32,6 +35,8 @@ class Renderer:
         self.proj = get_projection_matrix(self)
         self.view = get_view_matrix(camera)
 
+        self.env_map = None
+
         self.program = None
 
     def load_mesh(self, game_object: GameObject):
@@ -58,6 +63,26 @@ class Renderer:
             game_object.ibo
         )
 
+    def load_env_map(self, path):
+        exr = OpenEXR.InputFile(path)
+        dw = exr.header()['dataWindow']
+
+        width = dw.max.x - dw.min.x + 1
+        height = dw.max.y - dw.min.y + 1
+
+        pt = Imath.PixelType(Imath.PixelType.FLOAT)
+
+        r = np.frombuffer(exr.channel('R', pt), dtype=np.float32)
+        g = np.frombuffer(exr.channel('G', pt), dtype=np.float32)
+        b = np.frombuffer(exr.channel('B', pt), dtype=np.float32)
+
+        img = np.stack([r, g, b], axis=-1)
+        img = img.reshape((height, width, 3))
+        img = np.flipud(img)
+
+        self.env_map = self.ctx.texture(size=(width, height), components=3, data=img.tobytes(), dtype='f4')
+
+
     def build_pipeline(self):
         self.program = self.ctx.program(
             vertex_shader=VERT_SHADER,
@@ -68,9 +93,6 @@ class Renderer:
         self.program["cam_pos"].value = tuple(self.camera.position)
 
     def render(self, scene: Scene):
-        self.ctx.clear(0.05, 0.05, 0.08, 1.0)
-        self.ctx.clear(depth=1.0)
-
         self.view = get_view_matrix(self.camera)
         for game_object in scene.game_objects:
             self.program["model"].write(game_object.model.astype("f4").T.tobytes())
@@ -86,5 +108,9 @@ class Renderer:
             if game_object.material.normal_map:
                 game_object.material.normal_map.use(location=1)
                 self.program["normal_map"] = 1
+
+            if self.env_map:
+                self.env_map.use(location=2)
+                self.program["env_map"] = 2
 
             game_object.vao.render()
