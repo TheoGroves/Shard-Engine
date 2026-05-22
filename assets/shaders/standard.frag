@@ -3,10 +3,12 @@
 uniform sampler2D tex;
 uniform sampler2D normal_map;
 uniform sampler2D env_map;
+uniform sampler2D height_map;
 
 uniform vec3 light_dir;
 uniform vec3 cam_pos;
 uniform float roughness;
+uniform float height_scale;
 
 in mat3 TBN;
 in mat4 out_model;

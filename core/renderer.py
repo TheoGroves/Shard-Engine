@@ -39,7 +39,7 @@ class Renderer:
 
         self.program = None
 
-    def load_mesh(self, game_object: GameObject):
+    def generate_buffers(self, game_object: GameObject):
         game_object.vbo = self.ctx.buffer(
             game_object.vertices.astype("f4").tobytes()
         )
@@ -89,7 +89,7 @@ class Renderer:
             fragment_shader=FRAG_SHADER
         )
 
-        self.program["light_dir"].value = (0.0, 1.0, 1.0)
+        self.program["light_dir"].value = (1.0, 1.0, -0.2)
         self.program["cam_pos"].value = tuple(self.camera.position)
 
     def render(self, scene: Scene):
@@ -100,6 +100,7 @@ class Renderer:
             self.program["proj"].write(self.proj.astype("f4").T.tobytes())
             self.program["cam_pos"].value = tuple(self.camera.position)
             self.program["roughness"].value = game_object.material.roughness
+            self.program["uv_scale"].value = game_object.material.uv_scale
 
             if game_object.material.texture:
                 game_object.material.texture.use(location=0)
@@ -109,8 +110,13 @@ class Renderer:
                 game_object.material.normal_map.use(location=1)
                 self.program["normal_map"] = 1
 
+            #if game_object.material.heightmap:
+            #    game_object.material.heightmap.use(location=2)
+            #    self.program["height_map"] = 2
+            #    self.program["height_scale"].value = game_object.material.height_scale
+
             if self.env_map:
-                self.env_map.use(location=2)
-                self.program["env_map"] = 2
+                self.env_map.use(location=3)
+                self.program["env_map"] = 3
 
             game_object.vao.render()

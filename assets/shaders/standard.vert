@@ -14,6 +14,8 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 proj;
 
+uniform float uv_scale;
+
 void main() {
     mat4 mvp = proj * view * model;
 
@@ -32,5 +34,5 @@ void main() {
 
     fragPos = vec3(model * vec4(in_pos, 1.0));
     out_model = model;
-    uv = in_uv_map;
+    uv = in_uv_map * uv_scale;
 }
