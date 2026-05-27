@@ -7,6 +7,7 @@ from core.game_object import GameObject
 from core.transform import Transform
 from core.scene import Scene
 from rendering.skybox import generate_skybox
+from rendering.shadow_mapper import ShadowMapper
 
 pygame.init()
 
@@ -17,9 +18,13 @@ clock = pygame.time.Clock()
 
 camera = Camera((0, 0, 5))
 
+light_dir = (1.0, 0.5, 0)
+
 ctx = moderngl.create_context()
 renderer = Renderer(ctx, screen_width, screen_height, camera)
-renderer.build_pipeline()
+renderer.build_pipeline(light_dir)
+
+shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir))
 
 scene = Scene("Main")
 
@@ -35,6 +40,10 @@ floor.load_model("assets/models/Plane.obj")
 renderer.generate_buffers(bunny)
 renderer.generate_buffers(suzanne)
 renderer.generate_buffers(floor)
+
+shadow_mapper.generate_shadow_vao(bunny)
+shadow_mapper.generate_shadow_vao(suzanne)
+shadow_mapper.generate_shadow_vao(floor)
 
 scene.add(bunny)
 scene.add(suzanne)
@@ -68,6 +77,14 @@ while True:
     ctx.enable(moderngl.DEPTH_TEST)
 
     ctx.depth_mask = True
+
+    shadow_mapper.render_depth(scene)
+    shadow_mapper.depth_tex.use(location=4)
+    renderer.program["shadow_map"] = 4
+    renderer.program["light_space"].write(
+        shadow_mapper.light_space_matrix
+        .astype("f4").T.tobytes()
+    )
 
     renderer.render(scene)
 

@@ -86,3 +86,16 @@ def get_projection_matrix(camera):
 
 def get_view_matrix(camera):
     return look_at(camera.position, camera.position + camera.front, camera.world_up)
+
+def orthographic(left, right, bottom, top, near, far):
+    mat = np.eye(4, dtype=np.float32)
+
+    mat[0,0] = 2 / (right - left)
+    mat[1,1] = 2 / (top - bottom)
+    mat[2,2] = -2 / (far - near)
+
+    mat[0,3] = -(right + left) / (right - left)
+    mat[1,3] = -(top + bottom) / (top - bottom)
+    mat[2,3] = -(far + near) / (far - near)
+
+    return mat

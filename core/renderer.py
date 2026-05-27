@@ -83,13 +83,13 @@ class Renderer:
         self.env_map = self.ctx.texture(size=(width, height), components=3, data=img.tobytes(), dtype='f4')
 
 
-    def build_pipeline(self):
+    def build_pipeline(self, light_dir):
         self.program = self.ctx.program(
             vertex_shader=VERT_SHADER,
             fragment_shader=FRAG_SHADER
         )
 
-        self.program["light_dir"].value = (1.0, 1.0, -0.2)
+        self.program["light_dir"].value = light_dir
         self.program["cam_pos"].value = tuple(self.camera.position)
 
     def render(self, scene: Scene):

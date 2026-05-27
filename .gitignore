@@ -180,3 +180,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 *.exr
+code_getter.py
+code.txt
