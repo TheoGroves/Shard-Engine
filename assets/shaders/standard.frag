@@ -4,12 +4,12 @@ uniform sampler2D tex;
 uniform sampler2D normal_map;
 uniform sampler2D env_map;
 uniform sampler2D height_map;
+uniform sampler2D orm_map;
 
 uniform sampler2D shadow_map;
 
 uniform vec3 light_dir;
 uniform vec3 cam_pos;
-uniform float roughness;
 uniform float height_scale;
 
 in mat3 TBN;
@@ -20,7 +20,7 @@ in vec4 fragPosLightSpace;
 
 out vec4 color;
 
-float ShadowCalculation(vec4 fragPosLightSpace)
+float ShadowCalculation(vec4 fragPosLightSpace, vec3 n, vec3 l)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
@@ -29,7 +29,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
         return 0.0;
 
     float currentDepth = projCoords.z;
-    float bias = 0.005;
+    float bias = max(0.0005 * (1.0 - dot(n, l)), 0.00005);
 
     float shadow = 0.0;
 
@@ -49,6 +49,37 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     return shadow;
 }
 
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    return a2 / (3.14159265 * denom * denom);
+}
+
+float GeometryShlickGGX(float NdotV, float roughness)
+{
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+
+    return NdotV / (NdotV * (1.0 - k) + k);
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    return GeometryShlickGGX(NdotV, roughness) * GeometryShlickGGX(NdotL, roughness);
+}
+
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
 void main() {
     vec3 nMap = texture(normal_map, uv).rgb;
     nMap = nMap * 2.0 - 1.0;
@@ -58,24 +89,63 @@ void main() {
     vec3 v = normalize(cam_pos - fragPos);
 
     vec3 r = normalize(reflect(-l, n));
-    float fresnel = pow(1.0 - max(dot(n,v), 0.0), 5.0);
     vec2 envUV;
     envUV.x = atan(r.z, r.x) / (2.0*3.14159265) + 0.5;
     envUV.y = asin(r.y) / 3.14159265 + 0.5;
-    float exposure = 0.6;
+    float exposure = 1;
     vec3 env = texture(env_map, envUV).rgb;
-    env = vec3(1.0) - exp(-env * exposure);
 
-    float diff = max(0.0, dot(n, l));
+    // PBR model
+    vec3 orm = texture(orm_map, uv).rgb;
 
-    vec3 h = normalize(l + v);
-    float spec = pow(max(dot(n, h), 0.0), roughness);
+    vec3 albedo = pow(texture(tex, uv).rgb, vec3(2.2));
+    float metallic = orm.b;
+    float roughness = clamp(orm.g, 0.04, 1.0);
+    float ao = orm.r;
 
-    vec3 texColour = pow(texture(tex, uv).rgb, vec3(2.2));
+    // Fresnel base reflectance
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    float shadow = ShadowCalculation(fragPosLightSpace);
+    vec3 L = normalize(light_dir);
+    vec3 V = normalize(cam_pos - fragPos);
+    vec3 H = normalize(L + V);
 
-    vec3 lighting = texColour * 0.025 + (1.0 - shadow) * texColour * diff + vec3(0.1) * spec * (1.0 - shadow) + env * fresnel * (1.0 - shadow * 0.8);
+    float NdotL = max(dot(n, L), 0.0);
+    float NdotV = max(dot(n, V), 0.0);
+    float NdotH = max(dot(n, H), 0.0);
+    float VdotH = max(dot(V, H), 0.0);
 
-    color = vec4(pow(lighting, vec3(1.0/2.2)), 1.0);
+    // NDF / G / F
+    float NDF = DistributionGGX(n, H, roughness);
+    float G   = GeometrySmith(n, V, L, roughness);
+    vec3  F   = FresnelSchlick(VdotH, F0);
+
+    // specular
+    vec3 specular = (NDF * G * F) / max(4.0 * NdotV * NdotL, 0.001);
+
+    // energy conservation
+    vec3 kS = F;
+    vec3 kD = (1.0 - kS) * (1.0 - metallic);
+
+    // diffuse (Lambert)
+    vec3 diffuse = kD * albedo / 3.14159265;
+
+    // shadow
+    float shadow = ShadowCalculation(fragPosLightSpace, n, L);
+
+    // direct lighting (add light strength here if needed)
+    float lightIntensity = 3.0;
+    vec3 direct = (diffuse + specular) * NdotL * lightIntensity * (1.0 - shadow);
+
+    // ambient (simple IBL-style split)
+    vec3 diffuseIBL = env * albedo;
+    vec3 specIBL = env * F;
+
+    vec3 ambient = diffuseIBL * kD + specIBL;
+    ambient *= ao;
+    ambient += vec3(0.1) * albedo;
+
+    vec3 colorFinal = direct + ambient;
+
+    color = vec4(colorFinal*2, 1.0);
 }

@@ -25,7 +25,7 @@ def load_many(ctx, renderer, models_path, textures_path):
             model_path = f"{models_path}/{model}"
             name = os.path.splitext(model)[0]
 
-            go = GameObject(name, Transform((0,0,0), (0,0,0)), Material(ctx, None, None, None, 0, 256, 8))
+            go = GameObject(name, Transform((0,0,0), (0,0,0), (1,1,1)), Material(ctx, None, None, None, None, 0, 8))
             go.load_model(model_path)
             renderer.generate_buffers(go)
 
@@ -48,13 +48,15 @@ def load_many(ctx, renderer, models_path, textures_path):
 
         # generate material if not already generated
         if index not in materials:
-            materials[index] = Material(ctx, None, None, None, 0, 256, 1)
+            materials[index] = Material(ctx, None, None, None, None, 0, 1)
 
         # determine tex type
         if "base" in tex.lower():
             materials[index].load_base_map(tex_path)
         elif "normal" in tex.lower():
             materials[index].load_normal_map(tex_path)
+        elif "orm" in tex.lower():
+            materials[index].load_orm_map(tex_path)
         else:
             print("Unable to determine texture type")
 

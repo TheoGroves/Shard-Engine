@@ -43,13 +43,20 @@ def perspective(fov, aspect, near, far):
 
     return mat
 
-def get_model_matrix(pos, rot):
+def get_model_matrix(pos, rot, scaling):
     x, y, z = pos
     pitch, yaw, roll = rot
 
     pitch = math.radians(pitch)
     yaw = math.radians(yaw)
     roll = math.radians(roll)
+
+    scale = np.array([
+        [scaling[0], 0,  0,  0],
+        [0,  scaling[1], 0,  0],
+        [0,  0,  scaling[2], 0],
+        [0,  0,  0,  1]
+    ], dtype=np.float32)
 
     rx = np.array([
         [1, 0, 0, 0],
@@ -79,7 +86,7 @@ def get_model_matrix(pos, rot):
 
     rotation = rz @ ry @ rx
 
-    return translation @ rotation
+    return translation @ rotation @ scale
 
 def get_projection_matrix(camera):
     return perspective(camera.fov, camera.aspect, camera.near, camera.far)

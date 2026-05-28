@@ -19,7 +19,7 @@ clock = pygame.time.Clock()
 
 camera = Camera((0, 0, 5))
 
-light_dir = (0.7, 1.5, 0.2)
+light_dir = (0.3, 1.0, 0.2)
 
 ctx = moderngl.create_context()
 renderer = Renderer(ctx, screen_width, screen_height, camera)
@@ -29,15 +29,19 @@ loaded_objects = load_many(ctx, renderer, "assets/models/SponzaModels", "assets/
 
 shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
-scene = Scene("Main", shadow_mapper)
+scene = Scene("Main", renderer, shadow_mapper)
 
 for go in loaded_objects.values():
     scene.add(go)
 
-player = GameObject("Player", Transform((0, 0, 0), (0,90,0)), Material(ctx, None, None, None, 0, 32.0, 1))
+player = GameObject("Player", Transform((0, 0, 0), (0,0,0), (1,1,1)), Material(ctx, None, None, None, None, 0, 1))
 player.load_model("assets/models/Player.obj")
-renderer.generate_buffers(player)
+
+bunny = GameObject("Bunny", Transform((0, 0, 0), (0,0,0), (0.5,0.5,0.5)), Material(ctx, None, None, None, None, 0, 16))
+bunny.load_model("assets/models/StanfordBunny.obj")
+
 scene.add(player)
+scene.add(bunny)
 
 renderer.load_env_map("assets/textures/Day-HDRI.exr")
 skybox, skybox_prog = generate_skybox(ctx)
@@ -52,7 +56,7 @@ while True:
             raise SystemExit
 
     camera.process_inputs(pygame.key.get_pressed(), dt)   
-    player.set_transform(Transform(camera.position, (0,0,0)))
+    player.set_transform(Transform(camera.position, (0,0,0), (1,1,1)))
 
     ctx.clear(0.05, 0.05, 0.08, 1.0)
     

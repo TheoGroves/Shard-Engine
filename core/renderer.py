@@ -99,7 +99,6 @@ class Renderer:
             self.program["view"].write(self.view.astype("f4").T.tobytes())
             self.program["proj"].write(self.proj.astype("f4").T.tobytes())
             self.program["cam_pos"].value = tuple(self.camera.position)
-            self.program["roughness"].value = game_object.material.roughness
             self.program["uv_scale"].value = game_object.material.uv_scale
 
             if game_object.material.texture:
@@ -118,5 +117,9 @@ class Renderer:
             if self.env_map:
                 self.env_map.use(location=3)
                 self.program["env_map"] = 3
+
+            if game_object.material.orm_map:
+                game_object.material.orm_map.use(location=5)
+                self.program["orm_map"] = 5
 
             game_object.vao.render()

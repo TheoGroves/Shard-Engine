@@ -2,13 +2,13 @@ from PIL import Image
 import moderngl
 
 class Material:
-    def __init__(self, ctx, tex_path, normal_path, heightmap_path, height_scale, roughness, uv_scale):
+    def __init__(self, ctx, tex_path, normal_path, heightmap_path, orm_path, height_scale, uv_scale):
         self.ctx = ctx
         self.texture = self.load_texture(f"assets/textures/{tex_path}" if tex_path else None, "assets/textures/Empty.png")
         self.normal_map = self.load_texture(f"assets/textures/{normal_path}" if normal_path else None, "assets/textures/EmptyNormal.png")
         self.heightmap = self.load_texture(f"assets/textures/{heightmap_path}" if heightmap_path else None, "assets/textures/EmptyHeightmap.png")
+        self.orm_map = self.load_texture(f"assets/textures/{orm_path}" if orm_path else None, "assets/textures/EmptyORM.png")
         self.height_scale = height_scale
-        self.roughness = roughness
         self.uv_scale = uv_scale
 
     def load_texture(self, path, fallback):
@@ -29,3 +29,6 @@ class Material:
 
     def load_height_map(self, path):
         self.heightmap = self.load_texture(path if path else None, "assets/textures/EmptyHeightmap.png")
+
+    def load_orm_map(self, path):
+        self.orm_map = self.load_texture(path if path else None, "assets/textures/EmptyORM.png")

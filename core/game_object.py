@@ -18,7 +18,7 @@ class GameObject:
         self.vao = None
 
     def set_transform(self, transform: Transform):
-        self.model = get_model_matrix((transform.pos[0], transform.pos[1], transform.pos[2]), transform.rot)
+        self.model = get_model_matrix((transform.pos[0], transform.pos[1], transform.pos[2]), transform.rot, transform.scale)
 
     def load_model(self, path):
         vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
