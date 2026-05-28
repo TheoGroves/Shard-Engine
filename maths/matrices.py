@@ -73,9 +73,9 @@ def get_model_matrix(pos, rot):
     ], dtype=np.float32)
 
     translation = np.eye(4, dtype=np.float32)
-    translation[0, 3] = x * 16
-    translation[1, 3] = y * 16
-    translation[2, 3] = z * 16
+    translation[0, 3] = x
+    translation[1, 3] = y
+    translation[2, 3] = z
 
     rotation = rz @ ry @ rx
 

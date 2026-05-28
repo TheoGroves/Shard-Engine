@@ -20,3 +20,12 @@ class Material:
         tex.filter = (moderngl.LINEAR_MIPMAP_LINEAR, moderngl.LINEAR)
 
         return tex
+    
+    def load_base_map(self, path):
+        self.texture = self.load_texture(path if path else None, "assets/textures/Empty.png")
+    
+    def load_normal_map(self, path):
+        self.normal_map = self.load_texture(path if path else None, "assets/textures/EmptyNormal.png")
+
+    def load_height_map(self, path):
+        self.heightmap = self.load_texture(path if path else None, "assets/textures/EmptyHeightmap.png")

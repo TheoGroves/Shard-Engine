@@ -1,6 +1,6 @@
-from maths.vector import Vec3, Vec2
 import time
 import numpy as np
+from maths.vector import Vec3, Vec2
 
 def parse_obj(location):
     start = time.perf_counter()
@@ -169,7 +169,14 @@ def parse_obj(location):
         t = tangents[i]
 
         # Orthagonalize
-        t = (t - n * t.dot(n)).normalize()
+        EPSILON = 1e-8
+
+        t = t - n * t.dot(n)
+
+        if t.length() < EPSILON:
+            continue
+
+        t = t.normalize()
         tangents[i] = t
 
         # Rebuild bitangents

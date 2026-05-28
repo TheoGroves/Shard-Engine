@@ -8,46 +8,36 @@ from core.transform import Transform
 from core.scene import Scene
 from rendering.skybox import generate_skybox
 from rendering.shadow_mapper import ShadowMapper
+from importers.asset_importer import load_many
 
 pygame.init()
 
-screen_width, screen_height = 1280, 720
+screen_width, screen_height = 2560, 1440
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.OPENGL | pygame.DOUBLEBUF)
 
 clock = pygame.time.Clock()
 
 camera = Camera((0, 0, 5))
 
-light_dir = (1.0, 0.5, 0)
+light_dir = (0.7, 1.5, 0.2)
 
 ctx = moderngl.create_context()
 renderer = Renderer(ctx, screen_width, screen_height, camera)
 renderer.build_pipeline(light_dir)
 
-shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir))
+loaded_objects = load_many(ctx, renderer, "assets/models/SponzaModels", "assets/textures/SponzaTextures")
 
-scene = Scene("Main")
+shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
-bunny = GameObject("Bunny", Transform((0, 0, 0), (0,90,0)), Material(ctx, "ClayDiffuse.jpg", "ClayNormal.jpg", "ClayHeightmap.jpg", 0.01, 16.0, 1))
-bunny.load_model("assets/models/StanfordBunny.obj")
+scene = Scene("Main", shadow_mapper)
 
-suzanne = GameObject("Suzanne", Transform((0, 0.6, 2), (-10,80,0)), Material(ctx, "PlasterDiffuse.jpg", "PlasterNormal.jpg", "PlasterHeightmap.png", 0.01, 64.0, 1))
-suzanne.load_model("assets/models/Suzanne.obj")
+for go in loaded_objects.values():
+    scene.add(go)
 
-floor = GameObject("Floor", Transform((0,0,1), (0,0,0)), Material(ctx, None, None, None, 0, 256, 8))
-floor.load_model("assets/models/Plane.obj")
-
-renderer.generate_buffers(bunny)
-renderer.generate_buffers(suzanne)
-renderer.generate_buffers(floor)
-
-shadow_mapper.generate_shadow_vao(bunny)
-shadow_mapper.generate_shadow_vao(suzanne)
-shadow_mapper.generate_shadow_vao(floor)
-
-scene.add(bunny)
-scene.add(suzanne)
-scene.add(floor)
+player = GameObject("Player", Transform((0, 0, 0), (0,90,0)), Material(ctx, None, None, None, 0, 32.0, 1))
+player.load_model("assets/models/Player.obj")
+renderer.generate_buffers(player)
+scene.add(player)
 
 renderer.load_env_map("assets/textures/Day-HDRI.exr")
 skybox, skybox_prog = generate_skybox(ctx)
@@ -62,6 +52,7 @@ while True:
             raise SystemExit
 
     camera.process_inputs(pygame.key.get_pressed(), dt)   
+    player.set_transform(Transform(camera.position, (0,0,0)))
 
     ctx.clear(0.05, 0.05, 0.08, 1.0)
     

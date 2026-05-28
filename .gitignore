@@ -182,3 +182,5 @@ cython_debug/
 *.exr
 code_getter.py
 code.txt
+/assets/textures/SponzaTextures
+/assets/models/SponzaModels
