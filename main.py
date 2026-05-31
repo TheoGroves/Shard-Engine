@@ -1,5 +1,6 @@
 import pygame
 import moderngl
+import numpy as np
 from core.camera import Camera
 from core.renderer import Renderer
 from core.material import Material
@@ -11,6 +12,9 @@ from rendering.shadow_mapper import ShadowMapper
 from rendering.debug_renderer import ColliderDebugger
 from importers.asset_importer import load_many
 from collisions.collider import Collider
+from collisions.capsule import Capsule
+from collisions.spatial_grid import SpatialGrid
+from collisions.collision_solver import capsule_triangle_collision
 
 pygame.init()
 
@@ -19,7 +23,7 @@ screen = pygame.display.set_mode((screen_width, screen_height), pygame.OPENGL | 
 
 clock = pygame.time.Clock()
 
-camera = Camera((0, 0, 5))
+camera = Camera((0, 2, 0))
 
 light_dir = (0.3, 1.0, 0.2)
 
@@ -32,23 +36,23 @@ shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 scene = Scene("Main", renderer, shadow_mapper)
 
 collider_debugger = ColliderDebugger(ctx)
+DEBUG_COLLIDERS = False
 
-# Load rendering gameobjects
 loaded_objects = load_many(ctx, renderer, "assets/models/SponzaModels", "assets/textures/SponzaTextures")
 for go in loaded_objects.values():
     scene.add(go)
 
-# Load collider
-sponza_collider = Collider(ctx, "assets/models/SponzaCollider.obj", True)
+sponza_collider = Collider(ctx, "assets/models/SponzaCollider.obj", DEBUG_COLLIDERS)
 sponza_collider.set_model(Transform((0,0,0), (0,0,0), (1,1,1)))
 
 player = GameObject("Player", Transform((0, 0, 0), (0,0,0), (1,1,1)), Material(ctx, None, None, None, None, 0, 1))
 player.load_model("assets/models/Player.obj")
+player_capsule = Capsule(0.35, 2.0, -0.65)
 
 bunny = GameObject("Bunny", Transform((0, 0, 0), (0,0,0), (0.5,0.5,0.5)), Material(ctx, None, None, None, None, 0, 16))
 bunny.load_model("assets/models/StanfordBunny.obj")
 
-bunny_collider = Collider(ctx, "assets/models/StanfordBunnyCollider.obj", True)
+bunny_collider = Collider(ctx, "assets/models/StanfordBunnyCollider.obj", DEBUG_COLLIDERS)
 bunny_collider.set_model(Transform((0,0,0), (0,0,0), (0.5, 0.5, 0.5)))
 
 scene.add(player)
@@ -59,6 +63,22 @@ scene.add_collider(bunny_collider)
 
 renderer.load_env_map("assets/textures/Day-HDRI.exr")
 skybox, skybox_prog = generate_skybox(ctx)
+
+grid = SpatialGrid(1.0)
+triangles = []
+
+for collider in scene.colliders:
+    for tri in collider.get_world_triangles():
+        idx = len(triangles)
+
+        triangles.append(tri)
+
+        a,b,c = tri
+
+        grid.insert_triangle(
+            idx,
+            a,b,c
+        )
 
 dt=0
 fps=0
@@ -71,7 +91,31 @@ while True:
 
     camera.process_inputs(pygame.key.get_pressed(), dt)   
     player.set_transform(Transform(camera.position, (0,0,0), (1,1,1)))
+    player_capsule.position = camera.position
 
+    r = player_capsule.radius
+
+    mins = player_capsule.position - np.array([r,1.0,r])
+    maxs = player_capsule.position + np.array([r,1.0,r])
+
+    candidates = grid.query_capsule(
+        mins,
+        maxs
+    )
+
+    for tri_idx in candidates:
+        a,b,c = triangles[tri_idx]
+
+        correction = capsule_triangle_collision(
+            player_capsule,
+            a,b,c
+        )
+
+        if correction is not None:
+            player_capsule.position += correction
+
+    camera.position = player_capsule.position        
+    
     ctx.clear(0.05, 0.05, 0.08, 1.0)
     
     ctx.disable(moderngl.CULL_FACE)
