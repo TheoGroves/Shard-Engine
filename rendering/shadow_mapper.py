@@ -80,3 +80,16 @@ class ShadowMapper:
             obj.shadow_vao.render()
 
         self.ctx.screen.use()
+
+    def update(self, camera):
+        target = camera.position.astype(np.float32)
+
+        light_pos = target - self.light_dir * 20.0
+
+        self.light_view = look_at(
+            light_pos,
+            target,
+            np.array([0, 1, 0], dtype=np.float32)
+        )
+
+        self.light_space_matrix = self.light_proj @ self.light_view

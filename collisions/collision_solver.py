@@ -1,4 +1,6 @@
 import numpy as np
+from collisions.capsule import Capsule
+from collisions.spatial_grid import SpatialGrid
 
 def closest_point_on_triangle(p, a, b, c):
     ab = b - a
@@ -46,30 +48,68 @@ def closest_point_on_triangle(p, a, b, c):
 
     return a + ab*v + ac*w
 
-def capsule_triangle_collision(capsule, a, b, c):
-    p0, p1 = capsule.get_segment()
-
-    center = (p0 + p1) * 0.5
-
-    closest = closest_point_on_triangle(
-        center,
-        a,
-        b,
-        c
-    )
+def sphere_triangle_collision(center, radius, a, b, c):
+    closest = closest_point_on_triangle(center, a, b, c)
 
     delta = center - closest
-
     dist = np.linalg.norm(delta)
 
-    if dist >= capsule.radius:
+    if dist >= radius:
         return None
 
-    if dist < 0.0001:
-        normal = np.array([0,1,0], dtype=np.float32)
+    if dist < 1e-6:
+        normal = np.array([0, 1, 0], dtype=np.float32)
     else:
         normal = delta / dist
 
-    penetration = capsule.radius - dist
+    return normal * (radius - dist)
 
-    return normal * penetration
+def capsule_triangle_collision(capsule, a, b, c):
+    p0, p1 = capsule.get_segment()
+
+    correction = np.zeros(3, dtype=np.float32)
+
+    hit0 = sphere_triangle_collision(
+        p0,
+        capsule.radius,
+        a, b, c
+    )
+
+    hit1 = sphere_triangle_collision(
+        p1,
+        capsule.radius,
+        a, b, c
+    )
+
+    if hit0 is not None:
+        correction += hit0
+
+    if hit1 is not None:
+        correction += hit1
+
+    if np.linalg.norm(correction) < 1e-6:
+        return None
+
+    return correction
+
+def solve_capsule(capsule: Capsule, triangles, grid: SpatialGrid):
+    r = capsule.radius
+
+    mins = capsule.position - np.array([r,1.0,r])
+    maxs = capsule.position + np.array([r,1.0,r])
+
+    candidates = grid.query_capsule(
+        mins,
+        maxs
+    )
+
+    for tri_idx in candidates:
+        a,b,c = triangles[tri_idx]
+
+        correction = capsule_triangle_collision(
+            capsule,
+            a,b,c
+        )
+
+        if correction is not None:
+            capsule.position += correction

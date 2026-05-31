@@ -32,3 +32,7 @@ class Material:
 
     def load_orm_map(self, path):
         self.orm_map = self.load_texture(path if path else None, "assets/textures/EmptyORM.png")
+
+    @staticmethod
+    def identity(ctx):
+        return Material(ctx, None, None, None, None, 0, 1)

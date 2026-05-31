@@ -1,20 +1,17 @@
 import pygame
 import moderngl
-import numpy as np
 from core.camera import Camera
 from core.renderer import Renderer
 from core.material import Material
 from core.game_object import GameObject
 from core.transform import Transform
-from core.scene import Scene
-from rendering.skybox import generate_skybox
+from core.render_pipeline import RenderPipeline
 from rendering.shadow_mapper import ShadowMapper
 from rendering.debug_renderer import ColliderDebugger
-from importers.asset_importer import load_many
-from collisions.collider import Collider
 from collisions.capsule import Capsule
 from collisions.spatial_grid import SpatialGrid
-from collisions.collision_solver import capsule_triangle_collision
+from collisions.collision_solver import solve_capsule
+from scenes.sponza_scene import SponzaSceneBuilder
 
 pygame.init()
 
@@ -33,52 +30,20 @@ renderer.build_pipeline(light_dir)
 
 shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
-scene = Scene("Main", renderer, shadow_mapper)
-
 collider_debugger = ColliderDebugger(ctx)
 DEBUG_COLLIDERS = False
 
-loaded_objects = load_many(ctx, renderer, "assets/models/SponzaModels", "assets/textures/SponzaTextures")
-for go in loaded_objects.values():
-    scene.add(go)
+scene, skybox, skybox_prog = SponzaSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS)
 
-sponza_collider = Collider(ctx, "assets/models/SponzaCollider.obj", DEBUG_COLLIDERS)
-sponza_collider.set_model(Transform((0,0,0), (0,0,0), (1,1,1)))
-
-player = GameObject("Player", Transform((0, 0, 0), (0,0,0), (1,1,1)), Material(ctx, None, None, None, None, 0, 1))
+player = GameObject("Player", Transform.identity(), Material.identity(ctx))
 player.load_model("assets/models/Player.obj")
-player_capsule = Capsule(0.35, 2.0, -0.65)
-
-bunny = GameObject("Bunny", Transform((0, 0, 0), (0,0,0), (0.5,0.5,0.5)), Material(ctx, None, None, None, None, 0, 16))
-bunny.load_model("assets/models/StanfordBunny.obj")
-
-bunny_collider = Collider(ctx, "assets/models/StanfordBunnyCollider.obj", DEBUG_COLLIDERS)
-bunny_collider.set_model(Transform((0,0,0), (0,0,0), (0.5, 0.5, 0.5)))
-
+player_capsule = Capsule(0.35, 2.0, -0.8)
 scene.add(player)
-scene.add(bunny)
-
-scene.add_collider(sponza_collider)
-scene.add_collider(bunny_collider)
-
-renderer.load_env_map("assets/textures/Day-HDRI.exr")
-skybox, skybox_prog = generate_skybox(ctx)
 
 grid = SpatialGrid(1.0)
-triangles = []
+triangles = scene.get_collision_triangles(grid)
 
-for collider in scene.colliders:
-    for tri in collider.get_world_triangles():
-        idx = len(triangles)
-
-        triangles.append(tri)
-
-        a,b,c = tri
-
-        grid.insert_triangle(
-            idx,
-            a,b,c
-        )
+render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger)
 
 dt=0
 fps=0
@@ -90,57 +55,15 @@ while True:
             raise SystemExit
 
     camera.process_inputs(pygame.key.get_pressed(), dt)   
-    player.set_transform(Transform(camera.position, (0,0,0), (1,1,1)))
     player_capsule.position = camera.position
+    shadow_mapper.update(camera)
 
-    r = player_capsule.radius
+    solve_capsule(player_capsule, triangles, grid)
 
-    mins = player_capsule.position - np.array([r,1.0,r])
-    maxs = player_capsule.position + np.array([r,1.0,r])
+    camera.position = player_capsule.position
+    player.set_transform(Transform(camera.position, (0,0,0), (1,1,1)))    
 
-    candidates = grid.query_capsule(
-        mins,
-        maxs
-    )
-
-    for tri_idx in candidates:
-        a,b,c = triangles[tri_idx]
-
-        correction = capsule_triangle_collision(
-            player_capsule,
-            a,b,c
-        )
-
-        if correction is not None:
-            player_capsule.position += correction
-
-    camera.position = player_capsule.position        
-    
-    ctx.clear(0.05, 0.05, 0.08, 1.0)
-    
-    ctx.disable(moderngl.CULL_FACE)
-    ctx.disable(moderngl.DEPTH_TEST)
-    ctx.depth_mask = False
-
-    skybox_prog['env_map'] = 3
-    skybox_prog['view'].write(renderer.view.T.astype("f4").tobytes())
-    skybox_prog['proj'].write(renderer.proj.T.astype("f4").tobytes())
-    skybox.render()
-    ctx.enable(moderngl.CULL_FACE)
-    ctx.enable(moderngl.DEPTH_TEST)
-
-    ctx.depth_mask = True
-
-    shadow_mapper.render_depth(scene)
-    shadow_mapper.depth_tex.use(location=4)
-    renderer.program["shadow_map"] = 4
-    renderer.program["light_space"].write(
-        shadow_mapper.light_space_matrix
-        .astype("f4").T.tobytes()
-    )
-
-    renderer.render(scene)
-    collider_debugger.draw(renderer, scene.colliders)
+    render_pipeline.render_frame(scene)
 
     pygame.display.set_caption(f"Engine | {fps:.0f}fps")
 
