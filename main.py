@@ -8,7 +8,9 @@ from core.transform import Transform
 from core.scene import Scene
 from rendering.skybox import generate_skybox
 from rendering.shadow_mapper import ShadowMapper
+from rendering.debug_renderer import ColliderDebugger
 from importers.asset_importer import load_many
+from collisions.collider import Collider
 
 pygame.init()
 
@@ -25,14 +27,20 @@ ctx = moderngl.create_context()
 renderer = Renderer(ctx, screen_width, screen_height, camera)
 renderer.build_pipeline(light_dir)
 
-loaded_objects = load_many(ctx, renderer, "assets/models/SponzaModels", "assets/textures/SponzaTextures")
-
 shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
 scene = Scene("Main", renderer, shadow_mapper)
 
+collider_debugger = ColliderDebugger(ctx)
+
+# Load rendering gameobjects
+loaded_objects = load_many(ctx, renderer, "assets/models/SponzaModels", "assets/textures/SponzaTextures")
 for go in loaded_objects.values():
     scene.add(go)
+
+# Load collider
+sponza_collider = Collider(ctx, "assets/models/SponzaCollider.obj", True)
+sponza_collider.set_model(Transform((0,0,0), (0,0,0), (1,1,1)))
 
 player = GameObject("Player", Transform((0, 0, 0), (0,0,0), (1,1,1)), Material(ctx, None, None, None, None, 0, 1))
 player.load_model("assets/models/Player.obj")
@@ -40,8 +48,14 @@ player.load_model("assets/models/Player.obj")
 bunny = GameObject("Bunny", Transform((0, 0, 0), (0,0,0), (0.5,0.5,0.5)), Material(ctx, None, None, None, None, 0, 16))
 bunny.load_model("assets/models/StanfordBunny.obj")
 
+bunny_collider = Collider(ctx, "assets/models/StanfordBunnyCollider.obj", True)
+bunny_collider.set_model(Transform((0,0,0), (0,0,0), (0.5, 0.5, 0.5)))
+
 scene.add(player)
 scene.add(bunny)
+
+scene.add_collider(sponza_collider)
+scene.add_collider(bunny_collider)
 
 renderer.load_env_map("assets/textures/Day-HDRI.exr")
 skybox, skybox_prog = generate_skybox(ctx)
@@ -82,6 +96,7 @@ while True:
     )
 
     renderer.render(scene)
+    collider_debugger.draw(renderer, scene.colliders)
 
     pygame.display.set_caption(f"Engine | {fps:.0f}fps")
 

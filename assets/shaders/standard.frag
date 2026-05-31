@@ -103,7 +103,6 @@ void main() {
     float roughness = clamp(orm.g, 0.04, 1.0);
     float ao = orm.r;
 
-    // Fresnel base reflectance
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
     vec3 L = normalize(light_dir);
@@ -115,29 +114,22 @@ void main() {
     float NdotH = max(dot(n, H), 0.0);
     float VdotH = max(dot(V, H), 0.0);
 
-    // NDF / G / F
     float NDF = DistributionGGX(n, H, roughness);
     float G   = GeometrySmith(n, V, L, roughness);
     vec3  F   = FresnelSchlick(VdotH, F0);
 
-    // specular
     vec3 specular = (NDF * G * F) / max(4.0 * NdotV * NdotL, 0.001);
 
-    // energy conservation
     vec3 kS = F;
     vec3 kD = (1.0 - kS) * (1.0 - metallic);
 
-    // diffuse (Lambert)
     vec3 diffuse = kD * albedo / 3.14159265;
 
-    // shadow
     float shadow = ShadowCalculation(fragPosLightSpace, n, L);
 
-    // direct lighting (add light strength here if needed)
     float lightIntensity = 3.0;
     vec3 direct = (diffuse + specular) * NdotL * lightIntensity * (1.0 - shadow);
 
-    // ambient (simple IBL-style split)
     vec3 diffuseIBL = env * albedo;
     vec3 specIBL = env * F;
 
