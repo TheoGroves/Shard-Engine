@@ -1,5 +1,5 @@
 class Transform:
-    def __init__(self, pos, rot, scale):
+    def __init__(self, pos=(0,0,0), rot=(0,0,0), scale=(1,1,1)):
         self.pos = pos
         self.rot = rot
         self.scale = scale

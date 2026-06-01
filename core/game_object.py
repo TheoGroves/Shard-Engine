@@ -1,4 +1,4 @@
-from maths.matrices import get_model_matrix
+from maths.matrices import get_model_matrix, decompose_model_matrix
 from core.material import Material
 from core.transform import Transform
 from loaders.obj_parser import parse_objs, build_interleaved
@@ -19,6 +19,10 @@ class GameObject:
 
     def set_transform(self, transform: Transform):
         self.model = get_model_matrix(transform.pos, transform.rot, transform.scale)
+
+    def get_transform(self):
+        pos, rot, scale = decompose_model_matrix(self.model)
+        return Transform(pos, rot, scale)
 
     def load_model(self, path):
         vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])

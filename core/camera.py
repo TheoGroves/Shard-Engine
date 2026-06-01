@@ -53,24 +53,6 @@ class Camera:
 
                 self.pitch = max(-89.0, min(89.0, self.pitch))
 
-            if keys[pygame.K_w]:
-                self.position += self.front * self.speed * dt
-            if keys[pygame.K_s]:
-                self.position -= self.front * self.speed * dt
-            if keys[pygame.K_a]:
-                self.position -= self.right * self.speed * dt
-            if keys[pygame.K_d]:
-                self.position += self.right * self.speed * dt
-            if keys[pygame.K_SPACE]:
-                self.position += self.world_up * self.speed * dt
-            if keys[pygame.K_LSHIFT]:
-                self.position -= self.world_up * self.speed * dt
-
-            if keys[pygame.K_LCTRL]:
-                self.speed = 5.0
-            else:
-                self.speed = 2.5
-
             self.update_vectors()
 
     def update_vectors(self):

@@ -88,6 +88,37 @@ def get_model_matrix(pos, rot, scaling):
 
     return translation @ rotation @ scale
 
+def decompose_model_matrix(matrix):
+    pos = matrix[:3, 3].copy()
+
+    rot_scale = matrix[:3, :3]
+
+    sx = np.linalg.norm(rot_scale[:, 0])
+    sy = np.linalg.norm(rot_scale[:, 1])
+    sz = np.linalg.norm(rot_scale[:, 2])
+
+    scale = np.array([sx, sy, sz])
+
+    rotation = np.zeros((3, 3), dtype=np.float32)
+    rotation[:, 0] = rot_scale[:, 0] / sx
+    rotation[:, 1] = rot_scale[:, 1] / sy
+    rotation[:, 2] = rot_scale[:, 2] / sz
+
+    yaw = np.arcsin(-rotation[2, 0])
+
+    cy = np.cos(yaw)
+
+    if abs(cy) > 1e-6:
+        pitch = np.arctan2(rotation[2, 1], rotation[2, 2])
+        roll = np.arctan2(rotation[1, 0], rotation[0, 0])
+    else:
+        pitch = np.arctan2(-rotation[1, 2], rotation[1, 1])
+        roll = 0.0
+
+    rot = np.degrees([pitch, yaw, roll])
+
+    return pos, rot, scale
+
 def get_projection_matrix(camera):
     return perspective(camera.fov, camera.aspect, camera.near, camera.far)
 

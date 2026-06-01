@@ -93,6 +93,8 @@ def capsule_triangle_collision(capsule, a, b, c):
     return correction
 
 def solve_capsule(capsule: Capsule, triangles, grid: SpatialGrid):
+    grounded = False
+    ground_normal = np.zeros(3)
     r = capsule.radius
 
     mins = capsule.position - np.array([r,1.0,r])
@@ -113,3 +115,11 @@ def solve_capsule(capsule: Capsule, triangles, grid: SpatialGrid):
 
         if correction is not None:
             capsule.position += correction
+
+            n = correction / np.linalg.norm(correction)
+
+            if n[1] > 0.5:
+                grounded = True
+                ground_normal = n
+
+    return grounded, ground_normal
