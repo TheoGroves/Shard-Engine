@@ -22,7 +22,13 @@ def closest_point_on_triangle(p, a, b, c):
 
     vc = d1 * d4 - d3 * d2
     if vc <= 0 and d1 >= 0 and d3 <= 0:
-        v = d1 / (d1 - d3)
+        den = (d1 - d3)
+        if abs(den) < 1e-8:
+            v = 0.0
+        else:
+            v = d1 / den
+
+        v = max(0.0, min(1.0, v))
         return a + ab * v
 
     cp = p - c

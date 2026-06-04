@@ -35,4 +35,4 @@ class Material:
 
     @staticmethod
     def identity(ctx):
-        return Material(ctx, None, None, None, None, 0, 1)
+        return Material(ctx, None, None, None, None, 0.001, 1)

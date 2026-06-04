@@ -5,63 +5,68 @@ from core.game_object import GameObject
 from core.transform import Transform
 from core.material import Material
 
+def get_asset_key(filename):
+    name = os.path.splitext(filename)[0].lower()
+
+    for suffix in [" base", " normal", " orm", " heightmap", "_base", "_normal", "_orm", "_heightmap"]:
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+
+    name = name.replace("_", " ")
+
+    name = re.sub(r"\s+", " ", name).strip()
+
+    if name.isdigit():
+        return int(name)
+
+    return name
+
 def load_many(ctx, renderer, models_path, textures_path):
     start = time.perf_counter()
 
     game_objects = {}
 
     for model in os.listdir(models_path):
-        if model.endswith(".obj"):
-            # find index
-            match = re.search(r"\d+", model)
+        if not model.endswith(".obj"):
+            continue
 
-            if match:
-                index = int(match.group())
-            else:
-                print(f"Warning: No index found for {model} at {models_path}")
-                continue
+        key = get_asset_key(model)
+        model_path = f"{models_path}/{model}"
+        name = os.path.splitext(model)[0]
 
-            # generate gameobject, model and buffers
-            model_path = f"{models_path}/{model}"
-            name = os.path.splitext(model)[0]
+        go = GameObject(name, Transform.identity(), Material.identity(ctx))
 
-            go = GameObject(name, Transform((0,0,0), (0,0,0), (1,1,1)), Material(ctx, None, None, None, None, 0, 8))
-            go.load_model(model_path)
-            renderer.generate_buffers(go)
+        go.load_model(model_path)
+        renderer.generate_buffers(go)
 
-            game_objects[index] = go
-
+        game_objects[key] = go
 
     materials = {}
 
     for tex in os.listdir(textures_path):
-        # find index
-        match = re.search(r"\d+", tex)
-
-        if match:
-            index = int(match.group())
-        else:
-            print(f"Warning: No index found for {tex} at {textures_path}")
-            continue
+        key = get_asset_key(tex)
 
         tex_path = f"{textures_path}/{tex}"
 
-        # generate material if not already generated
-        if index not in materials:
-            materials[index] = Material(ctx, None, None, None, None, 0, 1)
+        if key not in materials:
+            materials[key] = Material.identity(ctx)
 
-        # determine tex type
-        if "base" in tex.lower():
-            materials[index].load_base_map(tex_path)
-        elif "normal" in tex.lower():
-            materials[index].load_normal_map(tex_path)
-        elif "orm" in tex.lower():
-            materials[index].load_orm_map(tex_path)
+        tex_lower = tex.lower()
+
+        if "base" in tex_lower:
+            materials[key].load_base_map(tex_path)
+        elif "normal" in tex_lower:
+            materials[key].load_normal_map(tex_path)
+        elif "orm" in tex_lower:
+            materials[key].load_orm_map(tex_path)
+        elif "heightmap" in tex_lower:
+            materials[key].load_height_map(tex_path)
         else:
-            print("Unable to determine texture type")
+            print(f"Unable to determine texture type: {tex}")
 
     for key in game_objects.keys():
         if key in materials:
+            print(f"Loaded material for {key}")
             game_objects[key].material = materials[key]
         
     print(f"Loaded assets in {(time.perf_counter()-start)*1000:.0f}ms")

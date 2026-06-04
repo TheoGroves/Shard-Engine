@@ -23,6 +23,8 @@ class Camera:
         self.speed = 2.5
         self.sensitivity = 5.0
 
+        self.exposure = 2
+
         pygame.event.set_grab(True)
         pygame.mouse.set_visible(False)
         self.focused = True

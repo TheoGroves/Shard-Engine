@@ -17,8 +17,8 @@ class ShadowMapper:
         self.fbo = ctx.framebuffer(depth_attachment=self.depth_tex)
 
         self.light_proj = orthographic(
-            -20, 20,
-            -20, 20,
+            -40, 40,
+            -40, 40,
             0.1, 50.0
         )
 
@@ -49,8 +49,9 @@ class ShadowMapper:
             [
                 (
                     game_object.vbo,
-                    "3f 32x",
-                    "in_pos"
+                    "3f 2f 24x",
+                    "in_pos",
+                    "in_uv_map"
                 )
             ],
             game_object.ibo
@@ -76,6 +77,10 @@ class ShadowMapper:
             self.program["light_space"].write(
                 self.light_space_matrix.astype("f4").T.tobytes()
             )
+
+            if obj.material.texture:
+                obj.material.texture.use(location=0)
+                self.program["tex"] = 0
 
             obj.shadow_vao.render()
 

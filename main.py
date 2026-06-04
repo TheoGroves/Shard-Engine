@@ -13,7 +13,7 @@ from collisions.capsule import Capsule
 from collisions.spatial_grid import SpatialGrid
 from collisions.collision_solver import solve_capsule
 from physics.rigidbody import Rigidbody
-from scenes.sponza_scene import SponzaSceneBuilder
+from scenes.warehouse_scene import WarehouseSceneBuilder
 
 DEBUG_COLLIDERS = False
 GRAVITY = -9.81
@@ -27,7 +27,7 @@ clock = pygame.time.Clock()
 
 camera = Camera((0, 2, 0))
 
-light_dir = (0.3, 1.0, 0.2)
+light_dir = (0.5, 0.7, 0.2)
 
 ctx = moderngl.create_context()
 renderer = Renderer(ctx, screen_width, screen_height, camera)
@@ -37,17 +37,17 @@ shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
 collider_debugger = ColliderDebugger(ctx)
 
-scene, skybox, skybox_prog = SponzaSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS)
+scene, skybox, skybox_prog = WarehouseSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS)
 
 player = GameObject("Player", Transform.identity(), Material.identity(ctx))
 player.load_model("assets/models/Player.obj")
-player_capsule = Capsule(0.35, 2.0, -0.8)
+player_capsule = Capsule(0.35, 1.7, -0.8)
 player_capsule.position[1] = 5
 player_rb = Rigidbody()
 speed = 2.5
 scene.add(player)
 
-grid = SpatialGrid(1.0)
+grid = SpatialGrid(5.0)
 triangles = scene.get_collision_triangles(grid)
 
 render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger)

@@ -16,7 +16,6 @@ with open(os.path.join(shader_dir, "standard.vert")) as f:
 with open(os.path.join(shader_dir, "standard.frag")) as f:
     FRAG_SHADER = f.read()
 
-
 class Renderer:
     def __init__(self, ctx: moderngl.Context, width: int, height:int, camera: Camera):
         self.ctx = ctx
@@ -100,6 +99,7 @@ class Renderer:
             self.program["proj"].write(self.proj.astype("f4").T.tobytes())
             self.program["cam_pos"].value = tuple(self.camera.position)
             self.program["uv_scale"].value = game_object.material.uv_scale
+            self.program["tonemapExposure"] = self.camera.exposure
 
             if game_object.material.texture:
                 game_object.material.texture.use(location=0)
@@ -109,10 +109,10 @@ class Renderer:
                 game_object.material.normal_map.use(location=1)
                 self.program["normal_map"] = 1
 
-            #if game_object.material.heightmap:
-            #    game_object.material.heightmap.use(location=2)
-            #    self.program["height_map"] = 2
-            #    self.program["height_scale"].value = game_object.material.height_scale
+            if game_object.material.heightmap:
+                game_object.material.heightmap.use(location=2)
+                self.program["height_map"] = 2
+                self.program["height_scale"].value = game_object.material.height_scale
 
             if self.env_map:
                 self.env_map.use(location=3)

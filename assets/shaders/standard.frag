@@ -11,6 +11,7 @@ uniform sampler2D shadow_map;
 uniform vec3 light_dir;
 uniform vec3 cam_pos;
 uniform float height_scale;
+uniform float tonemapExposure;
 
 in mat3 TBN;
 in mat4 out_model;
@@ -81,7 +82,20 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
 }
 
 void main() {
-    vec3 nMap = texture(normal_map, uv).rgb;
+    vec3 viewDir = normalize(cam_pos - fragPos);
+    vec3 view = normalize(TBN * viewDir);
+
+    float denom = max(view.z, 0.2);
+
+    float height = texture(height_map, uv).r;
+    height = height * 2.0 - 1.0;
+
+    vec2 parallaxDir = view.xy / denom;
+    vec2 parallaxOffset = parallaxDir * (height * height_scale);
+
+    vec2 uvParallax = uv - parallaxOffset;
+
+    vec3 nMap = texture(normal_map, uvParallax).rgb;
     nMap = nMap * 2.0 - 1.0;
 
     vec3 n = normalize(TBN * nMap);
@@ -96,9 +110,15 @@ void main() {
     vec3 env = texture(env_map, envUV).rgb;
 
     // PBR model
-    vec3 orm = texture(orm_map, uv).rgb;
+    vec3 orm = texture(orm_map, uvParallax).rgb;
 
-    vec3 albedo = pow(texture(tex, uv).rgb, vec3(2.2));
+    vec4 baseSample = texture(tex, uvParallax);
+
+    if(baseSample.a < 0.5)
+        discard;
+
+    vec3 albedo = baseSample.rgb;
+
     float metallic = orm.b;
     float roughness = clamp(orm.g, 0.04, 1.0);
     float ao = orm.r;
@@ -139,5 +159,9 @@ void main() {
 
     vec3 colorFinal = direct + ambient;
 
-    color = vec4(colorFinal*2, 1.0);
+    vec3 hdr = colorFinal;
+
+    hdr = vec3(1.0) - exp(-hdr * tonemapExposure);
+
+    color = vec4(hdr, 1.0);
 }
