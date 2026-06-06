@@ -1,13 +1,14 @@
 import moderngl
 
 class RenderPipeline:
-    def __init__(self, ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger):
+    def __init__(self, ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer):
         self.ctx = ctx
         self.renderer = renderer
         self.skybox = skybox
         self.skybox_prog = skybox_prog
         self.shadow_mapper = shadow_mapper
         self.collider_debugger = collider_debugger
+        self.ui_renderer = ui_renderer
 
     def render_frame(self, scene):
         self.ctx.clear(0.05, 0.05, 0.08, 1.0)
@@ -35,3 +36,5 @@ class RenderPipeline:
 
         self.renderer.render(scene)
         self.collider_debugger.draw(self.renderer, scene.colliders)
+
+        self.ui_renderer.render()

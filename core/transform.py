@@ -4,6 +4,15 @@ class Transform:
         self.rot = rot
         self.scale = scale
 
+    def set_pos(self, pos):
+        self.pos = pos
+
+    def set_rot(self, rot):
+        self.rot = rot
+
+    def set_scale(self, scale):
+        self.scale = scale
+
     @staticmethod
     def identity():
         return Transform((0,0,0), (0,0,0), (1,1,1))

@@ -7,13 +7,19 @@ from core.material import Material
 from core.game_object import GameObject
 from core.transform import Transform
 from core.render_pipeline import RenderPipeline
+from core.input_manager import InputManager
 from rendering.shadow_mapper import ShadowMapper
 from rendering.debug_renderer import ColliderDebugger
 from collisions.capsule import Capsule
 from collisions.spatial_grid import SpatialGrid
-from collisions.collision_solver import solve_capsule
 from physics.rigidbody import Rigidbody
 from scenes.warehouse_scene import WarehouseSceneBuilder
+from gameplay.player_controller import PlayerController
+from ui.ui_renderer import UIRenderer
+from ui.ui_elements import UIText
+
+PLAY_MODE = True
+PLAY_TEXT = ["[EDITOR]", "[PLAY]"]
 
 DEBUG_COLLIDERS = False
 GRAVITY = -9.81
@@ -27,7 +33,7 @@ clock = pygame.time.Clock()
 
 camera = Camera((0, 2, 0))
 
-light_dir = (0.5, 0.7, 0.2)
+light_dir = (1.0, 0.5, 0.0)
 
 ctx = moderngl.create_context()
 renderer = Renderer(ctx, screen_width, screen_height, camera)
@@ -37,25 +43,36 @@ shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
 collider_debugger = ColliderDebugger(ctx)
 
+input_manager = InputManager()
+
 scene, skybox, skybox_prog = WarehouseSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS)
 
-player = GameObject("Player", Transform.identity(), Material.identity(ctx))
+player = GameObject("Player", Transform(scale=(1,1.45,1)), Material.identity(ctx))
 player.load_model("assets/models/Player.obj")
-player_capsule = Capsule(0.35, 1.7, -0.8)
+player_capsule = Capsule(0.35, 1.6, -0.8)
 player_capsule.position[1] = 5
 player_rb = Rigidbody()
-speed = 2.5
+player_controller = PlayerController(camera, player_rb, player_capsule)
 scene.add(player)
 
 grid = SpatialGrid(5.0)
 triangles = scene.get_collision_triangles(grid)
 
-render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger)
+ui_renderer = UIRenderer(ctx, (screen_width, screen_height))
+ui_renderer.add_quad(
+    UIText(
+        1280,
+        200,
+        "",
+        pygame.font.SysFont("arial", 36),
+        ctx
+    )
+)
+
+render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer)
 
 dt=0
 fps=0
-
-grounded = False
 
 while True:
     for event in pygame.event.get():
@@ -63,53 +80,33 @@ while True:
             pygame.quit()
             raise SystemExit
 
-    keys = pygame.key.get_pressed()
+    input_manager.update()
+    keys = input_manager.current_keys
+
+    ui_renderer.quads = []
+    ui_renderer.add_quad(
+        UIText(
+            1280,
+            200,
+            PLAY_TEXT[PLAY_MODE],
+            pygame.font.SysFont("arial", 25),
+            ctx
+        )
+    )
+
+    if input_manager.is_key_just_pressed(pygame.K_c):
+        PLAY_MODE = not PLAY_MODE
 
     camera.process_inputs(keys, dt)   
 
-    move = np.zeros(3)
-
-    if keys[pygame.K_w]:
-        move += camera.front * speed * dt
-    if keys[pygame.K_s]:
-        move -= camera.front * speed * dt
-    if keys[pygame.K_a]:
-        move -= camera.right * speed * dt
-    if keys[pygame.K_d]:
-        move += camera.right * speed * dt
-    if keys[pygame.K_SPACE] and grounded:
-        player_rb.velocity += camera.world_up * 5
-    if keys[pygame.K_LSHIFT]:
-        move -= camera.world_up * speed * dt
-
-    if keys[pygame.K_LCTRL]:
-        speed = 5.0
-    else:
-        speed = 2.5
-
-    move[1] = 0
-
-    player_capsule.position += move
-
-    if dt < 1:
-        player_rb.velocity[1] += GRAVITY * dt
-
-    player_capsule.position += player_rb.velocity * dt
-
-    grounded, normal = solve_capsule(
-        player_capsule,
-        triangles,
-        grid
-    )
-
-    if grounded:
-        if player_rb.velocity[1] < 0:
-            player_rb.velocity[1] = 0
-
-    camera.position = player_capsule.position
+    player_controller.update(keys, dt, triangles, grid, GRAVITY, PLAY_MODE)
 
     shadow_mapper.update(camera)
-    player.set_transform(Transform(camera.position, (0,0,0), (1,1,1)))    
+
+    if PLAY_MODE:
+        t = player.get_transform()
+        t.set_pos(camera.position)
+        player.set_transform(t)    
 
     render_pipeline.render_frame(scene)
 

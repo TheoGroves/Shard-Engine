@@ -137,3 +137,6 @@ def orthographic(left, right, bottom, top, near, far):
     mat[2,3] = -(far + near) / (far - near)
 
     return mat
+
+def get_screen_projection(width, height):
+    return orthographic(0, width, height, 0, -1, 1)
