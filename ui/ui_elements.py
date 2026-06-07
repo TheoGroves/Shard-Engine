@@ -1,7 +1,7 @@
 import moderngl
 import pygame
 import numpy as np
-from PIL import Image
+from loaders.texture_loader import load_texture
 
 class UIElement:
     def __init__(self, x, y, width, height, ctx):
@@ -15,17 +15,19 @@ class UIElement:
         self.vao = None
         self.tex = None
 
-        self.vertices = self.generate_vertices()
+        self.screen_size = None
+
+        self.vertices = None
 
     def generate_vertices(self):
         return np.array([
-            self.x-self.width, self.y-self.height, 0, 0,
-            self.x+self.width, self.y-self.height, 1, 0,
-            self.x+self.width, self.y+self.height, 1, 1,
+            self.x*self.screen_size[0]-self.width/2, self.y*self.screen_size[1]-self.height/2, 0, 0,
+            self.x*self.screen_size[0]+self.width/2, self.y*self.screen_size[1]-self.height/2, 1, 0,
+            self.x*self.screen_size[0]+self.width/2, self.y*self.screen_size[1]+self.height/2, 1, 1,
 
-            self.x-self.width, self.y-self.height, 0, 0,
-            self.x+self.width, self.y+self.height, 1, 1,
-            self.x-self.width, self.y+self.height, 0, 1
+            self.x*self.screen_size[0]-self.width/2, self.y*self.screen_size[1]-self.height/2, 0, 0,
+            self.x*self.screen_size[0]+self.width/2, self.y*self.screen_size[1]+self.height/2, 1, 1,
+            self.x*self.screen_size[0]-self.width/2, self.y*self.screen_size[1]+self.height/2, 0, 1
         ], dtype=np.float32)
 
     def update_vertices(self):
@@ -50,19 +52,9 @@ class UIImage(UIElement):
     def __init__(self, x, y, width, height, ctx, tex_path):
         super().__init__(x, y, width, height, ctx)
         self.set_texture(tex_path)
-
-    def _load_texture(self, path, fallback):
-        img = Image.open(path if path else fallback).convert("RGBA")
-        img = img.transpose(Image.FLIP_TOP_BOTTOM)
-
-        tex = self.ctx.texture(img.size, 4, img.tobytes())
-        tex.build_mipmaps()
-        tex.filter = (moderngl.LINEAR_MIPMAP_LINEAR, moderngl.LINEAR)
-
-        return tex
     
     def set_texture(self, texture_path):
-        self._set_tex(self._load_texture(texture_path, "assets/textures/MissingUI.png"))
+        self._set_tex(load_texture(self.ctx, texture_path, "assets/textures/MissingUI.png")[0])
 
 class UIText(UIElement):
     def __init__(self, x, y, text: str, font: pygame.font.Font, ctx: moderngl.Context, colour=(255,255,255)):
@@ -87,5 +79,8 @@ class UIText(UIElement):
 
         self.width, self.height = text_surf.get_size()
         self.update_vertices()
+
+        self.vbo.orphan()
+        self.vbo.write(self.vertices.astype("f4").tobytes())
 
         self.set_tex_from_surf(text_surf)

@@ -26,6 +26,8 @@ class UIRenderer:
         self.quads = []
 
     def add_quad(self, quad):
+        quad.screen_size = (self.width, self.height)
+        quad.update_vertices()
         quad.vbo = self.ctx.buffer(quad.vertices.astype("f4").tobytes())
         quad.vao = self.ctx.vertex_array(
             self.program,
@@ -36,10 +38,15 @@ class UIRenderer:
 
         self.quads.append(quad)
 
+    def get_quad(self, index):
+        return self.quads[index]
+
     def render(self):
         self.ctx.disable(moderngl.DEPTH_TEST)
         self.ctx.disable(moderngl.CULL_FACE)
         self.ctx.depth_mask = False
+        self.ctx.enable(moderngl.BLEND)
+        self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
         for quad in self.quads:
             quad.tex.use(location=0)
             self.program["tex"] = 0
@@ -47,3 +54,4 @@ class UIRenderer:
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.CULL_FACE)
         self.ctx.depth_mask = True
+        self.ctx.disable(moderngl.BLEND)

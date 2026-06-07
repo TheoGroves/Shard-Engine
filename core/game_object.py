@@ -17,6 +17,8 @@ class GameObject:
         self.ibo = None
         self.vao = None
 
+        self.model_path = None
+
     def set_transform(self, transform: Transform):
         self.model = get_model_matrix(transform.pos, transform.rot, transform.scale)
 
@@ -25,6 +27,7 @@ class GameObject:
         return Transform(pos, rot, scale)
 
     def load_model(self, path):
+        self.model_path = path
         vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
 
         self.vertices, self.indices = build_interleaved(

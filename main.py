@@ -1,25 +1,20 @@
 import pygame
 import moderngl
-import numpy as np
-from core.camera import Camera
-from core.renderer import Renderer
-from core.material import Material
-from core.game_object import GameObject
-from core.transform import Transform
-from core.render_pipeline import RenderPipeline
-from core.input_manager import InputManager
-from rendering.shadow_mapper import ShadowMapper
-from rendering.debug_renderer import ColliderDebugger
-from collisions.capsule import Capsule
-from collisions.spatial_grid import SpatialGrid
-from physics.rigidbody import Rigidbody
-from scenes.warehouse_scene import WarehouseSceneBuilder
-from gameplay.player_controller import PlayerController
-from ui.ui_renderer import UIRenderer
-from ui.ui_elements import UIText
+import os
+import psutil
+
+from core import Camera, Renderer, Material, GameObject, Transform, RenderPipeline, InputManager
+from rendering import ShadowMapper, ColliderDebugger
+from collisions import Capsule, SpatialGrid
+from physics import Rigidbody
+from scenes import WarehouseSceneBuilder
+from gameplay import PlayerController
+from ui import UIRenderer, UIText
 
 PLAY_MODE = True
-PLAY_TEXT = ["[EDITOR]", "[PLAY]"]
+PLAY_TEXT = ["[EDITOR]", ""]
+
+WIREFRAME = False
 
 DEBUG_COLLIDERS = False
 GRAVITY = -9.81
@@ -58,13 +53,36 @@ scene.add(player)
 grid = SpatialGrid(5.0)
 triangles = scene.get_collision_triangles(grid)
 
+process = psutil.Process(os.getpid())
+total_ram = psutil.virtual_memory().total
+
 ui_renderer = UIRenderer(ctx, (screen_width, screen_height))
 ui_renderer.add_quad(
     UIText(
-        1280,
-        200,
+        0.5,
+        0.15,
         "",
-        pygame.font.SysFont("arial", 36),
+        pygame.font.SysFont("arial", 40),
+        ctx
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.85,
+        0.15,
+        "",
+        pygame.font.SysFont("arial", 25),
+        ctx
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.85,
+        0.2,
+        "",
+        pygame.font.SysFont("arial", 25),
         ctx
     )
 )
@@ -83,19 +101,24 @@ while True:
     input_manager.update()
     keys = input_manager.current_keys
 
-    ui_renderer.quads = []
-    ui_renderer.add_quad(
-        UIText(
-            1280,
-            200,
-            PLAY_TEXT[PLAY_MODE],
-            pygame.font.SysFont("arial", 25),
-            ctx
-        )
-    )
+    ui_renderer.get_quad(0).update_text(PLAY_TEXT[PLAY_MODE])
+    ui_renderer.get_quad(1).update_text(f"FPS: {fps:.1f}")
+    ui_renderer.get_quad(2).update_text(f"Memory Usage: {process.memory_info().rss / 1048576:.1f}MB")
+
+    ram_use = process.memory_info().rss/total_ram
+    if ram_use > 0.5:
+        print(f"WARNING: {ram_use * 100:.1f}% of RAM used")
 
     if input_manager.is_key_just_pressed(pygame.K_c):
         PLAY_MODE = not PLAY_MODE
+
+    if input_manager.is_key_just_pressed(pygame.K_x):
+        WIREFRAME = not WIREFRAME
+    
+    if PLAY_MODE:
+        WIREFRAME = False
+
+    ctx.wireframe = WIREFRAME
 
     camera.process_inputs(keys, dt)   
 
