@@ -28,6 +28,7 @@ class UIRenderer:
     def add_quad(self, quad):
         quad.screen_size = (self.width, self.height)
         quad.update_vertices()
+
         quad.vbo = self.ctx.buffer(quad.vertices.astype("f4").tobytes())
         quad.vao = self.ctx.vertex_array(
             self.program,

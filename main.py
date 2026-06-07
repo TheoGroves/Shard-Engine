@@ -63,27 +63,33 @@ ui_renderer.add_quad(
         0.15,
         "",
         pygame.font.SysFont("arial", 40),
-        ctx
+        ctx,
+        (255,255,255),
+        "centre"
     )
 )
 
 ui_renderer.add_quad(
     UIText(
-        0.85,
+        0.88,
+        0.125,
+        "",
+        pygame.font.SysFont("arial", 25),
+        ctx,
+        (255,255,255),
+        "right"
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.88,
         0.15,
         "",
         pygame.font.SysFont("arial", 25),
-        ctx
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.85,
-        0.2,
-        "",
-        pygame.font.SysFont("arial", 25),
-        ctx
+        ctx,
+        (255,255,255),
+        "right"
     )
 )
 
@@ -114,6 +120,11 @@ while True:
 
     if input_manager.is_key_just_pressed(pygame.K_x):
         WIREFRAME = not WIREFRAME
+
+    if input_manager.is_key_just_pressed(pygame.K_g):
+        DEBUG_COLLIDERS = not DEBUG_COLLIDERS
+        for c in scene.colliders:
+            c.debug = DEBUG_COLLIDERS
     
     if PLAY_MODE:
         WIREFRAME = False
