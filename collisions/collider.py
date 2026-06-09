@@ -1,4 +1,5 @@
 import numpy as np
+from core.mesh import Mesh
 from maths.matrices import get_model_matrix
 from loaders.obj_parser import parse_obj, build_interleaved
 
@@ -9,12 +10,7 @@ class Collider:
 
         self.debug = debug
 
-        self.vertices = None
-        self.indices = None
-
-        self.vbo = None
-        self.ibo = None
-        self.vao = None
+        self.mesh = Mesh()
 
         self.model_matrix = None
 
@@ -23,37 +19,37 @@ class Collider:
     def load_mesh(self):
         verts, norms, tans, bitans, uvs, inds, n_inds, uv_inds = parse_obj(self.mesh_path)
 
-        self.vertices, self.indices = build_interleaved(
+        self.mesh.vertices, self.mesh.indices = build_interleaved(
             verts, norms, tans, bitans, uvs,
             inds, n_inds, uv_inds
         )
 
-        self.vbo = self.ctx.buffer(self.vertices.astype("f4").tobytes())
-        self.ibo = self.ctx.buffer(self.indices.astype("i4").tobytes())
+        self.mesh.vbo = self.ctx.buffer(self.mesh.vertices.astype("f4").tobytes())
+        self.mesh.ibo = self.ctx.buffer(self.mesh.indices.astype("i4").tobytes())
 
     def build_debug_vao(self, prog):
-        self.vao = self.ctx.vertex_array(
+        self.mesh.vao = self.ctx.vertex_array(
             prog,
             [
-                (self.vbo, "3f 32x", "in_pos")
+                (self.mesh.vbo, "3f 32x", "in_pos")
             ],
-            self.ibo
+            self.mesh.ibo
         )
 
     def set_model(self, transform):
         self.model_matrix = get_model_matrix(transform.pos, transform.rot, transform.scale)
 
     def get_world_triangles(self):
-        verts = self.vertices.reshape(-1, 11)
+        verts = self.mesh.vertices.reshape(-1, 11)
 
         model = self.model_matrix
 
         tris = []
 
-        for i in range(0, len(self.indices), 3):
-            i0 = self.indices[i]
-            i1 = self.indices[i + 1]
-            i2 = self.indices[i + 2]
+        for i in range(0, len(self.mesh.indices), 3):
+            i0 = self.mesh.indices[i]
+            i1 = self.mesh.indices[i + 1]
+            i2 = self.mesh.indices[i + 2]
 
             p0 = verts[i0][:3]
             p1 = verts[i1][:3]

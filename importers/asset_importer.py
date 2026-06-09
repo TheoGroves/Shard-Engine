@@ -1,9 +1,10 @@
 import time
 import os
 import re
-from core.game_object import GameObject
-from core.transform import Transform
 from core.material import Material
+from core.components import Transform, MeshRenderer
+from ecs import EntityManager
+from core.systems import TransformSystem, MeshRendererSystem
 
 def get_asset_key(filename):
     name = os.path.splitext(filename)[0].lower()
@@ -21,10 +22,10 @@ def get_asset_key(filename):
 
     return name
 
-def load_many(ctx, renderer, models_path, textures_path):
+def load_many(ctx, shadow_mapper, models_path, textures_path, em: EntityManager, ts: TransformSystem, mrs: MeshRendererSystem):
     start = time.perf_counter()
 
-    game_objects = {}
+    eids = {}
 
     for model in os.listdir(models_path):
         if not model.endswith(".obj"):
@@ -32,14 +33,13 @@ def load_many(ctx, renderer, models_path, textures_path):
 
         key = get_asset_key(model)
         model_path = f"{models_path}/{model}"
-        name = os.path.splitext(model)[0]
 
-        go = GameObject(name, Transform.identity(), Material.identity(ctx))
+        eid = em.create_entity()
+        em.add_component(eid, Transform.identity())
+        em.add_component(eid, MeshRenderer(None, None, Material.identity(ctx)))
+        mrs.load_model(eid, model_path, shadow_mapper)
 
-        go.load_model(model_path)
-        renderer.generate_buffers(go)
-
-        game_objects[key] = go
+        eids[key] = eid
 
     materials = {}
 
@@ -64,10 +64,9 @@ def load_many(ctx, renderer, models_path, textures_path):
         else:
             print(f"Unable to determine texture type: {tex}")
 
-    for key in game_objects.keys():
+    for key in eids.keys():
         if key in materials:
             print(f"Loaded material for {key}")
-            game_objects[key].material = materials[key]
+            mrs.set_material(eids[key], materials[key])
         
     print(f"Loaded assets in {(time.perf_counter()-start)*1000:.0f}ms")
-    return game_objects

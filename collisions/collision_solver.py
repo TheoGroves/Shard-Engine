@@ -1,5 +1,4 @@
 import numpy as np
-from collisions.capsule import Capsule
 from collisions.spatial_grid import SpatialGrid
 
 def closest_point_on_triangle(p, a, b, c):
@@ -70,8 +69,16 @@ def sphere_triangle_collision(center, radius, a, b, c):
 
     return normal * (radius - dist)
 
-def capsule_triangle_collision(capsule, a, b, c):
-    p0, p1 = capsule.get_segment()
+def get_segment(position, capsule):
+    half = max(0.0, capsule.height * 0.5 - capsule.radius)
+
+    p0 = position + np.array([0, -half+capsule.offset, 0], dtype=np.float32)
+    p1 = position + np.array([0, half+capsule.offset, 0], dtype=np.float32)
+
+    return p0, p1
+
+def capsule_triangle_collision(position, capsule, a, b, c):
+    p0, p1 = get_segment(position, capsule)
 
     correction = np.zeros(3, dtype=np.float32)
 
@@ -98,13 +105,13 @@ def capsule_triangle_collision(capsule, a, b, c):
 
     return correction
 
-def solve_capsule(capsule: Capsule, triangles, grid: SpatialGrid):
+def solve_capsule(transform, capsule, triangles, grid: SpatialGrid):
     grounded = False
     ground_normal = np.zeros(3)
     r = capsule.radius
 
-    mins = capsule.position - np.array([r,1.0,r])
-    maxs = capsule.position + np.array([r,1.0,r])
+    mins = transform.pos - np.array([r,1.0,r], dtype=np.float32)
+    maxs = transform.pos + np.array([r,1.0,r], dtype=np.float32)
 
     candidates = grid.query_capsule(
         mins,
@@ -115,12 +122,13 @@ def solve_capsule(capsule: Capsule, triangles, grid: SpatialGrid):
         a,b,c = triangles[tri_idx]
 
         correction = capsule_triangle_collision(
+            transform.pos,
             capsule,
             a,b,c
         )
 
         if correction is not None:
-            capsule.position += correction
+            transform.pos += correction
 
             n = correction / np.linalg.norm(correction)
 

@@ -1,4 +1,3 @@
-import moderngl
 import numpy as np
 
 from maths.matrices import look_at, orthographic
@@ -43,18 +42,18 @@ class ShadowMapper:
             fragment_shader=frag
         )
 
-    def generate_shadow_vao(self, game_object):
-        game_object.shadow_vao = self.ctx.vertex_array(
+    def generate_shadow_vao(self, mesh_renderer):
+        mesh_renderer.mesh.shadow_vao = self.ctx.vertex_array(
             self.program,
             [
                 (
-                    game_object.vbo,
+                    mesh_renderer.mesh.vbo,
                     "3f 2f 24x",
                     "in_pos",
                     "in_uv_map"
                 )
             ],
-            game_object.ibo
+            mesh_renderer.mesh.ibo
         )
 
     def render_depth(self, scene):
@@ -69,25 +68,30 @@ class ShadowMapper:
 
         self.ctx.clear(depth=1.0)
 
-        for obj in scene.game_objects:
+        for eid in scene.em.query("MeshRenderer", "Transform"):
+            entity = scene.em.entities[eid]
+            mesh_renderer = entity.components["MeshRenderer"]
+            transform = entity.components["Transform"]
+
             self.program["model"].write(
-                obj.model.astype("f4").T.tobytes()
+                transform.model.astype("f4").T.tobytes()
             )
 
             self.program["light_space"].write(
                 self.light_space_matrix.astype("f4").T.tobytes()
             )
 
-            if obj.material.texture:
-                obj.material.texture.use(location=0)
+            if mesh_renderer.material and mesh_renderer.material.texture:
+                mesh_renderer.material.texture.use(location=0)
                 self.program["tex"] = 0
 
-            obj.shadow_vao.render()
+            if mesh_renderer.mesh.shadow_vao:
+                mesh_renderer.mesh.shadow_vao.render()
 
         self.ctx.screen.use()
 
     def update(self, camera):
-        target = camera.position.astype(np.float32)
+        target = camera.pos.astype(np.float32)
 
         light_pos = target - self.light_dir * 20.0
 

@@ -1,15 +1,21 @@
 import pygame
 import moderngl
+from OpenGL import GL
 import os
 import psutil
+import time
 
-from core import Camera, Renderer, Material, GameObject, Transform, RenderPipeline, InputManager
+from core import Renderer, Material, RenderPipeline, InputManager, Mesh
+from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera
+from core.systems import CollisionSystem, TransformSystem, MeshRendererSystem, InputSystem, PlayerControllerSystem, CameraSystem, MeshColliderSystem
 from rendering import ShadowMapper, ColliderDebugger
-from collisions import Capsule, SpatialGrid
-from physics import Rigidbody
+from collisions import SpatialGrid
 from scenes import WarehouseSceneBuilder
-from gameplay import PlayerController
 from ui import UIRenderer, UIText
+from maths.matrices import get_view_matrix
+
+GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX = 0x9048
+GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049
 
 PLAY_MODE = True
 PLAY_TEXT = ["[EDITOR]", ""]
@@ -26,32 +32,55 @@ screen = pygame.display.set_mode((screen_width, screen_height), pygame.OPENGL | 
 
 clock = pygame.time.Clock()
 
-camera = Camera((0, 2, 0))
-
 light_dir = (1.0, 0.5, 0.0)
 
 ctx = moderngl.create_context()
-renderer = Renderer(ctx, screen_width, screen_height, camera)
+
+renderer = Renderer(ctx, screen_width, screen_height)
 renderer.build_pipeline(light_dir)
 
 shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
-collider_debugger = ColliderDebugger(ctx)
-
 input_manager = InputManager()
 
-scene, skybox, skybox_prog = WarehouseSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS)
+transform_system = TransformSystem(None)
+mesh_renderer_system = MeshRendererSystem(None, renderer)
+mesh_collider_system = MeshColliderSystem(None, renderer)
 
-player = GameObject("Player", Transform(scale=(1,1.45,1)), Material.identity(ctx))
-player.load_model("assets/models/Player.obj")
-player_capsule = Capsule(0.35, 1.6, -0.8)
-player_capsule.position[1] = 5
-player_rb = Rigidbody()
-player_controller = PlayerController(camera, player_rb, player_capsule)
-scene.add(player)
+scene, skybox, skybox_prog = WarehouseSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS, transform_system, mesh_renderer_system, mesh_collider_system)
+
+collider_debugger = ColliderDebugger(ctx, scene.em, mesh_collider_system)
+
+collision_system = CollisionSystem(scene.em)
+input_system = InputSystem(scene.em)
+camera_system = CameraSystem(scene.em, transform_system)
+
+cam_eid = scene.em.create_entity()
+scene.em.add_component(cam_eid, Transform())
+scene.em.add_component(cam_eid, Camera(screen_width, screen_height))
+
+cam_t = scene.em.entities[cam_eid].components["Transform"]
+cam = scene.em.entities[cam_eid].components["Camera"]
+
+renderer.set_camera(cam_t)
+
+player_controller_system = PlayerControllerSystem(scene.em, cam_t, PLAY_MODE)
+
+
+player_eid = scene.em.create_entity()
+scene.em.add_component(player_eid, Transform.identity())
+scene.em.add_component(player_eid, MeshRenderer(Mesh(), None, Material.identity(ctx)))
+scene.em.add_component(player_eid, CapsuleCollider(0.35, 1.6, -0.8))
+scene.em.add_component(player_eid, Rigidbody())
+scene.em.add_component(player_eid, PlayerController())
+scene.em.add_component(player_eid, Input())
+
+transform_system.set_pos(player_eid, (0, 5, 0))
+transform_system.set_scale(player_eid, (1,1.45,1))
+mesh_renderer_system.load_model(player_eid, "assets/models/Player.obj", shadow_mapper)
 
 grid = SpatialGrid(5.0)
-triangles = scene.get_collision_triangles(grid)
+triangles = mesh_collider_system.get_collision_triangles(grid)
 
 process = psutil.Process(os.getpid())
 total_ram = psutil.virtual_memory().total
@@ -93,12 +122,64 @@ ui_renderer.add_quad(
     )
 )
 
-render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer)
+ui_renderer.add_quad(
+    UIText(
+        0.88,
+        0.175,
+        "",
+        pygame.font.SysFont("arial", 25),
+        ctx,
+        (255,255,255),
+        "right"
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.88,
+        0.2,
+        "",
+        pygame.font.SysFont("arial", 25),
+        ctx,
+        (255,255,255),
+        "right"
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.88,
+        0.225,
+        "",
+        pygame.font.SysFont("arial", 25),
+        ctx,
+        (255,255,255),
+        "right"
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.88,
+        0.25,
+        "",
+        pygame.font.SysFont("arial", 25),
+        ctx,
+        (255,255,255),
+        "right"
+    )
+)
+
+render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system)
 
 dt=0
+dt_real=0
 fps=0
 
+total_kb = GL.glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX)
+
 while True:
+    start = time.perf_counter()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -106,10 +187,21 @@ while True:
 
     input_manager.update()
     keys = input_manager.current_keys
-
+    
+    input_system.update()
+    player_controller_system.update(dt, triangles, grid, GRAVITY)
+    
     ui_renderer.get_quad(0).update_text(PLAY_TEXT[PLAY_MODE])
-    ui_renderer.get_quad(1).update_text(f"FPS: {fps:.1f}")
-    ui_renderer.get_quad(2).update_text(f"Memory Usage: {process.memory_info().rss / 1048576:.1f}MB")
+    ui_renderer.get_quad(1).update_text(f"fps: {fps:.1f}")
+    ui_renderer.get_quad(2).update_text(f"fps_raw: {1/dt_real if dt_real > 0 else float('inf'):.1f}")
+    ui_renderer.get_quad(3).update_text(f"mem: {process.memory_info().rss / 1048576:.1f}MB")
+    
+    available_kb = GL.glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX)
+    used_kb = total_kb - available_kb
+    ui_renderer.get_quad(4).update_text(f"vram: {used_kb / 1024:.1f}MB")
+
+    ui_renderer.get_quad(5).update_text(f"dt: {dt*1000:.1f}ms")
+    ui_renderer.get_quad(6).update_text(f"dt_raw: {dt_real*1000:.1f}ms")
 
     ram_use = process.memory_info().rss/total_ram
     if ram_use > 0.5:
@@ -117,6 +209,7 @@ while True:
 
     if input_manager.is_key_just_pressed(pygame.K_c):
         PLAY_MODE = not PLAY_MODE
+        player_controller_system.play_mode = PLAY_MODE
 
     if input_manager.is_key_just_pressed(pygame.K_x):
         WIREFRAME = not WIREFRAME
@@ -131,21 +224,23 @@ while True:
 
     ctx.wireframe = WIREFRAME
 
-    camera.process_inputs(keys, dt)   
-
-    player_controller.update(keys, dt, triangles, grid, GRAVITY, PLAY_MODE)
-
-    shadow_mapper.update(camera)
+    camera_system.update(keys, dt)
 
     if PLAY_MODE:
-        t = player.get_transform()
-        t.set_pos(camera.position)
-        player.set_transform(t)    
+        transform_system.set_pos(player_eid, cam_t.pos)
+    
+    transform_system.update()
+    
+    renderer.view = get_view_matrix(cam_t)
+
+    shadow_mapper.update(cam_t)
 
     render_pipeline.render_frame(scene)
 
     pygame.display.set_caption(f"Engine | {fps:.0f}fps")
 
     pygame.display.flip()
+
+    dt_real = time.perf_counter()-start
     dt = clock.tick(60)/1000
     fps = clock.get_fps()

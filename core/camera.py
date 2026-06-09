@@ -69,4 +69,4 @@ class Camera:
 
         self.front = normalize(front)
         self.right = normalize(np.cross(self.front, self.world_up))
-        self.up = normalize(np.cross(self.right, self.front))
+        self.up = normalize(np.cross(self.front, self.right))

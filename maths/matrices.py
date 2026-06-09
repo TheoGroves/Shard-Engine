@@ -122,8 +122,8 @@ def decompose_model_matrix(matrix):
 def get_projection_matrix(camera):
     return perspective(camera.fov, camera.aspect, camera.near, camera.far)
 
-def get_view_matrix(camera):
-    return look_at(camera.position, camera.position + camera.front, camera.world_up)
+def get_view_matrix(transform):
+    return look_at(transform.pos, transform.pos + transform.front, transform.world_up)
 
 def orthographic(left, right, bottom, top, near, far):
     mat = np.eye(4, dtype=np.float32)

@@ -1,5 +1,3 @@
-from PIL import Image
-import moderngl
 from loaders.texture_loader import load_texture
 
 class Material:

@@ -4,9 +4,6 @@ import OpenEXR
 import Imath
 import numpy as np
 from maths.matrices import get_view_matrix, get_projection_matrix
-from core.camera import Camera
-from core.game_object import GameObject
-from core.scene import Scene
 
 shader_dir = "assets/shaders"
 
@@ -17,7 +14,7 @@ with open(os.path.join(shader_dir, "standard.frag")) as f:
     FRAG_SHADER = f.read()
 
 class Renderer:
-    def __init__(self, ctx: moderngl.Context, width: int, height:int, camera: Camera):
+    def __init__(self, ctx: moderngl.Context, width: int, height:int):
         self.ctx = ctx
         self.ctx.enable(moderngl.CULL_FACE)
         self.ctx.enable(moderngl.DEPTH_TEST)
@@ -29,29 +26,33 @@ class Renderer:
         self.near = 0.1
         self.far = 1000.0
         self.aspect = width / height
-        self.camera = camera
+        self.camera = None
 
         self.proj = get_projection_matrix(self)
-        self.view = get_view_matrix(camera)
+        self.view = None
 
         self.env_map = None
 
         self.program = None
 
-    def generate_buffers(self, game_object: GameObject):
-        game_object.vbo = self.ctx.buffer(
-            game_object.vertices.astype("f4").tobytes()
+    def set_camera(self, camera):
+        self.camera = camera
+        self.view = get_view_matrix(camera)
+
+    def generate_buffers(self, mesh_renderer):
+        mesh_renderer.mesh.vbo = self.ctx.buffer(
+            mesh_renderer.mesh.vertices.astype("f4").tobytes()
         )
 
-        game_object.ibo = self.ctx.buffer(
-            game_object.indices.astype("i4").tobytes()
+        mesh_renderer.mesh.ibo = self.ctx.buffer(
+            mesh_renderer.mesh.indices.astype("i4").tobytes()
         )
 
-        game_object.vao = self.ctx.vertex_array(
+        mesh_renderer.mesh.vao = self.ctx.vertex_array(
             self.program,
             [
                 (
-                    game_object.vbo,
+                    mesh_renderer.mesh.vbo,
                     "3f 2f 3f 3f",
                     "in_pos",
                     "in_uv_map",
@@ -59,7 +60,7 @@ class Renderer:
                     "in_tangent"
                 )
             ],
-            game_object.ibo
+            mesh_renderer.mesh.ibo
         )
 
     def load_env_map(self, path):
@@ -89,37 +90,3 @@ class Renderer:
         )
 
         self.program["light_dir"].value = light_dir
-        self.program["cam_pos"].value = tuple(self.camera.position)
-
-    def render(self, scene: Scene):
-        self.view = get_view_matrix(self.camera)
-        for game_object in scene.game_objects:
-            self.program["model"].write(game_object.model.astype("f4").T.tobytes())
-            self.program["view"].write(self.view.astype("f4").T.tobytes())
-            self.program["proj"].write(self.proj.astype("f4").T.tobytes())
-            self.program["cam_pos"].value = tuple(self.camera.position)
-            self.program["uv_scale"].value = game_object.material.uv_scale
-            self.program["tonemapExposure"] = self.camera.exposure
-
-            if game_object.material.texture:
-                game_object.material.texture.use(location=0)
-                self.program["tex"] = 0
-
-            if game_object.material.normal_map:
-                game_object.material.normal_map.use(location=1)
-                self.program["normal_map"] = 1
-
-            if game_object.material.heightmap:
-                game_object.material.heightmap.use(location=2)
-                self.program["height_map"] = 2
-                self.program["height_scale"].value = game_object.material.height_scale
-
-            if self.env_map:
-                self.env_map.use(location=3)
-                self.program["env_map"] = 3
-
-            if game_object.material.orm_map:
-                game_object.material.orm_map.use(location=5)
-                self.program["orm_map"] = 5
-
-            game_object.vao.render()

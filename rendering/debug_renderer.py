@@ -1,7 +1,8 @@
-import moderngl
+from core.systems import MeshColliderSystem
+from ecs import EntityManager
 
 class ColliderDebugger:
-    def __init__(self, ctx):
+    def __init__(self, ctx, em: EntityManager, mcs: MeshColliderSystem):
         self.ctx = ctx
 
         with open("assets/shaders/debug.vert") as f:
@@ -15,7 +16,10 @@ class ColliderDebugger:
             fragment_shader=debug_frag
         )
 
-    def draw(self, renderer, colliders):
+        self.em = em
+        self.mcs = mcs
+
+    def draw(self, renderer):
         if not self.program:
             return
 
@@ -24,16 +28,20 @@ class ColliderDebugger:
 
         self.ctx.wireframe = True
 
-        for c in colliders:
+        for eid in self.em.query("MeshCollider", "Transform"):
+            entity = self.em.entities[eid]
+            c = entity.components["MeshCollider"]
+            t = entity.components["Transform"]
+
             if not c.debug:
                 continue
 
-            c.build_debug_vao(self.program)
-
+            self.mcs.build_debug_vao(eid, self.program)    
+            
             self.program["model"].write(
-                c.model_matrix.astype("f4").T.tobytes()
+                t.model.astype("f4").T.tobytes()
             )
 
-            c.vao.render()
+            c.mesh.vao.render()
 
         self.ctx.wireframe = False

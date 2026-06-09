@@ -1,7 +1,7 @@
 import moderngl
 
 class RenderPipeline:
-    def __init__(self, ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer):
+    def __init__(self, ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system):
         self.ctx = ctx
         self.renderer = renderer
         self.skybox = skybox
@@ -9,6 +9,7 @@ class RenderPipeline:
         self.shadow_mapper = shadow_mapper
         self.collider_debugger = collider_debugger
         self.ui_renderer = ui_renderer
+        self.mesh_renderer_system = mesh_renderer_system
 
     def render_frame(self, scene):
         self.ctx.clear(0.05, 0.05, 0.08, 1.0)
@@ -34,7 +35,7 @@ class RenderPipeline:
             .astype("f4").T.tobytes()
         )
 
-        self.renderer.render(scene)
-        self.collider_debugger.draw(self.renderer, scene.colliders)
+        self.mesh_renderer_system.render(self.renderer.program, self.renderer.proj, self.renderer.env_map, self.renderer.camera)
+        self.collider_debugger.draw(self.renderer)
 
         self.ui_renderer.render()

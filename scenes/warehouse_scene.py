@@ -1,22 +1,24 @@
 from core.scene import Scene
-from core.transform import Transform
+from core.components import Transform, MeshCollider
+from core.systems import TransformSystem, MeshRendererSystem, MeshColliderSystem
 from rendering.skybox import generate_skybox
-from collisions.collider import Collider
 from importers.asset_importer import load_many
 
 class WarehouseSceneBuilder:
     @staticmethod
-    def build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS):
+    def build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS, ts: TransformSystem, mrs: MeshRendererSystem, mcs: MeshColliderSystem):
         scene = Scene("Warehouse", renderer, shadow_mapper)
+        ts.em = scene.em
+        mrs.em = scene.em
+        mcs.em = scene.em
 
-        loaded_objects = load_many(ctx, renderer, "assets/models/WarehouseModels", "assets/textures/WarehouseTextures")
-        for go in loaded_objects.values():
-            scene.add(go)
+        load_many(ctx, shadow_mapper, "assets/models/WarehouseModels", "assets/textures/WarehouseTextures", scene.em, ts, mrs)
 
-        warehouse_collider = Collider(ctx, "assets/models/WarehouseCollider.obj", DEBUG_COLLIDERS)
-        warehouse_collider.set_model(Transform((0,0,0), (0,0,0), (1, 1, 1)))
+        collider_eid = scene.em.create_entity()
+        scene.em.add_component(collider_eid, Transform.identity())
+        scene.em.add_component(collider_eid, MeshCollider(None, False))
 
-        scene.add_collider(warehouse_collider)
+        mcs.load_model(collider_eid, "assets/models/WarehouseCollider.obj")
 
         renderer.load_env_map("assets/textures/Day-HDRI.exr")
         skybox, skybox_prog = generate_skybox(ctx)
