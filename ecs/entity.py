@@ -61,6 +61,11 @@ class EntityManager:
         sets = [set(self.components[ct].keys()) for ct in component_types]
         return set.intersection(*sets)
     
+    def clear(self):
+        self.entities = {}
+        self.components = defaultdict(dict)
+        self._next_eid = 0
+    
 class Serializer:
     @staticmethod
     def serialize_component(component):

@@ -7,7 +7,6 @@ class Scene:
         self.name = name
         self.renderer = renderer
         self.shadow_mapper = shadow_mapper
-        self.colliders = []
         self.em = EntityManager()
 
         self._serializer = Serializer()
@@ -43,10 +42,11 @@ class Scene:
         for eid in self.em.query("MeshRenderer"):
             mr = self.em.entities[eid].components["MeshRenderer"]
             self.renderer.generate_buffers(mr)
-            self.shadow_mapper.generate_shadow_vao(mr)
+            self.shadow_mapper.generate_shadow_vao(mr)        
     
     def save_scene(self, scene_name):
         self._serializer.save_scene(self.em, f"scenes/{scene_name}.json")
 
     def load_scene(self, scene_name, ctx):
+        self.em.clear()
         self._deserializer.load_scene(self.em, f"scenes/{scene_name}.json", ctx)

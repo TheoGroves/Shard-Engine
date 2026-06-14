@@ -5,13 +5,12 @@ import os
 import psutil
 import time
 
-from core import Renderer, Material, RenderPipeline, InputManager, Mesh, Scene
+from core import Renderer, RenderPipeline, InputManager, Scene
 from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera, MeshCollider
 from core.systems import CollisionSystem, TransformSystem, MeshRendererSystem, InputSystem, PlayerControllerSystem, CameraSystem, MeshColliderSystem
 from rendering import ShadowMapper, ColliderDebugger
 from collisions import SpatialGrid
-from scene_builders import WarehouseSceneBuilder
-from ui import UIRenderer, UIText, UIFloat
+from ui import UIRenderer, UIText, UIFloat, UIButton
 from maths.matrices import get_view_matrix
 from rendering.skybox import generate_skybox
 
@@ -50,17 +49,10 @@ transform_system = TransformSystem(None)
 mesh_renderer_system = MeshRendererSystem(None, renderer)
 mesh_collider_system = MeshColliderSystem(None, renderer)
 
-#scene, skybox, skybox_prog = WarehouseSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS, transform_system, mesh_renderer_system, mesh_collider_system)
-
-
 scene = Scene("Warehouse", renderer, shadow_mapper)
 transform_system.em = scene.em
 mesh_renderer_system.em = scene.em
 mesh_collider_system.em = scene.em
-collider_eid = scene.em.create_entity()
-
-scene.em.add_component(collider_eid, Transform.identity())
-scene.em.add_component(collider_eid, MeshCollider(None, False))
 
 renderer.load_env_map("assets/textures/Day-HDRI.exr")
 skybox, skybox_prog = generate_skybox(ctx)
@@ -72,7 +64,6 @@ collider_debugger = ColliderDebugger(ctx, scene.em, mesh_collider_system)
 collision_system = CollisionSystem(scene.em)
 input_system = InputSystem(scene.em)
 camera_system = CameraSystem(scene.em, transform_system)
-
 
 for eid in scene.em.query("Camera"):
     if scene.em.entities[eid].components["Camera"].active:
@@ -195,6 +186,50 @@ ui_renderer.add_quad(
     )
 )
 
+ui_renderer.add_quad(
+    UIButton(
+        0.15,
+        0.205,
+        0.1,
+        ctx,
+        "assets/textures/DefaultButton.png",
+        "left"
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.166,
+        0.205,
+        "Save Scene",
+        pygame.font.SysFont("consolas", 25),
+        ctx,
+        anchor="left"
+    )
+)
+
+ui_renderer.add_quad(
+    UIButton(
+        0.15,
+        0.225,
+        0.1,
+        ctx,
+        "assets/textures/DefaultButton.png",
+        "left"
+    )
+)
+
+ui_renderer.add_quad(
+    UIText(
+        0.166,
+        0.225,
+        "Load Scene",
+        pygame.font.SysFont("consolas", 25),
+        ctx,
+        anchor="left"
+    )
+)
+
 render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system)
 
 dt=0
@@ -238,6 +273,31 @@ while True:
         cam = camera_system.em.entities[eid]
         cam.components["Camera"].exposure = exposure_ui.value
 
+    if ui_renderer.get_quad(8).update():
+        scene.save_scene("main")
+    
+    if ui_renderer.get_quad(10).update():
+        scene.load_scene("main", ctx)
+        scene.generate_buffers()
+
+        for eid in scene.em.query("Camera"):
+            if scene.em.entities[eid].components["Camera"].active:
+                cam_eid = eid
+                break
+
+        cam_t = scene.em.entities[cam_eid].components["Transform"]
+        cam = scene.em.entities[cam_eid].components["Camera"]
+
+        renderer.set_camera(cam_t, cam)
+
+        player_controller_system = PlayerControllerSystem(scene.em, cam_t, PLAY_MODE)
+
+        for eid in scene.em.query("PlayerController"):
+            player_eid = eid
+
+        grid = SpatialGrid(5.0)
+        triangles = mesh_collider_system.get_collision_triangles(grid)
+
     ram_use = process.memory_info().rss/total_ram
     if ram_use > 0.5:
         print(f"WARNING: {ram_use * 100:.1f}% of RAM used")
@@ -255,9 +315,6 @@ while True:
             c = scene.em.entities[c_eid].components["MeshCollider"]
             c.debug = DEBUG_COLLIDERS
     
-    if PLAY_MODE:
-        WIREFRAME = False
-
     ctx.wireframe = WIREFRAME
 
     camera_system.update(keys, dt, ui_renderer)

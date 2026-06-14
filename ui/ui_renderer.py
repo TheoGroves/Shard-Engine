@@ -54,6 +54,7 @@ class UIRenderer:
         for quad in self.elements:
             quad.tex.use(location=0)
             self.program["tex"] = 0
+            self.program["brightness"] = quad.brightness
             quad.vao.render()
         self.ctx.enable(moderngl.DEPTH_TEST)
         self.ctx.enable(moderngl.CULL_FACE)

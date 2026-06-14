@@ -1,6 +1,115 @@
 import time
 import numpy as np
-from maths.vector import Vec3, Vec2
+import math
+from numba import njit
+import numpy as np
+
+def dot(a, b):
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+
+def cross(a, b):
+    return (
+        a[1]*b[2] - a[2]*b[1],
+        a[2]*b[0] - a[0]*b[2],
+        a[0]*b[1] - a[1]*b[0],
+    )
+
+def length(v):
+    return math.sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2])
+
+def normalize(v):
+    l = length(v)
+    if l == 0:
+        return (0.0, 0.0, 0.0)
+    inv = 1.0 / l
+    return (v[0]*inv, v[1]*inv, v[2]*inv)
+
+def sub(a, b):
+    return (a[0]-b[0], a[1]-b[1], a[2]-b[2])
+
+def mul(v, s):
+    return (v[0]*s, v[1]*s, v[2]*s)
+
+@njit
+def compute_tangents(vertices, uvs, indices, uv_indices):
+    n_verts = vertices.shape[0]
+
+    tangents = np.zeros((n_verts, 3), dtype=np.float32)
+    bitangents = np.zeros((n_verts, 3), dtype=np.float32)
+
+    for t in range(indices.shape[0]):
+
+        i0 = indices[t, 0]
+        i1 = indices[t, 1]
+        i2 = indices[t, 2]
+
+        uv0_i = uv_indices[t, 0]
+        uv1_i = uv_indices[t, 1]
+        uv2_i = uv_indices[t, 2]
+
+        if uv0_i < 0 or uv1_i < 0 or uv2_i < 0:
+            continue
+
+        v0x, v0y, v0z = vertices[i0]
+        v1x, v1y, v1z = vertices[i1]
+        v2x, v2y, v2z = vertices[i2]
+
+        uv0x, uv0y = uvs[uv0_i]
+        uv1x, uv1y = uvs[uv1_i]
+        uv2x, uv2y = uvs[uv2_i]
+
+        e1x = v1x - v0x
+        e1y = v1y - v0y
+        e1z = v1z - v0z
+
+        e2x = v2x - v0x
+        e2y = v2y - v0y
+        e2z = v2z - v0z
+
+        du1 = uv1x - uv0x
+        dv1 = uv1y - uv0y
+        du2 = uv2x - uv0x
+        dv2 = uv2y - uv0y
+
+        denom = du1 * dv2 - du2 * dv1
+        if abs(denom) < 1e-8:
+            continue
+
+        f = 1.0 / denom
+
+        tx = f * (dv2 * e1x - dv1 * e2x)
+        ty = f * (dv2 * e1y - dv1 * e2y)
+        tz = f * (dv2 * e1z - dv1 * e2z)
+
+        bx = f * (-du2 * e1x + du1 * e2x)
+        by = f * (-du2 * e1y + du1 * e2y)
+        bz = f * (-du2 * e1z + du1 * e2z)
+
+        tangents[i0, 0] += tx
+        tangents[i0, 1] += ty
+        tangents[i0, 2] += tz
+
+        tangents[i1, 0] += tx
+        tangents[i1, 1] += ty
+        tangents[i1, 2] += tz
+
+        tangents[i2, 0] += tx
+        tangents[i2, 1] += ty
+        tangents[i2, 2] += tz
+
+        bitangents[i0, 0] += bx
+        bitangents[i0, 1] += by
+        bitangents[i0, 2] += bz
+
+        bitangents[i1, 0] += bx
+        bitangents[i1, 1] += by
+        bitangents[i1, 2] += bz
+
+        bitangents[i2, 0] += bx
+        bitangents[i2, 1] += by
+        bitangents[i2, 2] += bz
+
+    return tangents, bitangents
 
 def parse_obj(location):
     start = time.perf_counter()
@@ -23,19 +132,19 @@ def parse_obj(location):
             # Vertices
             if line.startswith("v "):
                 x, y, z = map(float, line.strip().split()[1:])
-                vertices.append(Vec3(x, y, z))
-                tangents.append(Vec3(0,0,0))
-                bitangents.append(Vec3(0,0,0))
+                vertices.append((x, y, z))
+                tangents.append((0,0,0))
+                bitangents.append((0,0,0))
 
             # Normals
             if line.startswith("vn "):
                 x, y, z = map(float, line.strip().split()[1:])
-                normals.append(Vec3(x, y, z))
+                normals.append((x, y, z))
 
             # UV Coords
             if line.startswith("vt "):
                 x, y = map(float, line.strip().split()[1:])
-                uv_coords.append(Vec2(x, y))
+                uv_coords.append((x, y))
 
             # Indices
             if line.startswith("f "):
@@ -104,51 +213,7 @@ def parse_obj(location):
                         face_uv_coords[i+1]
                     ])
                     tot += 1
-                
-                    # Generate Tangents
-                    if face_uv_coords[0] == -1 or face_uv_coords[i] == -1 or face_uv_coords[i+1] == -1:
-                        continue
-                    
-                    i0, i1, i2 = face_vertices[0], face_vertices[i], face_vertices[i+1]
-                    v0, v1, v2 = vertices[i0], vertices[i1], vertices[i2]
-                    uv0 = uv_coords[face_uv_coords[0]]
-                    uv1 = uv_coords[face_uv_coords[i]]
-                    uv2 = uv_coords[face_uv_coords[i+1]]
-                    
-                    e1 = v1-v0
-                    e2 = v2-v0
-
-                    du1 = uv1.x - uv0.x
-                    dv1 = uv1.y - uv0.y
-                    du2 = uv2.x - uv0.x
-                    dv2 = uv2.y - uv0.y
-
-                    denom = du1 * dv2 - du2 * dv1
-                    if denom == 0:
-                        continue
-
-                    f = 1.0 / denom
-
-                    tangent = Vec3(
-                        f * (dv2 * e1.x - dv1 * e2.x),
-                        f * (dv2 * e1.y - dv1 * e2.y),
-                        f * (dv2 * e1.z - dv1 * e2.z)
-                    )
-
-                    bitangent = Vec3(
-                        f * (-du2 * e1.x + du1 * e2.x),
-                        f * (-du2 * e1.y + du1 * e2.y),
-                        f * (-du2 * e1.z + du1 * e2.z)
-                    )
-
-                    tangents[i0] += tangent
-                    tangents[i1] += tangent
-                    tangents[i2] += tangent
-
-                    bitangents[i0] += bitangent
-                    bitangents[i1] += bitangent
-                    bitangents[i2] += bitangent
-
+                         
     print(f"Generated {tot} triangles from:")
     if tris > 0:
         print(f"  - Tris: {tris}")
@@ -159,7 +224,7 @@ def parse_obj(location):
 
     # Correct tangents
     for i in range(len(tangents)):
-        if tangents[i].length() == 0:
+        if length(tangents[i]) == 0:
             continue
 
         if i >= len(normals):
@@ -171,24 +236,38 @@ def parse_obj(location):
         # Orthagonalize
         EPSILON = 1e-8
 
-        t = t - n * t.dot(n)
+        t = sub(t, mul(n, dot(t, n)))
 
-        if t.length() < EPSILON:
+        if length(t) < EPSILON:
             continue
 
-        t = t.normalize()
+        t = normalize(t)
         tangents[i] = t
 
         # Rebuild bitangents
-        b = n.cross(t)
+        b = cross(n, t)
 
         # Handedness
-        if b.dot(bitangents[i]) < 0.0:
-            t = t * -1.0
-            b = n.cross(t)
+        if dot(b, bitangents[i]) < 0.0:
+            t = mul(t, -1.0)
+            b = cross(n, t)
 
         tangents[i] = t
         bitangents[i] = b
+
+    vertices = np.array(vertices, dtype=np.float32)
+    normals = np.array(normals, dtype=np.float32)
+    uv_coords = np.array(uv_coords, dtype=np.float32)
+
+    indices = np.array(indices, dtype=np.int32)
+    uv_indices = np.array(uv_indices, dtype=np.int32)
+    normal_indices = np.array(normal_indices, dtype=np.int32)
+    tangents, bitangents = compute_tangents(
+        vertices,
+        uv_coords,
+        indices.reshape(-1, 3),
+        uv_indices.reshape(-1, 3)
+    )
 
     print(f"Parsed {location.split('/')[-1]} in {(time.perf_counter()-start)*1000:.1f}ms")
     return vertices, normals, tangents, bitangents, uv_coords, indices, normal_indices, uv_indices
@@ -228,48 +307,63 @@ def parse_objs(locations):
 def build_interleaved(vertices, normals, tangents, bitangents, uvs,
                       indices, normal_indices, uv_indices):
 
-    vertex_map = {}
     packed = []
     new_indices = []
 
+    vertex_map = {}
+
+    vmap = vertex_map
+    vp = vertices
+    vn = normals
+    vu = uvs
+    vt = tangents
+
     for i in range(len(indices)):
+
         v_i = indices[i]
         n_i = normal_indices[i]
         uv_i = uv_indices[i]
 
-        key = (v_i, n_i, uv_i)
+        key = (v_i << 20) ^ (n_i << 10) ^ uv_i
 
-        if key not in vertex_map:
-            pos = vertices[v_i]
+        idx = vmap.get(key)
+        if idx is None:
 
-            # UV
+            pos = vp[v_i]
+
             if uv_i != -1:
-                uv = uvs[uv_i]
-                u, v = uv.x, uv.y
+                uv = vu[uv_i]
+                u = uv[0]
+                v = uv[1]
             else:
-                u, v = 0.0, 0.0
+                u = 0.0
+                v = 0.0
 
-            # Normal
             if n_i != -1:
-                norm = normals[n_i]
-                nx, ny, nz = norm.x, norm.y, norm.z
+                norm = vn[n_i]
+                nx = norm[0]
+                ny = norm[1]
+                nz = norm[2]
             else:
-                nx, ny, nz = 0.0, 0.0, 1.0
+                nx = 0.0
+                ny = 0.0
+                nz = 1.0
 
-            t = tangents[v_i]
+            t = vt[v_i]
 
-            packed.extend([
-                pos.x, pos.y, pos.z,
+            packed.extend((
+                pos[0], pos[1], pos[2],
                 u, v,
                 nx, ny, nz,
-                t.x, t.y, t.z
-            ])
+                t[0], t[1], t[2]
+            ))
 
-            vertex_map[key] = len(vertex_map)
+            idx = len(vmap)
+            vmap[key] = idx
 
-        new_indices.append(vertex_map[key])
+        new_indices.append(idx)
 
     return (
-        np.array(packed, dtype="f4"),
-        np.array(new_indices, dtype="i4")
+        np.array(packed, dtype=np.float32),
+        np.array(new_indices, dtype=np.int32)
     )

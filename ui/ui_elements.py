@@ -1,6 +1,7 @@
 import moderngl
 import pygame
 import numpy as np
+from PIL import Image
 from loaders.texture_loader import load_texture
 
 ANCHORS = {
@@ -33,6 +34,7 @@ class UIElement:
         self.vertices = None
 
         self.anchor = anchor
+        self.brightness = 1.0
 
     def generate_vertices(self):
         cx = self.x * self.screen_size[0]
@@ -168,3 +170,17 @@ class UIFloat(UIText):
 
     def is_blocking(self):
         return super().is_blocking() or self.mouse_held
+    
+class UIButton(UIImage):
+    def __init__(self, x, y, scale, ctx, tex_path, anchor="centre"):
+        with Image.open(tex_path) as img:
+            width, height = img.size
+        super().__init__(x, y, width*scale, height*scale, ctx, tex_path, anchor)
+        self.brightness = 0.5
+
+    def update(self):
+        self.brightness = 0.5
+        if self.mouse_over() and pygame.mouse.get_pressed()[0]:
+            self.brightness = 1.0
+            return True
+        return False
