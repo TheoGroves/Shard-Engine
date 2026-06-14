@@ -307,63 +307,48 @@ def parse_objs(locations):
 def build_interleaved(vertices, normals, tangents, bitangents, uvs,
                       indices, normal_indices, uv_indices):
 
+    vertex_map = {}
     packed = []
     new_indices = []
 
-    vertex_map = {}
-
-    vmap = vertex_map
-    vp = vertices
-    vn = normals
-    vu = uvs
-    vt = tangents
-
     for i in range(len(indices)):
-
         v_i = indices[i]
         n_i = normal_indices[i]
         uv_i = uv_indices[i]
 
-        key = (v_i << 20) ^ (n_i << 10) ^ uv_i
+        key = (v_i, n_i, uv_i)
 
-        idx = vmap.get(key)
-        if idx is None:
+        if key not in vertex_map:
+            pos = vertices[v_i]
 
-            pos = vp[v_i]
-
+            # UV
             if uv_i != -1:
-                uv = vu[uv_i]
-                u = uv[0]
-                v = uv[1]
+                uv = uvs[uv_i]
+                u, v = uv[0], uv[1]
             else:
-                u = 0.0
-                v = 0.0
+                u, v = 0.0, 0.0
 
+            # Normal
             if n_i != -1:
-                norm = vn[n_i]
-                nx = norm[0]
-                ny = norm[1]
-                nz = norm[2]
+                norm = normals[n_i]
+                nx, ny, nz = norm[0], norm[1], norm[2]
             else:
-                nx = 0.0
-                ny = 0.0
-                nz = 1.0
+                nx, ny, nz = 0.0, 0.0, 1.0
 
-            t = vt[v_i]
+            t = tangents[v_i]
 
-            packed.extend((
+            packed.extend([
                 pos[0], pos[1], pos[2],
                 u, v,
                 nx, ny, nz,
                 t[0], t[1], t[2]
-            ))
+            ])
 
-            idx = len(vmap)
-            vmap[key] = idx
+            vertex_map[key] = len(vertex_map)
 
-        new_indices.append(idx)
+        new_indices.append(vertex_map[key])
 
     return (
-        np.array(packed, dtype=np.float32),
-        np.array(new_indices, dtype=np.int32)
+        np.array(packed, dtype="f4"),
+        np.array(new_indices, dtype="i4")
     )
