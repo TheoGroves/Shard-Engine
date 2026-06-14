@@ -5,14 +5,17 @@ import os
 import psutil
 import time
 
-from core import Renderer, Material, RenderPipeline, InputManager, Mesh
-from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera
+from core import Renderer, Material, RenderPipeline, InputManager, Mesh, Scene
+from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera, MeshCollider
 from core.systems import CollisionSystem, TransformSystem, MeshRendererSystem, InputSystem, PlayerControllerSystem, CameraSystem, MeshColliderSystem
 from rendering import ShadowMapper, ColliderDebugger
 from collisions import SpatialGrid
-from scenes import WarehouseSceneBuilder
+from scene_builders import WarehouseSceneBuilder
 from ui import UIRenderer, UIText, UIFloat
 from maths.matrices import get_view_matrix
+from rendering.skybox import generate_skybox
+
+engine_start = time.perf_counter()
 
 GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX = 0x9048
 GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049
@@ -47,7 +50,22 @@ transform_system = TransformSystem(None)
 mesh_renderer_system = MeshRendererSystem(None, renderer)
 mesh_collider_system = MeshColliderSystem(None, renderer)
 
-scene, skybox, skybox_prog = WarehouseSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS, transform_system, mesh_renderer_system, mesh_collider_system)
+#scene, skybox, skybox_prog = WarehouseSceneBuilder.build(ctx, renderer, shadow_mapper, DEBUG_COLLIDERS, transform_system, mesh_renderer_system, mesh_collider_system)
+
+
+scene = Scene("Warehouse", renderer, shadow_mapper)
+transform_system.em = scene.em
+mesh_renderer_system.em = scene.em
+mesh_collider_system.em = scene.em
+collider_eid = scene.em.create_entity()
+
+scene.em.add_component(collider_eid, Transform.identity())
+scene.em.add_component(collider_eid, MeshCollider(None, False))
+
+renderer.load_env_map("assets/textures/Day-HDRI.exr")
+skybox, skybox_prog = generate_skybox(ctx)
+
+scene.load_scene("main", ctx)
 
 collider_debugger = ColliderDebugger(ctx, scene.em, mesh_collider_system)
 
@@ -55,9 +73,11 @@ collision_system = CollisionSystem(scene.em)
 input_system = InputSystem(scene.em)
 camera_system = CameraSystem(scene.em, transform_system)
 
-cam_eid = scene.em.create_entity()
-scene.em.add_component(cam_eid, Transform())
-scene.em.add_component(cam_eid, Camera(screen_width, screen_height))
+
+for eid in scene.em.query("Camera"):
+    if scene.em.entities[eid].components["Camera"].active:
+        cam_eid = eid
+        break
 
 cam_t = scene.em.entities[cam_eid].components["Transform"]
 cam = scene.em.entities[cam_eid].components["Camera"]
@@ -66,17 +86,10 @@ renderer.set_camera(cam_t, cam)
 
 player_controller_system = PlayerControllerSystem(scene.em, cam_t, PLAY_MODE)
 
-player_eid = scene.em.create_entity()
-scene.em.add_component(player_eid, Transform.identity())
-scene.em.add_component(player_eid, MeshRenderer(Mesh(), None, Material.identity(ctx)))
-scene.em.add_component(player_eid, CapsuleCollider(0.35, 1.6, -0.8))
-scene.em.add_component(player_eid, Rigidbody())
-scene.em.add_component(player_eid, PlayerController())
-scene.em.add_component(player_eid, Input())
+for eid in scene.em.query("PlayerController"):
+    player_eid = eid
 
-transform_system.set_pos(player_eid, (0, 5, 0))
-transform_system.set_scale(player_eid, (1,1.45,1))
-mesh_renderer_system.load_model(player_eid, "assets/models/Player.obj", shadow_mapper)
+scene.generate_buffers()
 
 grid = SpatialGrid(5.0)
 triangles = mesh_collider_system.get_collision_triangles(grid)
@@ -190,6 +203,10 @@ fps=0
 
 total_kb = GL.glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX)
 
+scene.save_scene("main")
+
+print(f"Engine loaded in {(time.perf_counter()-engine_start)*1000:.1f}ms")
+
 while True:
     start = time.perf_counter()
     for event in pygame.event.get():
@@ -232,9 +249,10 @@ while True:
     if input_manager.is_key_just_pressed(pygame.K_x):
         WIREFRAME = not WIREFRAME
 
-    if input_manager.is_key_just_pressed(pygame.K_g):
+    if input_manager.is_key_just_pressed(pygame.K_v):
         DEBUG_COLLIDERS = not DEBUG_COLLIDERS
-        for c in scene.colliders:
+        for c_eid in scene.em.query("MeshCollider"):
+            c = scene.em.entities[c_eid].components["MeshCollider"]
             c.debug = DEBUG_COLLIDERS
     
     if PLAY_MODE:

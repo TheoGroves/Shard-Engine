@@ -1,6 +1,5 @@
 from rendering.shadow_mapper import ShadowMapper
-from collisions.collider import Collider
-from ecs import EntityManager
+from ecs import EntityManager, Serializer, Deserializer
 from core.components import Transform, MeshRenderer
 
 class Scene:
@@ -10,6 +9,9 @@ class Scene:
         self.shadow_mapper = shadow_mapper
         self.colliders = []
         self.em = EntityManager()
+
+        self._serializer = Serializer()
+        self._deserializer = Deserializer()
 
     def add(self, game_object=None):
         eid = self.em.create_entity()
@@ -27,7 +29,7 @@ class Scene:
         
         if game_object.mesh and len(game_object.mesh.vertices) > 0:
             mesh_renderer = MeshRenderer(game_object.mesh, None, game_object.material)
-            mesh_renderer.model_path = game_object.model_path
+            mesh_renderer.mesh.mesh = game_object.mesh.path
             self.em.add_component(eid, mesh_renderer)
             
             if self.renderer and self.renderer.program:
@@ -36,6 +38,15 @@ class Scene:
                     self.shadow_mapper.generate_shadow_vao(mesh_renderer)
         
         return eid
+    
+    def generate_buffers(self):
+        for eid in self.em.query("MeshRenderer"):
+            mr = self.em.entities[eid].components["MeshRenderer"]
+            self.renderer.generate_buffers(mr)
+            self.shadow_mapper.generate_shadow_vao(mr)
+    
+    def save_scene(self, scene_name):
+        self._serializer.save_scene(self.em, f"scenes/{scene_name}.json")
 
-    def add_collider(self, collider: Collider):
-        self.colliders.append(collider)
+    def load_scene(self, scene_name, ctx):
+        self._deserializer.load_scene(self.em, f"scenes/{scene_name}.json", ctx)

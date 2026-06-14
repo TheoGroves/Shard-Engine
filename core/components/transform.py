@@ -17,4 +17,29 @@ class Transform:
 
     @staticmethod
     def identity():
-        return Transform((0,0,0), (0,0,0), (1,1,1))
+        return Transform()
+    
+    @staticmethod
+    def _encode_array(v):
+        if isinstance(v, tuple):
+            return v
+        try:
+            return {"__type__": "ndarray", "__value__": v.tolist()}
+        except AttributeError:
+            return v
+    
+    @staticmethod
+    def _decode_array(v):
+        if isinstance(v, dict) and v.get("__type__") == "ndarray":
+            return np.array(v["__value__"])
+        return v
+
+    def serialize(self):
+        return {k: self._encode_array(getattr(self, k)) for k in ("pos", "rot", "scale")}
+    
+    @classmethod
+    def deserialize(cls, data, ctx):
+        pos = cls._decode_array(data["pos"])
+        rot = cls._decode_array(data["rot"])
+        scale = cls._decode_array(data["scale"])
+        return cls(pos, rot, scale)

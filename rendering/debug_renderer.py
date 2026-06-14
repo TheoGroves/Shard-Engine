@@ -36,7 +36,9 @@ class ColliderDebugger:
             if not c.debug:
                 continue
 
-            self.mcs.build_debug_vao(eid, self.program)    
+            if not c.mesh.vao:
+                renderer.generate_buffers(c)
+                self.mcs.build_debug_vao(eid, self.program, self.ctx)    
             
             self.program["model"].write(
                 t.model.astype("f4").T.tobytes()

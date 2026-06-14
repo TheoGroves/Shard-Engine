@@ -12,21 +12,9 @@ class MeshRendererSystem:
     def load_model(self, eid, path, shadow_mapper=None):
         mesh_renderer = self.em.entities[eid].components["MeshRenderer"]
 
-        mesh_renderer.model_path = path
-        vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
-
         mesh_renderer.mesh = Mesh()
 
-        mesh_renderer.mesh.vertices, mesh_renderer.mesh.indices = build_interleaved(
-            vertex_buffer,
-            normal_buffer,
-            tangent_buffer,
-            bitangent_buffer,
-            uv_buffer,
-            index_buffer,
-            normal_index_buffer,
-            uv_index_buffer
-        )
+        mesh_renderer.mesh.load_model(path)
 
         self.renderer.generate_buffers(mesh_renderer)
         

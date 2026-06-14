@@ -11,3 +11,14 @@ class Camera:
         self.far = 1000.0
         self.aspect = width / height
         self.exposure = 2
+
+    def serialize(self):
+        return {
+            "width": self.width,
+            "height": self.height,
+            "active": self.active
+        }
+    
+    @classmethod
+    def deserialize(cls, data, ctx):
+        return cls(data["width"], data["height"], data["active"])

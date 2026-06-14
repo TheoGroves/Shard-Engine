@@ -12,27 +12,15 @@ class MeshColliderSystem:
     def load_model(self, eid, path):
         mesh_collider = self.em.entities[eid].components["MeshCollider"]
 
-        mesh_collider.model_path = path
-        vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
-
         mesh_collider.mesh = Mesh()
-
-        mesh_collider.mesh.vertices, mesh_collider.mesh.indices = build_interleaved(
-            vertex_buffer,
-            normal_buffer,
-            tangent_buffer,
-            bitangent_buffer,
-            uv_buffer,
-            index_buffer,
-            normal_index_buffer,
-            uv_index_buffer
-        )
+        mesh_collider.mesh.load_model(path)
 
         self.renderer.generate_buffers(mesh_collider)
 
-    def build_debug_vao(self, eid, prog):
+    def build_debug_vao(self, eid, prog, ctx):
         mc = self.em.entities[eid].components["MeshCollider"]
-        mc.mesh.vao = self.ctx.vertex_array(
+
+        mc.mesh.vao = ctx.vertex_array(
             prog,
             [
                 (mc.mesh.vbo, "3f 32x", "in_pos")
