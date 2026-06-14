@@ -36,13 +36,15 @@ class MeshRendererSystem:
     def set_material(self, eid, material):
         self.em.entities[eid].components["MeshRenderer"].material = material
 
-    def render(self, program, proj, env_map, camera):
-        view = get_view_matrix(camera)
+    def render(self, program, proj, env_map, camera_t, camera, NORMAL_VISUALISER):
+        view = get_view_matrix(camera_t)
 
         program["view"].write(view.astype("f4").T.tobytes())
         program["proj"].write(proj.astype("f4").T.tobytes())
-        program["cam_pos"].value = tuple(camera.pos)
-        program["tonemapExposure"] = camera.exposure if hasattr(camera, 'exposure') else 2
+
+        if not NORMAL_VISUALISER:
+            program["cam_pos"].value = tuple(camera_t.pos)
+            program["tonemapExposure"] = camera.exposure
 
         for eid in self.em.query("Transform", "MeshRenderer"):
             entity = self.em.entities[eid]
@@ -60,17 +62,18 @@ class MeshRendererSystem:
                 mesh_renderer.material.normal_map.use(location=1)
                 program["normal_map"] = 1
 
-            if mesh_renderer.material.heightmap:
-                mesh_renderer.material.heightmap.use(location=2)
-                program["height_map"] = 2
-                program["height_scale"].value = mesh_renderer.material.height_scale
+            if not NORMAL_VISUALISER:
+                if mesh_renderer.material.heightmap:
+                    mesh_renderer.material.heightmap.use(location=2)
+                    program["height_map"] = 2
+                    program["height_scale"].value = mesh_renderer.material.height_scale
 
-            if env_map:
-                env_map.use(location=3)
-                program["env_map"] = 3
+                if env_map:
+                    env_map.use(location=3)
+                    program["env_map"] = 3
 
-            if mesh_renderer.material.orm_map:
-                mesh_renderer.material.orm_map.use(location=5)
-                program["orm_map"] = 5
+                if mesh_renderer.material.orm_map:
+                    mesh_renderer.material.orm_map.use(location=5)
+                    program["orm_map"] = 5
 
             mesh_renderer.mesh.vao.render()

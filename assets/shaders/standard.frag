@@ -30,7 +30,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 n, vec3 l)
         return 0.0;
 
     float currentDepth = projCoords.z;
-    float bias = max(0.0005 * (1.0 - dot(n, l)), 0.00005);
+    float bias = 0.0015 * (1.0 - dot(n, l)) + 0.0002;
 
     float shadow = 0.0;
 
@@ -155,6 +155,7 @@ void main() {
 
     vec3 ambient = diffuseIBL * kD + specIBL;
     ambient *= ao;
+    ambient *= 0.2;
     ambient += vec3(0.1) * albedo;
 
     vec3 colorFinal = direct + ambient;

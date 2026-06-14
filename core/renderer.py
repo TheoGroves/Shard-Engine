@@ -7,11 +7,20 @@ from maths.matrices import get_view_matrix, get_projection_matrix
 
 shader_dir = "assets/shaders"
 
+NORMAL_VISUALISER = False
+
 with open(os.path.join(shader_dir, "standard.vert")) as f:
     VERT_SHADER = f.read()
 
 with open(os.path.join(shader_dir, "standard.frag")) as f:
     FRAG_SHADER = f.read()
+
+
+with open(os.path.join(shader_dir, "normal.vert")) as f:
+    NORMAL_VERT_SHADER = f.read()
+
+with open(os.path.join(shader_dir, "normal.frag")) as f:
+    NORMAL_VISUALISER_SHADER = f.read()
 
 class Renderer:
     def __init__(self, ctx: moderngl.Context, width: int, height:int):
@@ -35,9 +44,10 @@ class Renderer:
 
         self.program = None
 
-    def set_camera(self, camera):
+    def set_camera(self, cam_transform, camera):
+        self.cam_transform = cam_transform
         self.camera = camera
-        self.view = get_view_matrix(camera)
+        self.view = get_view_matrix(cam_transform)
 
     def generate_buffers(self, mesh_renderer):
         mesh_renderer.mesh.vbo = self.ctx.buffer(
@@ -84,9 +94,16 @@ class Renderer:
 
 
     def build_pipeline(self, light_dir):
-        self.program = self.ctx.program(
-            vertex_shader=VERT_SHADER,
-            fragment_shader=FRAG_SHADER
-        )
+        if not NORMAL_VISUALISER:
+            self.program = self.ctx.program(
+                vertex_shader=VERT_SHADER,
+                fragment_shader=FRAG_SHADER
+            )
 
-        self.program["light_dir"].value = light_dir
+            self.program["light_dir"].value = light_dir
+
+        else:
+            self.program = self.ctx.program(
+                vertex_shader=NORMAL_VERT_SHADER,
+                fragment_shader=NORMAL_VISUALISER_SHADER
+            )

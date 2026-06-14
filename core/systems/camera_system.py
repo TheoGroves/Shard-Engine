@@ -10,7 +10,7 @@ class CameraSystem:
         self.just_focused = False
         self.sensitivity = 5
 
-    def update(self, keys, dt):
+    def update(self, keys, dt, ui_renderer):
         for eid in self.em.query("Camera", "Transform"):
             cam_entity = self.em.entities[eid]
 
@@ -27,7 +27,7 @@ class CameraSystem:
                 pygame.event.set_grab(False)
                 pygame.mouse.set_visible(True)
 
-            if pygame.mouse.get_pressed()[0] and not self.focused:
+            if pygame.mouse.get_pressed()[0] and not self.focused and not ui_renderer.check_ui_blocking():
                 self.focused = True
                 pygame.event.set_grab(True)
                 pygame.mouse.set_visible(False)

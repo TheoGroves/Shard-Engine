@@ -23,24 +23,27 @@ class UIRenderer:
             self.ortho.astype("f4").T.tobytes()
         )
 
-        self.quads = []
+        self.elements = []
 
-    def add_quad(self, quad):
-        quad.screen_size = (self.width, self.height)
-        quad.update_vertices()
+    def add_quad(self, element):
+        element.screen_size = (self.width, self.height)
+        element.update_vertices()
 
-        quad.vbo = self.ctx.buffer(quad.vertices.astype("f4").tobytes())
-        quad.vao = self.ctx.vertex_array(
+        element.vbo = self.ctx.buffer(element.vertices.astype("f4").tobytes())
+        element.vao = self.ctx.vertex_array(
             self.program,
             [
-                (quad.vbo, "2f 2f", "in_pos", "in_uv")
+                (element.vbo, "2f 2f", "in_pos", "in_uv")
             ]
         )
 
-        self.quads.append(quad)
+        self.elements.append(element)
 
     def get_quad(self, index):
-        return self.quads[index]
+        return self.elements[index]
+    
+    def check_ui_blocking(self):
+        return any(quad.is_blocking() for quad in self.elements)
 
     def render(self):
         self.ctx.disable(moderngl.DEPTH_TEST)
@@ -48,7 +51,7 @@ class UIRenderer:
         self.ctx.depth_mask = False
         self.ctx.enable(moderngl.BLEND)
         self.ctx.blend_func = moderngl.SRC_ALPHA, moderngl.ONE_MINUS_SRC_ALPHA
-        for quad in self.quads:
+        for quad in self.elements:
             quad.tex.use(location=0)
             self.program["tex"] = 0
             quad.vao.render()

@@ -11,7 +11,7 @@ from core.systems import CollisionSystem, TransformSystem, MeshRendererSystem, I
 from rendering import ShadowMapper, ColliderDebugger
 from collisions import SpatialGrid
 from scenes import WarehouseSceneBuilder
-from ui import UIRenderer, UIText
+from ui import UIRenderer, UIText, UIFloat
 from maths.matrices import get_view_matrix
 
 GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX = 0x9048
@@ -62,10 +62,9 @@ scene.em.add_component(cam_eid, Camera(screen_width, screen_height))
 cam_t = scene.em.entities[cam_eid].components["Transform"]
 cam = scene.em.entities[cam_eid].components["Camera"]
 
-renderer.set_camera(cam_t)
+renderer.set_camera(cam_t, cam)
 
 player_controller_system = PlayerControllerSystem(scene.em, cam_t, PLAY_MODE)
-
 
 player_eid = scene.em.create_entity()
 scene.em.add_component(player_eid, Transform.identity())
@@ -91,7 +90,7 @@ ui_renderer.add_quad(
         0.5,
         0.15,
         "",
-        pygame.font.SysFont("arial", 40),
+        pygame.font.SysFont("consolas", 40),
         ctx,
         (255,255,255),
         "centre"
@@ -103,7 +102,7 @@ ui_renderer.add_quad(
         0.88,
         0.125,
         "",
-        pygame.font.SysFont("arial", 25),
+        pygame.font.SysFont("consolas", 25),
         ctx,
         (255,255,255),
         "right"
@@ -115,7 +114,7 @@ ui_renderer.add_quad(
         0.88,
         0.15,
         "",
-        pygame.font.SysFont("arial", 25),
+        pygame.font.SysFont("consolas", 25),
         ctx,
         (255,255,255),
         "right"
@@ -127,7 +126,7 @@ ui_renderer.add_quad(
         0.88,
         0.175,
         "",
-        pygame.font.SysFont("arial", 25),
+        pygame.font.SysFont("consolas", 25),
         ctx,
         (255,255,255),
         "right"
@@ -139,7 +138,7 @@ ui_renderer.add_quad(
         0.88,
         0.2,
         "",
-        pygame.font.SysFont("arial", 25),
+        pygame.font.SysFont("consolas", 25),
         ctx,
         (255,255,255),
         "right"
@@ -151,7 +150,7 @@ ui_renderer.add_quad(
         0.88,
         0.225,
         "",
-        pygame.font.SysFont("arial", 25),
+        pygame.font.SysFont("consolas", 25),
         ctx,
         (255,255,255),
         "right"
@@ -163,10 +162,23 @@ ui_renderer.add_quad(
         0.88,
         0.25,
         "",
-        pygame.font.SysFont("arial", 25),
+        pygame.font.SysFont("consolas", 25),
         ctx,
         (255,255,255),
         "right"
+    )
+)
+
+ui_renderer.add_quad(
+    UIFloat(
+        0.15,
+        0.18,
+        "Exposure:",
+        1.5,
+        pygame.font.SysFont("consolas", 25),
+        ctx,
+        (255,255,255),
+        "left"
     )
 )
 
@@ -203,6 +215,12 @@ while True:
     ui_renderer.get_quad(5).update_text(f"dt: {dt*1000:.1f}ms")
     ui_renderer.get_quad(6).update_text(f"dt_raw: {dt_real*1000:.1f}ms")
 
+    exposure_ui = ui_renderer.get_quad(7)
+    exposure_ui.update()
+    for eid in camera_system.em.query("Camera", "Transform"):
+        cam = camera_system.em.entities[eid]
+        cam.components["Camera"].exposure = exposure_ui.value
+
     ram_use = process.memory_info().rss/total_ram
     if ram_use > 0.5:
         print(f"WARNING: {ram_use * 100:.1f}% of RAM used")
@@ -224,7 +242,7 @@ while True:
 
     ctx.wireframe = WIREFRAME
 
-    camera_system.update(keys, dt)
+    camera_system.update(keys, dt, ui_renderer)
 
     if PLAY_MODE:
         transform_system.set_pos(player_eid, cam_t.pos)

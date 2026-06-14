@@ -1,5 +1,7 @@
 import moderngl
 
+NORMAL_VISUALISER = False
+
 class RenderPipeline:
     def __init__(self, ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system):
         self.ctx = ctx
@@ -29,13 +31,15 @@ class RenderPipeline:
 
         self.shadow_mapper.render_depth(scene)
         self.shadow_mapper.depth_tex.use(location=4)
-        self.renderer.program["shadow_map"] = 4
-        self.renderer.program["light_space"].write(
-            self.shadow_mapper.light_space_matrix
-            .astype("f4").T.tobytes()
-        )
 
-        self.mesh_renderer_system.render(self.renderer.program, self.renderer.proj, self.renderer.env_map, self.renderer.camera)
+        if not NORMAL_VISUALISER:
+            self.renderer.program["shadow_map"] = 4
+            self.renderer.program["light_space"].write(
+                self.shadow_mapper.light_space_matrix
+                .astype("f4").T.tobytes()
+            )
+
+        self.mesh_renderer_system.render(self.renderer.program, self.renderer.proj, self.renderer.env_map, self.renderer.cam_transform, self.renderer.camera, NORMAL_VISUALISER)
         self.collider_debugger.draw(self.renderer)
 
         self.ui_renderer.render()
