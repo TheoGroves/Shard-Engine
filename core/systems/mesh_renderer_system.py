@@ -24,11 +24,13 @@ class MeshRendererSystem:
     def set_material(self, eid, material):
         self.em.entities[eid].components["MeshRenderer"].material = material
 
-    def render(self, program, proj, env_map, camera_t, camera, NORMAL_VISUALISER):
+    def render(self, program, proj, env_map, camera_t, camera, NORMAL_VISUALISER, light_dir):
         view = get_view_matrix(camera_t)
 
         program["view"].write(view.astype("f4").T.tobytes())
         program["proj"].write(proj.astype("f4").T.tobytes())
+
+        program["light_dir"].value = light_dir
 
         if not NORMAL_VISUALISER:
             program["cam_pos"].value = tuple(camera_t.pos)

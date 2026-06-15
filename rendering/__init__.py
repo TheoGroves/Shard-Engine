@@ -1,9 +1,10 @@
 from .debug_renderer import ColliderDebugger
 from .shadow_mapper import ShadowMapper
-from .skybox import generate_skybox
+from .skybox import generate_skybox, SkyboxSettings
 
 __all__ = [
     "ColliderDebugger",
     "ShadowMapper",
-    "generate_skybox"
+    "generate_skybox",
+    "SkyboxSettings"
 ]

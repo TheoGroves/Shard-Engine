@@ -38,6 +38,17 @@ class Vec3:
     def length(self):
         return (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
     
+    def euler_to_vector(self, yaw, pitch, roll):
+        yaw_rad = math.radians(yaw)
+        pitch_rad = math.radians(pitch)
+
+        self.x = math.cos(yaw_rad) * math.cos(pitch_rad)
+        self.y = math.sin(yaw_rad) * math.cos(pitch_rad)
+        self.z = math.sin(pitch_rad)
+
+    def to_tuple(self):
+        return (self.x, self.y, self.z)
+    
 class Vec2:
     def __init__(self, x=0.0, y=0.0):
         self.x = float(x)

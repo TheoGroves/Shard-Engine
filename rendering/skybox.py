@@ -3,13 +3,7 @@ import os
 
 shader_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets", "shaders")
 
-with open(os.path.join(shader_dir, "skybox.vert")) as f:
-    VERT_SHADER = f.read()
-
-with open(os.path.join(shader_dir, "skybox.frag")) as f:
-    FRAG_SHADER = f.read()
-
-def generate_skybox(ctx):
+def generate_skybox(ctx, skybox_settings):
     cube_vertices = np.array([
         -1, -1, -1,
          1, -1, -1,
@@ -49,6 +43,14 @@ def generate_skybox(ctx):
         -1,  1, -1,
     ], dtype='f4')
 
+    shader = "proc_skybox.frag" if skybox_settings.procedural else "skybox.frag"
+
+    with open(os.path.join(shader_dir, "skybox.vert")) as f:
+        VERT_SHADER = f.read()
+
+    with open(os.path.join(shader_dir, shader)) as f:
+        FRAG_SHADER = f.read()
+
     prog = ctx.program(
         vertex_shader=VERT_SHADER,
         fragment_shader=FRAG_SHADER
@@ -64,3 +66,9 @@ def generate_skybox(ctx):
     )
 
     return vao, prog
+
+class SkyboxSettings:
+    def __init__(self, procedural, sun_dir, sun_col):
+        self.procedural = procedural
+        self.sun_dir = sun_dir
+        self.sun_col = sun_col

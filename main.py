@@ -8,11 +8,10 @@ import time
 from core import Renderer, RenderPipeline, InputManager, Scene
 from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera, MeshCollider
 from core.systems import CollisionSystem, TransformSystem, MeshRendererSystem, InputSystem, PlayerControllerSystem, CameraSystem, MeshColliderSystem
-from rendering import ShadowMapper, ColliderDebugger
+from rendering import ShadowMapper, ColliderDebugger, generate_skybox, SkyboxSettings
 from collisions import SpatialGrid
 from ui import UIRenderer, UIText, UIFloat, UIButton
-from maths.matrices import get_view_matrix
-from rendering.skybox import generate_skybox
+from maths import get_view_matrix, Vec3
 
 engine_start = time.perf_counter()
 
@@ -27,6 +26,8 @@ WIREFRAME = False
 DEBUG_COLLIDERS = False
 GRAVITY = -9.81
 
+PROCEDURAL_SKYBOX = True
+
 pygame.init()
 
 screen_width, screen_height = 2560, 1440
@@ -34,12 +35,15 @@ screen = pygame.display.set_mode((screen_width, screen_height), pygame.OPENGL | 
 
 clock = pygame.time.Clock()
 
-light_dir = (1.0, 0.5, 0.0)
+ld = Vec3(1.0, 0.5, 0.0)
+light_dir = ld.to_tuple()
+
+world_time = 0
 
 ctx = moderngl.create_context()
 
 renderer = Renderer(ctx, screen_width, screen_height)
-renderer.build_pipeline(light_dir)
+renderer.build_pipeline()
 
 shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
@@ -55,7 +59,8 @@ mesh_renderer_system.em = scene.em
 mesh_collider_system.em = scene.em
 
 renderer.load_env_map("assets/textures/Day-HDRI.exr")
-skybox, skybox_prog = generate_skybox(ctx)
+skybox_settings = SkyboxSettings(PROCEDURAL_SKYBOX, light_dir, (1.0, 1.0, 1.0))
+skybox, skybox_prog = generate_skybox(ctx, skybox_settings)
 
 scene.load_scene("main", ctx)
 
@@ -230,7 +235,7 @@ ui_renderer.add_quad(
     )
 )
 
-render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system)
+render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, skybox_settings, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system)
 
 dt=0
 dt_real=0
@@ -315,6 +320,14 @@ while True:
             c = scene.em.entities[c_eid].components["MeshCollider"]
             c.debug = DEBUG_COLLIDERS
     
+    ld.euler_to_vector(90, world_time, 0)
+
+    light_dir = ld.to_tuple()
+    skybox_settings.sun_dir = light_dir
+
+    world_time += 2*dt
+
+
     ctx.wireframe = WIREFRAME
 
     camera_system.update(keys, dt, ui_renderer)

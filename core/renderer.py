@@ -93,14 +93,12 @@ class Renderer:
         self.env_map = self.ctx.texture(size=(width, height), components=3, data=img.tobytes(), dtype='f4')
 
 
-    def build_pipeline(self, light_dir):
+    def build_pipeline(self):
         if not NORMAL_VISUALISER:
             self.program = self.ctx.program(
                 vertex_shader=VERT_SHADER,
                 fragment_shader=FRAG_SHADER
             )
-
-            self.program["light_dir"].value = light_dir
 
         else:
             self.program = self.ctx.program(

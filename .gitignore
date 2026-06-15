@@ -188,3 +188,5 @@ code.txt
 /assets/textures/WarehouseTextures
 /scenes
 obj_tester.py
+*.dll
+/.vscode
