@@ -3,17 +3,18 @@ from ecs import EntityManager
 from loaders.obj_parser import parse_objs, build_interleaved
 from core.mesh import Mesh
 from core.renderer import Renderer
+from core.asset_manager import AssetManager
 
 class MeshColliderSystem:
-    def __init__(self, em: EntityManager, renderer: Renderer):
+    def __init__(self, em: EntityManager, renderer: Renderer, asset_manager: AssetManager):
         self.em = em
         self.renderer = renderer
+        self.asset_manager = asset_manager
 
     def load_model(self, eid, path):
         mesh_collider = self.em.entities[eid].components["MeshCollider"]
 
-        mesh_collider.mesh = Mesh()
-        mesh_collider.mesh.load_model(path)
+        mesh_collider.mesh = self.asset_manager.get_mesh(path)
 
         self.renderer.generate_buffers(mesh_collider)
 

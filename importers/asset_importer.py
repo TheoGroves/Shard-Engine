@@ -22,7 +22,7 @@ def get_asset_key(filename):
 
     return name
 
-def load_many(ctx, shadow_mapper, models_path, textures_path, em: EntityManager, ts: TransformSystem, mrs: MeshRendererSystem):
+def load_many(ctx, shadow_mapper, asset_manager, models_path, textures_path, em: EntityManager, ts: TransformSystem, mrs: MeshRendererSystem):
     start = time.perf_counter()
 
     eids = {}
@@ -34,9 +34,9 @@ def load_many(ctx, shadow_mapper, models_path, textures_path, em: EntityManager,
         key = get_asset_key(model)
         model_path = f"{models_path}/{model}"
 
-        eid = em.create_entity()
+        eid, _ = em.create_entity()
         em.add_component(eid, Transform.identity())
-        em.add_component(eid, MeshRenderer(None, None, Material.identity(ctx)))
+        em.add_component(eid, MeshRenderer(None, None, Material.identity(ctx, asset_manager)))
         mrs.load_model(eid, model_path, shadow_mapper)
 
         eids[key] = eid
@@ -49,7 +49,7 @@ def load_many(ctx, shadow_mapper, models_path, textures_path, em: EntityManager,
         tex_path = f"{textures_path}/{tex}"
 
         if key not in materials:
-            materials[key] = Material.identity(ctx)
+            materials[key] = Material.identity(ctx, asset_manager)
 
         tex_lower = tex.lower()
 

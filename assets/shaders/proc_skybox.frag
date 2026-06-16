@@ -155,7 +155,7 @@ void main()
     vec3 viewDir = normalize(dir);
     vec3 sunDir  = normalize(sun_dir);
 
-    vec3 col = atmosphere(cameraPos, viewDir, sunDir)*4;
+    vec3 col = atmosphere(cameraPos, viewDir, sunDir)*8;
 
     float sunAmount = smoothstep(0.99995, 0.99999, dot(viewDir, sunDir));
 

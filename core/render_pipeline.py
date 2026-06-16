@@ -38,8 +38,6 @@ class RenderPipeline:
 
         self.ctx.depth_mask = True
 
-        self.shadow_mapper.update_light_dir(self.skybox_settings.sun_dir)
-
         self.shadow_mapper.render_depth(scene)
         self.shadow_mapper.depth_tex.use(location=4)
 

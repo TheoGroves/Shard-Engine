@@ -10,16 +10,16 @@ class MeshRenderer:
 
     def serialize(self):
         return {
-            "mesh": self.mesh.serialize() if self.mesh else None,
+            "path": self.mesh.path if self.mesh else None,
             "material": self.material.serialize() if self.material else None
         }
     
     @classmethod
-    def deserialize(cls, data, ctx):
-        mesh = Mesh.deserialize(data["mesh"], ctx)
+    def deserialize(cls, data, ctx, asset_manager):
+        mesh = Mesh.deserialize(data["path"], ctx, asset_manager)
 
         material = None
         if data["material"]:
-            material = Material.deserialize(data["material"], ctx)
+            material = Material.deserialize(data["material"], ctx, asset_manager)
 
         return cls(mesh, None, material)

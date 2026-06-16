@@ -9,13 +9,13 @@ class MeshCollider:
 
     def serialize(self):
         return {
-            "mesh": self.mesh.serialize() if self.mesh else None,
+            "path": self.mesh.path if self.mesh else None,
             "debug": self.debug
         }
     
     @classmethod
-    def deserialize(cls, data, ctx):
-        mesh = Mesh.deserialize(data["mesh"], ctx)
+    def deserialize(cls, data, ctx, asset_manager):
+        mesh = Mesh.deserialize(data["path"], ctx, asset_manager)
         debug = data["debug"]
 
         return cls(mesh, debug)

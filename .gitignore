@@ -190,3 +190,4 @@ code.txt
 obj_tester.py
 *.dll
 /.vscode
+*.mesh

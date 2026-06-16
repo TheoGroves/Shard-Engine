@@ -5,21 +5,16 @@ import os
 import psutil
 import time
 
-from core import Renderer, RenderPipeline, InputManager, Scene
+from core import Renderer, RenderPipeline, InputManager, Scene, AssetManager, Engine
 from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera, MeshCollider
 from core.systems import CollisionSystem, TransformSystem, MeshRendererSystem, InputSystem, PlayerControllerSystem, CameraSystem, MeshColliderSystem
 from rendering import ShadowMapper, ColliderDebugger, generate_skybox, SkyboxSettings
-from collisions import SpatialGrid
-from ui import UIRenderer, UIText, UIFloat, UIButton
+from ui import UIRenderer, EditorUI
 from maths import get_view_matrix, Vec3
 
 engine_start = time.perf_counter()
 
-GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX = 0x9048
-GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049
-
 PLAY_MODE = True
-PLAY_TEXT = ["[EDITOR]", ""]
 
 WIREFRAME = False
 
@@ -28,6 +23,9 @@ GRAVITY = -9.81
 
 PROCEDURAL_SKYBOX = True
 
+GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX = 0x9048
+
+t = time.perf_counter()
 pygame.init()
 
 screen_width, screen_height = 2560, 1440
@@ -38,212 +36,83 @@ clock = pygame.time.Clock()
 ld = Vec3(1.0, 0.5, 0.0)
 light_dir = ld.to_tuple()
 
-world_time = 0
+world_time = 320
+print(f"Pygame setup took {(time.perf_counter()-t)*1000:.1f}ms")
 
+t = time.perf_counter()
 ctx = moderngl.create_context()
+
+print(f"OpenGL Context creation took {(time.perf_counter()-t)*1000:.1f}ms")
+
+t = time.perf_counter()
 
 renderer = Renderer(ctx, screen_width, screen_height)
 renderer.build_pipeline()
 
 shadow_mapper = ShadowMapper(ctx, tuple(-x for x in light_dir), 4096)
 
+asset_manager = AssetManager(ctx)
+
 input_manager = InputManager()
 
 transform_system = TransformSystem(None)
-mesh_renderer_system = MeshRendererSystem(None, renderer)
-mesh_collider_system = MeshColliderSystem(None, renderer)
+mesh_renderer_system = MeshRendererSystem(None, renderer, asset_manager)
+mesh_collider_system = MeshColliderSystem(None, renderer, asset_manager)
 
-scene = Scene("Warehouse", renderer, shadow_mapper)
+print(f"Systems creation took {(time.perf_counter()-t)*1000:.1f}ms")
+
+t = time.perf_counter()
+scene = Scene("Warehouse", renderer, shadow_mapper, asset_manager)
 transform_system.em = scene.em
 mesh_renderer_system.em = scene.em
 mesh_collider_system.em = scene.em
 
+engine = Engine(ctx, scene, renderer, mesh_collider_system, PLAY_MODE)
+print(f"Engine Creation {(time.perf_counter()-t)*1000:.1f}ms")
+
+t = time.perf_counter()
 renderer.load_env_map("assets/textures/Day-HDRI.exr")
+print(f"Environment map loaded in {(time.perf_counter()-t)*1000:.1f}ms")
+
+t = time.perf_counter()
 skybox_settings = SkyboxSettings(PROCEDURAL_SKYBOX, light_dir, (1.0, 1.0, 1.0))
 skybox, skybox_prog = generate_skybox(ctx, skybox_settings)
+print(f"Skybox generation completed in {(time.perf_counter()-t)*1000:.1f}ms")
 
-scene.load_scene("main", ctx)
+cam_t, cam, player_controller_system, player_eid, grid, triangles = engine.initialize()
 
+t = time.perf_counter()
 collider_debugger = ColliderDebugger(ctx, scene.em, mesh_collider_system)
 
 collision_system = CollisionSystem(scene.em)
 input_system = InputSystem(scene.em)
 camera_system = CameraSystem(scene.em, transform_system)
 
-for eid in scene.em.query("Camera"):
-    if scene.em.entities[eid].components["Camera"].active:
-        cam_eid = eid
-        break
-
-cam_t = scene.em.entities[cam_eid].components["Transform"]
-cam = scene.em.entities[cam_eid].components["Camera"]
-
-renderer.set_camera(cam_t, cam)
-
-player_controller_system = PlayerControllerSystem(scene.em, cam_t, PLAY_MODE)
-
-for eid in scene.em.query("PlayerController"):
-    player_eid = eid
-
-scene.generate_buffers()
-
-grid = SpatialGrid(5.0)
-triangles = mesh_collider_system.get_collision_triangles(grid)
-
-process = psutil.Process(os.getpid())
-total_ram = psutil.virtual_memory().total
-
-ui_renderer = UIRenderer(ctx, (screen_width, screen_height))
-ui_renderer.add_quad(
-    UIText(
-        0.5,
-        0.15,
-        "",
-        pygame.font.SysFont("consolas", 40),
-        ctx,
-        (255,255,255),
-        "centre"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.88,
-        0.125,
-        "",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        (255,255,255),
-        "right"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.88,
-        0.15,
-        "",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        (255,255,255),
-        "right"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.88,
-        0.175,
-        "",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        (255,255,255),
-        "right"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.88,
-        0.2,
-        "",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        (255,255,255),
-        "right"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.88,
-        0.225,
-        "",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        (255,255,255),
-        "right"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.88,
-        0.25,
-        "",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        (255,255,255),
-        "right"
-    )
-)
-
-ui_renderer.add_quad(
-    UIFloat(
-        0.15,
-        0.18,
-        "Exposure:",
-        1.5,
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        (255,255,255),
-        "left"
-    )
-)
-
-ui_renderer.add_quad(
-    UIButton(
-        0.15,
-        0.205,
-        0.1,
-        ctx,
-        "assets/textures/DefaultButton.png",
-        "left"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.166,
-        0.205,
-        "Save Scene",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        anchor="left"
-    )
-)
-
-ui_renderer.add_quad(
-    UIButton(
-        0.15,
-        0.225,
-        0.1,
-        ctx,
-        "assets/textures/DefaultButton.png",
-        "left"
-    )
-)
-
-ui_renderer.add_quad(
-    UIText(
-        0.166,
-        0.225,
-        "Load Scene",
-        pygame.font.SysFont("consolas", 25),
-        ctx,
-        anchor="left"
-    )
-)
-
-render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, skybox_settings, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system)
-
 dt=0
 dt_real=0
 fps=0
 
-total_kb = GL.glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX)
+print(f"Systems finalisation took {(time.perf_counter()-t)*1000:.1f}ms")
 
-scene.save_scene("main")
+t = time.perf_counter()
+process = psutil.Process(os.getpid())
+total_ram = psutil.virtual_memory().total
+TOTAL_KB = GL.glGetIntegerv(GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX)
+print(f"Memory profiling setup took {(time.perf_counter()-t)*1000:.1f}ms")
+
+t = time.perf_counter()
+ui_renderer = UIRenderer(ctx, (screen_width, screen_height))
+editor_ui = EditorUI(ui_renderer, engine)
+editor_ui.initialize()
+print(f"UI setup took {(time.perf_counter()-t)*1000:.1f}ms")
+
+t = time.perf_counter()
+render_pipeline = RenderPipeline(ctx, renderer, skybox, skybox_prog, skybox_settings, shadow_mapper, collider_debugger, ui_renderer, mesh_renderer_system)
+print(f"Render pipeline generated in {(time.perf_counter()-t)*1000:.1f}ms")
+
+t = time.perf_counter()
+engine.save()
+print(f"Scene backed up in {(time.perf_counter()-t)*1000:.1f}ms")
 
 print(f"Engine loaded in {(time.perf_counter()-engine_start)*1000:.1f}ms")
 
@@ -260,48 +129,12 @@ while True:
     input_system.update()
     player_controller_system.update(dt, triangles, grid, GRAVITY)
     
-    ui_renderer.get_quad(0).update_text(PLAY_TEXT[PLAY_MODE])
-    ui_renderer.get_quad(1).update_text(f"fps: {fps:.1f}")
-    ui_renderer.get_quad(2).update_text(f"fps_raw: {1/dt_real if dt_real > 0 else float('inf'):.1f}")
-    ui_renderer.get_quad(3).update_text(f"mem: {process.memory_info().rss / 1048576:.1f}MB")
-    
-    available_kb = GL.glGetIntegerv(GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX)
-    used_kb = total_kb - available_kb
-    ui_renderer.get_quad(4).update_text(f"vram: {used_kb / 1024:.1f}MB")
+    curr_mem_usage = process.memory_info().rss / 1048576
 
-    ui_renderer.get_quad(5).update_text(f"dt: {dt*1000:.1f}ms")
-    ui_renderer.get_quad(6).update_text(f"dt_raw: {dt_real*1000:.1f}ms")
+    packed_state = editor_ui.update(PLAY_MODE, fps, dt, dt_real, curr_mem_usage, TOTAL_KB, camera_system)
+    if packed_state:
+        cam_t, cam, player_controller_system, player_eid, grid, triangles = packed_state
 
-    exposure_ui = ui_renderer.get_quad(7)
-    exposure_ui.update()
-    for eid in camera_system.em.query("Camera", "Transform"):
-        cam = camera_system.em.entities[eid]
-        cam.components["Camera"].exposure = exposure_ui.value
-
-    if ui_renderer.get_quad(8).update():
-        scene.save_scene("main")
-    
-    if ui_renderer.get_quad(10).update():
-        scene.load_scene("main", ctx)
-        scene.generate_buffers()
-
-        for eid in scene.em.query("Camera"):
-            if scene.em.entities[eid].components["Camera"].active:
-                cam_eid = eid
-                break
-
-        cam_t = scene.em.entities[cam_eid].components["Transform"]
-        cam = scene.em.entities[cam_eid].components["Camera"]
-
-        renderer.set_camera(cam_t, cam)
-
-        player_controller_system = PlayerControllerSystem(scene.em, cam_t, PLAY_MODE)
-
-        for eid in scene.em.query("PlayerController"):
-            player_eid = eid
-
-        grid = SpatialGrid(5.0)
-        triangles = mesh_collider_system.get_collision_triangles(grid)
 
     ram_use = process.memory_info().rss/total_ram
     if ram_use > 0.5:
@@ -325,8 +158,7 @@ while True:
     light_dir = ld.to_tuple()
     skybox_settings.sun_dir = light_dir
 
-    world_time += 2*dt
-
+    #world_time += 4*dt
 
     ctx.wireframe = WIREFRAME
 
@@ -339,7 +171,7 @@ while True:
     
     renderer.view = get_view_matrix(cam_t)
 
-    shadow_mapper.update(cam_t)
+    shadow_mapper.update(cam_t, skybox_settings.sun_dir)
 
     render_pipeline.render_frame(scene)
 

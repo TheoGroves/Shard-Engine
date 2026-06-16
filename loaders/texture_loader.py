@@ -1,6 +1,7 @@
 from PIL import Image
 import moderngl
 import os
+import pickle
 
 def get_asset_type(filename):
     name = os.path.splitext(filename)[0].lower()
@@ -34,3 +35,30 @@ def load_texture(ctx, path, fallback):
     tex.filter = (moderngl.LINEAR_MIPMAP_LINEAR, moderngl.LINEAR)
 
     return tex, path if path else fallback
+
+def save_cooked_tex(src_path, out_path):
+    img = Image.open(src_path).convert("RGBA")
+    img = img.transpose(Image.FLIP_TOP_BOTTOM)
+
+    data = {
+        "width": img.width,
+        "height": img.height,
+        "rgba": img.tobytes()
+    }
+
+    with open(out_path, "wb") as f:
+        pickle.dump(data, f)
+
+def load_cooked_tex(ctx, path):
+    with open(path, "rb") as f:
+        data = pickle.load(f)
+
+    tex = ctx.texture(
+        (data["width"], data["height"]),
+        4,
+        data["rgba"]
+    )
+    tex.build_mipmaps()
+    tex.filter = (moderngl.LINEAR_MIPMAP_LINEAR, moderngl.LINEAR)
+
+    return tex, path

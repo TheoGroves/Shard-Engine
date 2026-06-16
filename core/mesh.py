@@ -1,3 +1,5 @@
+import numpy as np
+import pickle
 from loaders.obj_parser import parse_objs, build_interleaved
 
 class Mesh:
@@ -17,7 +19,6 @@ class Mesh:
         self.path = path
         vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
 
-
         self.vertices, self.indices = build_interleaved(
             vertex_buffer,
             normal_buffer,
@@ -29,13 +30,25 @@ class Mesh:
             uv_index_buffer
         )
 
-    def serialize(self):
-        return {
-            "path": self.path
+    @classmethod
+    def deserialize(cls, data, ctx, asset_manager):
+        mesh = asset_manager.get_mesh(data)
+        return mesh
+    
+    def save_cooked(self, path):
+        data = {
+            "vertices": self.vertices.tobytes(),
+            "indices": self.indices.tobytes(),
+            "path": str(self.path)
         }
 
-    @classmethod
-    def deserialize(cls, data, ctx):
-        mesh = cls()
-        mesh.load_model(data["path"])
-        return mesh
+        with open(path, "wb") as f:
+            pickle.dump(data, f)
+
+    def load_cooked(self, path):
+        with open(path, "rb") as f:
+            data = pickle.load(f)
+
+        self.vertices = np.frombuffer(data["vertices"], dtype="f4")
+        self.indices = np.frombuffer(data["indices"], dtype="i4")
+        self.path = data["path"]

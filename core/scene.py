@@ -1,19 +1,22 @@
+import time
+
 from rendering.shadow_mapper import ShadowMapper
 from ecs import EntityManager, Serializer, Deserializer
 from core.components import Transform, MeshRenderer
 
 class Scene:
-    def __init__(self, name: str, renderer, shadow_mapper: ShadowMapper):
+    def __init__(self, name: str, renderer, shadow_mapper: ShadowMapper, asset_manager):
         self.name = name
         self.renderer = renderer
         self.shadow_mapper = shadow_mapper
         self.em = EntityManager()
+        self.asset_manager = asset_manager
 
         self._serializer = Serializer()
         self._deserializer = Deserializer()
 
     def add(self, game_object=None):
-        eid = self.em.create_entity()
+        eid, _ = self.em.create_entity()
         
         if game_object is None:
             self.em.add_component(eid, Transform.identity())
@@ -49,4 +52,4 @@ class Scene:
 
     def load_scene(self, scene_name, ctx):
         self.em.clear()
-        self._deserializer.load_scene(self.em, f"scenes/{scene_name}.json", ctx)
+        self._deserializer.load_scene(self.em, f"scenes/{scene_name}.json", ctx, self.asset_manager)

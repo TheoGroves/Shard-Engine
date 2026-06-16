@@ -42,18 +42,6 @@ class ShadowMapper:
             fragment_shader=frag
         )
 
-    def update_light_dir(self, light_dir):
-        self.light_dir = np.array(light_dir, dtype=np.float32)
-        light_pos = self.light_dir * 20.0
-
-        self.light_view = look_at(
-            light_pos,
-            np.array([0,0,0], dtype=np.float32),
-            np.array([0,1,0], dtype=np.float32)
-        )
-
-        self.light_space_matrix = self.light_proj @ self.light_view
-
     def generate_shadow_vao(self, mesh_renderer):
         mesh_renderer.mesh.shadow_vao = self.ctx.vertex_array(
             self.program,
@@ -102,10 +90,11 @@ class ShadowMapper:
 
         self.ctx.screen.use()
 
-    def update(self, camera):
+    def update(self, camera, light_dir):
+        self.light_dir = np.array(light_dir, dtype=np.float32)
         target = camera.pos.astype(np.float32)
 
-        light_pos = target - self.light_dir * 20.0
+        light_pos = target + self.light_dir * 20.0
 
         self.light_view = look_at(
             light_pos,

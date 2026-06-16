@@ -4,6 +4,8 @@ from .render_pipeline import RenderPipeline
 from .renderer import Renderer
 from .scene import Scene
 from .mesh import Mesh
+from .asset_manager import AssetManager
+from .engine import Engine
 
 __all__ = [
     "InputManager",
@@ -11,5 +13,7 @@ __all__ = [
     "RenderPipeline",
     "Renderer",
     "Scene",
-    "Mesh"
+    "Mesh",
+    "AssetManager",
+    "Engine"
 ]

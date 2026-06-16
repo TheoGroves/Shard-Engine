@@ -3,18 +3,18 @@ from loaders.obj_parser import parse_objs, build_interleaved
 from core.mesh import Mesh
 from core.renderer import Renderer
 from maths.matrices import get_view_matrix
+from core.asset_manager import AssetManager
 
 class MeshRendererSystem:
-    def __init__(self, em: EntityManager, renderer: Renderer):
+    def __init__(self, em: EntityManager, renderer: Renderer, asset_manager: AssetManager):
         self.em = em
         self.renderer = renderer
+        self.asset_manager = asset_manager
 
     def load_model(self, eid, path, shadow_mapper=None):
         mesh_renderer = self.em.entities[eid].components["MeshRenderer"]
 
-        mesh_renderer.mesh = Mesh()
-
-        mesh_renderer.mesh.load_model(path)
+        mesh_renderer.mesh = self.asset_manager.get_mesh(path)
 
         self.renderer.generate_buffers(mesh_renderer)
         
@@ -30,9 +30,8 @@ class MeshRendererSystem:
         program["view"].write(view.astype("f4").T.tobytes())
         program["proj"].write(proj.astype("f4").T.tobytes())
 
-        program["light_dir"].value = light_dir
-
         if not NORMAL_VISUALISER:
+            program["light_dir"].value = light_dir
             program["cam_pos"].value = tuple(camera_t.pos)
             program["tonemapExposure"] = camera.exposure
 
