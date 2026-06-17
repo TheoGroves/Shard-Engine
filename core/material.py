@@ -1,6 +1,6 @@
 
 class Material:
-    def __init__(self, ctx, asset_manager, tex_path, normal_path, heightmap_path, orm_path, height_scale, uv_scale):
+    def __init__(self, ctx, asset_manager, tex_path="assets/textures/Empty.png", normal_path="assets/textures/EmptyNormal.png", heightmap_path="assets/textures/EmptyHeightmap.png", orm_path="assets/textures/EmptyORM.png", height_scale=0.01, uv_scale=1):
         self.ctx = ctx
         self.asset_manager = asset_manager
         self.texture, self.texture_path = self.asset_manager.get_texture(tex_path if tex_path else None, "assets/textures/Empty.png")

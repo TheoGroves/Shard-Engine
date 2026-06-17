@@ -15,8 +15,8 @@ const float ATMOS_RADIUS  = 6471000.0;
 const float HR = 8000.0;
 const float HM = 1200.0;
 
-const vec3 BETA_M = vec3(2.0e-5);
-const vec3 BETA_R = vec3(5.8e-6, 13.5e-6, 33.1e-6);
+const vec3 BETA_M = vec3(21e-6);
+const vec3 BETA_R = vec3(5.802e-6, 13.558e-6, 33.100e-6);
 
 bool raySphereIntersect(vec3 ro, vec3 rd, float radius, out float t0, out float t1)
 {
@@ -82,14 +82,12 @@ float rayleighPhase(float mu)
 
 float miePhase(float mu)
 {
-    float g = 0.76;
-
-    float denom =
-        1.0 + g*g - 2.0*g*mu;
+    float gg = g * g;
 
     return
-        (1.0-g*g) /
-        (4.0*PI*pow(denom,1.5));
+        (3.0 * (1.0 - gg) * (1.0 + mu * mu)) /
+        (8.0 * PI * (2.0 + gg) *
+         pow(1.0 + gg - 2.0 * g * mu, 1.5));
 }
 
 vec3 atmosphere(vec3 cameraPos, vec3 viewDir, vec3 sunDir)
@@ -132,8 +130,20 @@ vec3 atmosphere(vec3 cameraPos, vec3 viewDir, vec3 sunDir)
         accumulatedR += localR * segment;
         accumulatedM += localM * segment;
 
-        float s0, s1;
+        float p0, p1;
 
+        bool inShadow = false;
+
+        if(raySphereIntersect(samplePos, sunDir, PLANET_RADIUS, p0, p1))
+        {
+            if(p1 > 0.0)
+                inShadow = true;
+        }
+
+        if(inShadow)
+            continue;
+
+        float s0, s1;
         raySphereIntersect(samplePos, sunDir, ATMOS_RADIUS, s0, s1);
 
         vec2 sunDepth = opticalDepth(samplePos, sunDir, s1);
@@ -159,7 +169,7 @@ void main()
 
     float sunAmount = smoothstep(0.99995, 0.99999, dot(viewDir, sunDir));
 
-    col += sun_color * 20.0 * sunAmount;
+    col += sun_color * 20000.0 * sunAmount;
 
     col = col / (col + vec3(1.0));
 

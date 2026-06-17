@@ -3,7 +3,8 @@ import moderngl
 import OpenEXR
 import Imath
 import numpy as np
-from maths.matrices import get_view_matrix, get_projection_matrix
+from maths.matrices import get_view_matrix, get_projection_matrix, screen_to_world_ray
+from collisions import raycast
 
 shader_dir = "assets/shaders"
 
@@ -49,6 +50,10 @@ class Renderer:
         self.camera = camera
         self.view = get_view_matrix(cam_transform)
 
+    def screen_to_world(self, screen_x, screen_y, grid, tris):
+        origin, direction = screen_to_world_ray(screen_x, screen_y, (self.width, self.height), self.proj, self.view)
+        return raycast(origin, direction, grid, tris)
+
     def generate_buffers(self, mesh_renderer):
         mesh_renderer.mesh.vbo = self.ctx.buffer(
             mesh_renderer.mesh.vertices.astype("f4").tobytes()
@@ -91,7 +96,6 @@ class Renderer:
         img = np.flipud(img)
 
         self.env_map = self.ctx.texture(size=(width, height), components=3, data=img.tobytes(), dtype='f4')
-
 
     def build_pipeline(self):
         if not NORMAL_VISUALISER:

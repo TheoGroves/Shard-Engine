@@ -140,3 +140,32 @@ def orthographic(left, right, bottom, top, near, far):
 
 def get_screen_projection(width, height):
     return orthographic(0, width, height, 0, -1, 1)
+
+def screen_to_world_ray(x, y, screen_size, proj, view):
+    screen_width = screen_size[0]
+    screen_height = screen_size[1]
+
+    x = (2.0*x) / screen_width - 1.0
+    y = 1.0 - (2.0*y) / screen_height
+
+    ray_clip = np.array([x,y,-1.0,1.0], dtype=np.float32)
+
+    inv_proj = np.linalg.inv(proj)
+
+    ray_eye = inv_proj @ ray_clip
+    ray_eye = np.array([
+        ray_eye[0],
+        ray_eye[1],
+        -1.0,
+        0.0
+    ], dtype=np.float32)
+
+    inv_view = np.linalg.inv(view)
+
+    ray_world = inv_view @ ray_eye
+
+    ray_dir = normalize(ray_world[:3])
+
+    ray_origin = inv_view[:3, 3]
+
+    return ray_origin, ray_dir

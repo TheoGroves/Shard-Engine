@@ -102,13 +102,6 @@ void main() {
     vec3 l = normalize(light_dir);
     vec3 v = normalize(cam_pos - fragPos);
 
-    vec3 r = normalize(reflect(-l, n));
-    vec2 envUV;
-    envUV.x = atan(r.z, r.x) / (2.0*3.14159265) + 0.5;
-    envUV.y = asin(r.y) / 3.14159265 + 0.5;
-    float exposure = 1;
-    vec3 env = texture(env_map, envUV).rgb;
-
     // PBR model
     vec3 orm = texture(orm_map, uvParallax).rgb;
 
@@ -151,12 +144,8 @@ void main() {
     float lightIntensity = 3.0;
     vec3 direct = (diffuse + specular) * NdotL * lightIntensity * sunVisibility * (1.0 - shadow);
 
-    vec3 diffuseIBL = env * albedo;
-    vec3 specIBL = env * F;
+    vec3 ambient = albedo * ao * 0.08;
 
-    vec3 ambient = diffuseIBL * kD + specIBL;
-    ambient *= ao;
-    ambient *= 0.2;
     ambient += vec3(0.1) * albedo;
 
     vec3 colorFinal = direct + ambient;

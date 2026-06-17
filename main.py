@@ -4,8 +4,9 @@ from OpenGL import GL
 import os
 import psutil
 import time
+import numpy as np
 
-from core import Renderer, RenderPipeline, InputManager, Scene, AssetManager, Engine
+from core import Renderer, RenderPipeline, InputManager, Scene, AssetManager, Engine, Material
 from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera, MeshCollider
 from core.systems import CollisionSystem, TransformSystem, MeshRendererSystem, InputSystem, PlayerControllerSystem, CameraSystem, MeshColliderSystem
 from rendering import ShadowMapper, ColliderDebugger, generate_skybox, SkyboxSettings
@@ -166,7 +167,17 @@ while True:
 
     if PLAY_MODE:
         transform_system.set_pos(player_eid, cam_t.pos)
-    
+
+    if not PLAY_MODE and input_manager.is_mouse_just_pressed(2):
+        mx, my = pygame.mouse.get_pos()
+        hit_pos, _ = renderer.screen_to_world(mx, my, grid, triangles)
+        if isinstance(hit_pos, np.ndarray):
+            eid, entity = scene.em.create_entity()
+            scene.em.add_component(eid, Transform(hit_pos))
+            scene.em.add_component(eid, MeshRenderer(None, None, None))
+            mesh_renderer_system.load_model(eid, "assets/models/Suzanne.obj", shadow_mapper)
+            mesh_renderer_system.set_material(eid, Material(ctx, asset_manager, height_scale=0, uv_scale=8))
+
     transform_system.update()
     
     renderer.view = get_view_matrix(cam_t)

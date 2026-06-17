@@ -57,9 +57,9 @@ class MeshRendererSystem:
                     program["height_map"] = 2
                     program["height_scale"].value = mesh_renderer.material.height_scale
 
-                if env_map:
-                    env_map.use(location=3)
-                    program["env_map"] = 3
+                #if env_map:
+                #    env_map.use(location=3)
+                #    program["env_map"] = 3
 
                 if mesh_renderer.material.orm_map:
                     mesh_renderer.material.orm_map.use(location=5)
