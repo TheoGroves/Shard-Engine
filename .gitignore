@@ -191,3 +191,5 @@ obj_tester.py
 *.dll
 /.vscode
 *.mesh
+*.envmap
+*.tex

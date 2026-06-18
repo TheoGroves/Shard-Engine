@@ -1,5 +1,5 @@
 from .ui_renderer import UIRenderer
-from .ui_elements import UIImage, UIText, UIFloat, UIButton
+from .ui_elements import UIImage, UIText, UIFloat, UIButton, UILineGraph
 from .editor_ui import EditorUI
 
 __all__ = [
@@ -8,5 +8,6 @@ __all__ = [
     "UIText",
     "UIFloat",
     "UIButton",
-    "EditorUI"
+    "EditorUI",
+    "UILineGraph"
 ]

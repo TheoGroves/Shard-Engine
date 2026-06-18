@@ -1,6 +1,8 @@
 import numpy as np
+from numba import njit
 from collisions.spatial_grid import SpatialGrid
 
+@njit(cache=True, fastmath=True)
 def closest_point_on_triangle(p, a, b, c):
     ab = b - a
     ac = c - a

@@ -1,7 +1,5 @@
 import os
 import moderngl
-import OpenEXR
-import Imath
 import numpy as np
 from maths.matrices import get_view_matrix, get_projection_matrix, screen_to_world_ray
 from collisions import raycast
@@ -78,24 +76,8 @@ class Renderer:
             mesh_renderer.mesh.ibo
         )
 
-    def load_env_map(self, path):
-        exr = OpenEXR.InputFile(path)
-        dw = exr.header()['dataWindow']
-
-        width = dw.max.x - dw.min.x + 1
-        height = dw.max.y - dw.min.y + 1
-
-        pt = Imath.PixelType(Imath.PixelType.FLOAT)
-
-        r = np.frombuffer(exr.channel('R', pt), dtype=np.float32)
-        g = np.frombuffer(exr.channel('G', pt), dtype=np.float32)
-        b = np.frombuffer(exr.channel('B', pt), dtype=np.float32)
-
-        img = np.stack([r, g, b], axis=-1)
-        img = img.reshape((height, width, 3))
-        img = np.flipud(img)
-
-        self.env_map = self.ctx.texture(size=(width, height), components=3, data=img.tobytes(), dtype='f4')
+    def load_env_map(self, path, asset_manager):
+        self.env_map, _ = asset_manager.get_env_map(path)
 
     def build_pipeline(self):
         if not NORMAL_VISUALISER:

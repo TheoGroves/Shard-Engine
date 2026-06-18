@@ -1,6 +1,6 @@
 import pygame
 from OpenGL import GL
-from .ui_elements import UIText, UIFloat, UIButton
+from .ui_elements import UIText, UIFloat, UIButton, UILineGraph
 
 GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX = 0x9048
 GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049
@@ -154,6 +154,18 @@ class EditorUI:
             )
         )
 
+        self.ui_renderer.add_quad(
+            UILineGraph(
+                0.8,
+                0.12,
+                300,
+                200,
+                2,
+                self.engine.ctx,
+                "top_right"
+            )
+        )
+
     def update(self, play_mode, fps, dt, dt_real, curr_mem_usage, total_kb, camera_system):
         self.ui_renderer.get_quad(0).update_text(PLAY_TEXT[play_mode])
         self.ui_renderer.get_quad(1).update_text(f"fps: {fps:.1f}")
@@ -180,5 +192,11 @@ class EditorUI:
         if self.ui_renderer.get_quad(10).update():
             print("\nSCENE LOADED")
             return self.engine.initialize()
+        
+        line_graph = self.ui_renderer.get_quad(12)
+        line_graph.add_value(dt, 0, "dt (ms)")
+        line_graph.add_value(dt_real, 1, "dt_real (ms)")
+
+        line_graph.update()
         
         return None

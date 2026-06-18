@@ -72,7 +72,7 @@ engine = Engine(ctx, scene, renderer, mesh_collider_system, PLAY_MODE)
 print(f"Engine Creation {(time.perf_counter()-t)*1000:.1f}ms")
 
 t = time.perf_counter()
-renderer.load_env_map("assets/textures/Day-HDRI.exr")
+renderer.load_env_map("assets/textures/Day-HDRI.exr", asset_manager)
 print(f"Environment map loaded in {(time.perf_counter()-t)*1000:.1f}ms")
 
 t = time.perf_counter()

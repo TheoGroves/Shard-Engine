@@ -20,7 +20,7 @@ class WarehouseSceneBuilder:
 
         mcs.load_model(collider_eid, "assets/models/WarehouseCollider.obj")
 
-        renderer.load_env_map("assets/textures/Day-HDRI.exr")
+        renderer.load_env_map("assets/textures/Day-HDRI.exr", asset_manager)
         skybox, skybox_prog = generate_skybox(ctx)
 
         return scene, skybox, skybox_prog

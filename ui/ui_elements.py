@@ -16,6 +16,13 @@ ANCHORS = {
     "bottom_right": (1.0, 1.0),
 }
 
+COLOURS = [
+    (249, 237, 105),
+    (240, 138, 93),
+    (184, 59, 94),
+    (106, 44, 112)
+]
+
 class UIElement:
     def __init__(self, x, y, width, height, ctx, anchor="centre"):
         self.x = x
@@ -184,3 +191,116 @@ class UIButton(UIImage):
             self.brightness = 1.0
             return True
         return False
+    
+
+
+class UILineGraph(UIElement):
+    def __init__(self, x, y, width, height, num_lines, ctx, anchor="centre"):
+        self.num_lines = num_lines
+
+        self.values = [[0] * 150 for _ in range(self.num_lines)]
+        self.names = [f"Line {i}" for i in range(self.num_lines)]
+        self.maximum = 1
+
+        pygame.font.init()
+        self.font = pygame.font.SysFont("consolas", 15)
+
+        super().__init__(x, y, width, height, ctx, anchor)
+
+        self.surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        self._dirty = True
+
+    def add_value(self, value, line, name=None):
+        if name is not None:
+            self.names[line] = name
+
+        self.values[line].append(value)
+        self.values[line].pop(0)
+
+        self.maximum = max(max(line_vals) for line_vals in self.values)
+
+    def render_to_surface(self):
+        self.surface.fill((0, 0, 0, 0))
+
+        w, h = self.width, self.height
+
+        pygame.draw.rect(self.surface, (50, 50, 50, 40), (0, 0, w, h))
+
+        pygame.draw.line(self.surface, (170, 170, 170), (0, h-1), (0, 0))
+        pygame.draw.line(self.surface, (170, 170, 170), (0, h-1), (w, h-1))
+
+        max_val = self.maximum if self.maximum != 0 else 1
+
+        for line_index, line_vals in enumerate(self.values):
+            points = []
+
+            for i, value in enumerate(line_vals):
+                x = (i / len(line_vals)) * w
+                y = h - (value / max_val) * h
+                points.append((x, y))
+
+            pygame.draw.lines(
+                self.surface,
+                COLOURS[line_index % len(COLOURS)],
+                False,
+                points,
+                2
+            )
+
+        legend_x = 10
+        legend_y = 5
+        line_height = 18
+
+        max_text_width = 0
+        for name in self.names:
+            text_width = self.font.size(name)[0]
+            max_text_width = max(max_text_width, text_width)
+
+        legend_width = 20 + max_text_width + 5
+        legend_height = len(self.names) * line_height + 5
+
+        pygame.draw.rect(
+            self.surface,
+            (30, 30, 30, 50),
+            (legend_x - 3, legend_y - 3, legend_width, legend_height)
+        )
+
+        pygame.draw.rect(
+            self.surface,
+            (255, 255, 255, 122),
+            (legend_x - 3, legend_y - 3, legend_width, legend_height),
+            1
+        )
+
+        current_y = legend_y
+        for i, name in enumerate(self.names):
+            colour = COLOURS[i % len(COLOURS)]
+
+            pygame.draw.rect(self.surface, colour, (legend_x, current_y, 10, 10))
+
+            text = self.font.render(name, True, (255, 255, 255))
+            self.surface.blit(text, (legend_x + 15, current_y - 2))
+
+            current_y += line_height
+
+        self._dirty = True
+
+    def update_texture(self):
+        if not self._dirty:
+            return
+
+        data = pygame.image.tobytes(self.surface, "RGBA", False)
+
+        self._set_tex(
+            self.ctx.texture(
+                size=self.surface.get_size(),
+                components=4,
+                data=data
+            )
+        )
+
+        self._dirty = False
+
+    def update(self):
+        self.render_to_surface()
+        self.update_texture()
