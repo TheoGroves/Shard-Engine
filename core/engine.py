@@ -2,6 +2,7 @@ import time
 
 from core.systems import PlayerControllerSystem
 from collisions import SpatialGrid
+import spatial_collision_engine as sce
 
 class Engine:
     def __init__(self, ctx, scene, renderer, mesh_collider_system, play_mode):
@@ -41,7 +42,7 @@ class Engine:
         print(f"Player setup and fetch took {(time.perf_counter()-t)*1000:.1f}ms")
 
         t = time.perf_counter()
-        grid = SpatialGrid(5.0)
+        grid = sce.SpatialGrid(5)
         triangles = self.mesh_collider_system.get_collision_triangles(grid)
         print(f"Collision mesh generation took {(time.perf_counter()-t)*1000:.1f}ms\n")
         

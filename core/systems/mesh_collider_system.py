@@ -1,9 +1,11 @@
 import numpy as np
+import spatial_collision_engine as sce
 from ecs import EntityManager
 from loaders.obj_parser import parse_objs, build_interleaved
 from core.mesh import Mesh
 from core.renderer import Renderer
 from core.asset_manager import AssetManager
+
 
 class MeshColliderSystem:
     def __init__(self, em: EntityManager, renderer: Renderer, asset_manager: AssetManager):
@@ -53,7 +55,11 @@ class MeshColliderSystem:
             p1 = (model @ np.array([*p1,1]))[:3]
             p2 = (model @ np.array([*p2,1]))[:3]
 
-            tris.append((p0,p1,p2))
+            p0_v = sce.Vec3(p0[0], p0[1], p0[2])
+            p1_v = sce.Vec3(p1[0], p1[1], p1[2])
+            p2_v = sce.Vec3(p2[0], p2[1], p2[2])
+
+            tris.append(sce.Triangle(p0_v, p1_v, p2_v))
 
         return tris
     
@@ -66,7 +72,7 @@ class MeshColliderSystem:
 
                 triangles.append(tri)
 
-                a,b,c = tri
+                a,b,c = tri.a, tri.b, tri.c
 
                 grid.insert_triangle(
                     idx,

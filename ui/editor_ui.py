@@ -1,6 +1,6 @@
 import pygame
 from OpenGL import GL
-from .ui_elements import UIText, UIFloat, UIButton, UILineGraph
+from .ui_elements import UIText, UIFloat, UIButton, UILineGraph, UIScrollGrid
 
 GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX = 0x9048
 GL_GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049
@@ -158,13 +158,24 @@ class EditorUI:
             UILineGraph(
                 0.8,
                 0.12,
+                450,
                 300,
-                200,
                 2,
                 self.engine.ctx,
                 "top_right"
             )
         )
+
+        #self.ui_renderer.add_quad(
+        #    UIScrollGrid(
+        #        0.5,
+        #        0.88,
+        #        2000,
+        #        400,
+        #        self.engine.ctx,
+        #        "bottom"
+        #    )
+        #)
 
     def update(self, play_mode, fps, dt, dt_real, curr_mem_usage, total_kb, camera_system):
         self.ui_renderer.get_quad(0).update_text(PLAY_TEXT[play_mode])
@@ -194,9 +205,12 @@ class EditorUI:
             return self.engine.initialize()
         
         line_graph = self.ui_renderer.get_quad(12)
-        line_graph.add_value(dt, 0, "dt (ms)")
-        line_graph.add_value(dt_real, 1, "dt_real (ms)")
+        line_graph.add_value(dt*1000, 0, "dt (ms)")
+        line_graph.add_value(dt_real*1000, 1, "dt_real (ms)")
 
         line_graph.update()
-        
+
+        #asset_browser = self.ui_renderer.get_quad(13)
+        #asset_browser.update()
+
         return None

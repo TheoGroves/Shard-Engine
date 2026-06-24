@@ -217,28 +217,80 @@ class UILineGraph(UIElement):
         self.values[line].append(value)
         self.values[line].pop(0)
 
-        self.maximum = max(max(line_vals) for line_vals in self.values)
+        self.maximum = max(max(line_vals) for line_vals in self.values)*1.15
+
+    def get_avg(self, line: int):
+        return sum(self.values[line])/len(self.values[line])
+    
+    def get_max(self, line: int):
+        return max(self.values[line])
 
     def render_to_surface(self):
         self.surface.fill((0, 0, 0, 0))
 
         w, h = self.width, self.height
 
-        pygame.draw.rect(self.surface, (50, 50, 50, 40), (0, 0, w, h))
+        graph_left = 50
+        graph_width = w - graph_left - 5
 
-        pygame.draw.line(self.surface, (170, 170, 170), (0, h-1), (0, 0))
-        pygame.draw.line(self.surface, (170, 170, 170), (0, h-1), (w, h-1))
+        pygame.draw.rect(self.surface, (50, 50, 50, 40), (0, 0, w, h))
 
         max_val = self.maximum if self.maximum != 0 else 1
 
         for line_index, line_vals in enumerate(self.values):
+            average_val = self.get_avg(line_index)
+            maximum_val = self.get_max(line_index)
+
+            avg_h = h - (average_val / max_val) * h
+            max_h = h - (maximum_val / max_val) * h
+
+            pygame.draw.line(
+                self.surface,
+                (170, 170, 170, 160),
+                (graph_left-5, avg_h),
+                (w, avg_h),
+                1
+            )
+
+            max_string = f"{maximum_val:.1f}"
+            max_text = self.font.render(max_string, True, (255, 255, 255))
+
+            tr1 = max_text.get_rect()
+            tr1.left = 10
+            tr1.centery = max_h
+            tr1 = tr1.inflate(5, 5)
+
+            pygame.draw.rect(self.surface, (50, 50, 50, 150), tr1)
+
+            self.surface.blit(max_text, (10, max_h-(self.font.size(max_string)[1]/2)))
+
+            avg_string = f"{average_val:.1f}"
+            avg_text = self.font.render(avg_string, True, (255, 255, 255))
+
+            tr2 = avg_text.get_rect()
+            tr2.left = 10
+            tr2.centery = avg_h
+            tr2 = tr2.inflate(5, 5)
+
+            pygame.draw.rect(self.surface, (50, 50, 50, 150), tr2)
+
+            self.surface.blit(avg_text, (10, avg_h-(self.font.size(avg_string)[1]/2)))
+
+            pygame.draw.line(
+                self.surface,
+                (170, 170, 170, 160),
+                (graph_left-5, max_h),
+                (w, max_h),
+                1
+            )
+
             points = []
 
             for i, value in enumerate(line_vals):
-                x = (i / len(line_vals)) * w
+                x = graph_left + (i / (len(line_vals) - 1)) * graph_width
                 y = h - (value / max_val) * h
                 points.append((x, y))
-
+            
             pygame.draw.lines(
                 self.surface,
                 COLOURS[line_index % len(COLOURS)],
@@ -247,7 +299,10 @@ class UILineGraph(UIElement):
                 2
             )
 
-        legend_x = 10
+        pygame.draw.line(self.surface, (170, 170, 170), (graph_left, h-1), (graph_left, 0))
+        pygame.draw.line(self.surface, (170, 170, 170), (graph_left, h-1), (w, h-1))
+
+        legend_x = 10+graph_left
         legend_y = 5
         line_height = 18
 
@@ -282,6 +337,51 @@ class UILineGraph(UIElement):
             self.surface.blit(text, (legend_x + 15, current_y - 2))
 
             current_y += line_height
+
+        self._dirty = True
+
+    def update_texture(self):
+        if not self._dirty:
+            return
+
+        data = pygame.image.tobytes(self.surface, "RGBA", False)
+
+        self._set_tex(
+            self.ctx.texture(
+                size=self.surface.get_size(),
+                components=4,
+                data=data
+            )
+        )
+
+        self._dirty = False
+
+    def update(self):
+        self.render_to_surface()
+        self.update_texture()
+
+class UIScrollGrid(UIElement):
+    def __init__(self, x, y, width, height, ctx, anchor="centre"):
+        pygame.font.init()
+        self.font = pygame.font.SysFont("consolas", 18)
+
+        self._items = []
+
+        super().__init__(x, y, width, height, ctx, anchor)
+
+        self.surface = pygame.Surface((width, height), pygame.SRCALPHA)
+        self._dirty = True
+
+
+    def add_item(self, item):
+        self._items.append(item)
+
+    def render_to_surface(self):
+        self.surface.fill((0, 0, 0, 0))
+
+        w, h = self.width, self.height
+
+        pygame.draw.rect(self.surface, (100, 100, 100, 180), (0, 0, w, h))
 
         self._dirty = True
 
