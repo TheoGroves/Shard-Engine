@@ -42,7 +42,7 @@ class Engine:
         print(f"Player setup and fetch took {(time.perf_counter()-t)*1000:.1f}ms")
 
         t = time.perf_counter()
-        grid = sce.SpatialGrid(5)
+        grid = sce.SpatialGrid(20)
         triangles = self.mesh_collider_system.get_collision_triangles(grid)
         print(f"Collision mesh generation took {(time.perf_counter()-t)*1000:.1f}ms\n")
         

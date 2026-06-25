@@ -193,3 +193,48 @@ obj_tester.py
 *.mesh
 *.envmap
 *.tex
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+/build/
+/out/
+/cmake-build-*/
+*.so
+*.dll
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+*.pyd
+*.pdb
