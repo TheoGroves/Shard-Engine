@@ -2,11 +2,14 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_set>
+#include <cfloat>
 #include "CollisionSolver.h"
 #include "Vec3.h"
 #include "CollisionData.h"
 #include "Geometry.h"
 #include "SpatialGrid.h"
+
+constexpr float EPS = 1e-6f;
 
 Vec3 ClosestPointOnTriangle(const Vec3& p, const Vec3& a, const Vec3& b, const Vec3& c)
 {
@@ -96,35 +99,123 @@ CollisionData SphereTriangleCollision(const Vec3& centre, float radius, const Ve
 
 Segment GetSegment(const Vec3& pos, const Capsule& capsule) 
 {
-    float half = std::max(0.0, capsule.height * 0.5 - capsule.radius);
+    float half = std::max(0.0f, capsule.height * 0.5f - capsule.radius);
     Vec3 p0 = pos + Vec3(0, -half + capsule.offset, 0);
     Vec3 p1 = pos + Vec3(0, half + capsule.offset, 0);
 
     return Segment{p0, p1};
 }
 
+Vec3 TriangleNormal(const Vec3& a, const Vec3& b, const Vec3& c)
+{
+    return Normalize(Cross(b-a, c-a));
+}
+
+Segment ClosestSegmentSegment(const Segment& p, const Segment& q)
+{
+    Vec3 d1 = p.p1 - p.p0;
+    Vec3 d2 = q.p1 - q.p0;
+    Vec3 r  = p.p0 - q.p0;
+
+    float a = Dot(d1, d1);
+    float e = Dot(d2, d2);
+    float f = Dot(d2, r);
+
+    float s, t;
+
+    if (a < EPS && e < EPS)
+        return {p.p0, q.p0};
+
+    if (a < EPS) {
+        s = 0.0f;
+        t = std::clamp(f / e, 0.0f, 1.0f);
+    }
+    else {
+        float c = Dot(d1, r);
+
+        if ( e < EPS) {
+            t = 0.0f;
+            s = std::clamp(-c/a, 0.0f, 1.0f);
+        } else {
+            float b = Dot(d1, d2);
+            float denom = a*e - b*b;
+
+            if (denom > EPS)
+                s = std::clamp((b*f - c*e) / denom, 0.0f, 1.0f);
+            else
+                s = 0.0f;
+            
+            t = (b*s + f) / e;
+
+            if (t < 0.0f) {
+                t = 0.0f;
+                s = std::clamp(-c/a, 0.0f, 1.0f);
+            } else if (t > 1.0f) {
+                t = 1.0f;
+                s = std::clamp((b-c)/a, 0.0f, 1.0f);
+            }
+        }
+    }
+
+    return {
+        p.p0 + d1*s,
+        q.p0 + d2*t
+    };
+}
+
+ClosestResult ClosestSegmentTriangle(const Segment& seg, const Vec3& a, const Vec3& b, const Vec3& c)
+{
+    ClosestResult best;
+    float bestDistSq = FLT_MAX;
+
+    auto Test = [&](const Vec3& s, const Vec3& t)
+    {
+        float d2 = Dot(s - t, s - t);
+
+        if (d2 < bestDistSq)
+        {
+            bestDistSq = d2;
+            best.segmentPoint = s;
+            best.trianglePoint = t;
+        }
+    };
+
+    Test(seg.p0, ClosestPointOnTriangle(seg.p0, a, b, c));
+    Test(seg.p1, ClosestPointOnTriangle(seg.p1, a, b, c));
+
+    Segment r = ClosestSegmentSegment(seg, {a,b});
+    Test(r.p0, r.p1);
+
+    r = ClosestSegmentSegment(seg, {b, c});
+    Test(r.p0, r.p1);
+
+    r = ClosestSegmentSegment(seg, {c, a});
+    Test(r.p0, r.p1);
+
+    return best;
+}
+
 CollisionData CapsuleTriangleCollision(const Vec3& pos, const Capsule& capsule, const Vec3& a, const Vec3& b, const Vec3& c)
 {
     Segment seg = GetSegment(pos, capsule);
 
-    Vec3 correction = {0.0f, 0.0f, 0.0f};
+    ClosestResult r = ClosestSegmentTriangle(seg, a, b, c);
 
-    CollisionData hit0 = SphereTriangleCollision(seg.p0, capsule.radius, a, b, c);
-    CollisionData hit1 = SphereTriangleCollision(seg.p1, capsule.radius, a, b, c);
+    Vec3 delta = r.segmentPoint - r.trianglePoint;
 
-    if (hit0.collision) {
-        correction += hit0.collisionVector;
-    }
+    float d = Magnitude(delta);
 
-    if (hit1.collision) {
-        correction += hit1.collisionVector;
-    }
+    if (d >= capsule.radius)
+        return {false, {}};
 
-    if (Magnitude(correction) < 1e-6f) {
-        return CollisionData{false, correction};
-    }
+    Vec3 normal;
 
-    return CollisionData{true, correction};
+    if (d < EPS)
+        normal = TriangleNormal(a,b,c);
+    else
+        normal = delta / d;
+
+    return {true, normal * (capsule.radius - d)};
 }
 
 CollisionData SolveCapsule(Vec3& pos, const Capsule& capsule, const std::vector<Triangle>& triangles, const SpatialGrid& grid)
