@@ -2,7 +2,21 @@ import moderngl
 from maths.matrices import get_screen_projection
 
 class UIRenderer:
+    """
+    Manages rendering of many UIElements.
+
+    Handles:
+    - Shader setup
+    - Ortho projection
+    - GPU buffers
+    - UI render pipeline with blending
+    """
     def __init__(self, ctx: moderngl.Context, screen_size):
+        """
+        Initialize the UI renderer.
+        
+        Loads shaders, creates the ortho projection matrix and prepares the program.
+        """
         self.ctx = ctx
         self.width = screen_size[0]
         self.height = screen_size[1]
@@ -26,6 +40,14 @@ class UIRenderer:
         self.elements = []
 
     def add_quad(self, element):
+        """
+        Registers a UI Element for rendering.
+        
+        Prepares the UI Element's GPU resources:
+        - Assigns the screen size
+        - Generates the vertex data
+        - Creates VBO and VAO
+        """
         element.screen_size = (self.width, self.height)
         element.update_vertices()
 
@@ -40,12 +62,19 @@ class UIRenderer:
         self.elements.append(element)
 
     def get_quad(self, index):
+        """Returns a UI element by index."""
         return self.elements[index]
     
     def check_ui_blocking(self):
+        """Returns True if any UI Element is blocking input."""
         return any(quad.is_blocking() for quad in self.elements)
 
     def render(self):
+        """
+        Render all UI elements.
+
+        Configures GPU to use BLEND and ONE_MINUS_SRC_ALPHA to render each UI Element.
+        """
         self.ctx.disable(moderngl.DEPTH_TEST)
         self.ctx.disable(moderngl.CULL_FACE)
         self.ctx.depth_mask = False
