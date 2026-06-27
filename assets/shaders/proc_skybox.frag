@@ -6,8 +6,11 @@ out vec4 color;
 uniform vec3 sun_dir;
 uniform vec3 sun_color;
 
+uniform float air;
+uniform float aerosols;
+uniform float ozone;
+
 const float PI = 3.14159265;
-const float g = 0.76;
 
 const float PLANET_RADIUS = 6371000.0;
 const float ATMOS_RADIUS  = 6471000.0;
@@ -15,8 +18,8 @@ const float ATMOS_RADIUS  = 6471000.0;
 const float HR = 8000.0;
 const float HM = 1200.0;
 
-const vec3 BETA_M = vec3(21e-6);
 const vec3 BETA_R = vec3(5.802e-6, 13.558e-6, 33.100e-6);
+const vec3 BETA_M = vec3(21e-6);
 const vec3 BETA_O = vec3(0.650e-6, 1.881e-6, 0.085e-6);
 
 bool raySphereIntersect(vec3 ro, vec3 rd, float radius, out float t0, out float t1)
@@ -24,149 +27,140 @@ bool raySphereIntersect(vec3 ro, vec3 rd, float radius, out float t0, out float 
     float b = dot(ro, rd);
     float c = dot(ro, ro) - radius * radius;
 
-    float h = b*b - c;
-
-    if(h < 0.0)
+    float h = b * b - c;
+    if (h < 0.0)
         return false;
 
     h = sqrt(h);
-
     t0 = -b - h;
     t1 = -b + h;
-
     return true;
 }
 
 float getHeight(vec3 p)
 {
-    return length(p) - PLANET_RADIUS;
+    return max(length(p) - PLANET_RADIUS, 0.0);
 }
 
-float densityRayleigh(float height)
+float rayleighDensity(float h)
 {
-    return exp(-height / HR);
+    return exp(-h / HR);
 }
 
-float densityMie(float height)
+float mieDensity(float h)
 {
-    return exp(-height / HM);
+    return exp(-h / HM);
 }
 
-float densityOzone(float height)
+float ozoneDensity(float h)
 {
-    float x = (height - 25000) / 15000.0;
-    return exp(-x * x);
-}
-
-vec3 opticalDepth(vec3 ro, vec3 rd, float maxDist)
-{
-    const int STEPS = 8;
-
-    float stepSize = maxDist / float(STEPS);
-
-    float depthR = 0.0;
-    float depthM = 0.0;
-    float depthO = 0.0;
-
-    for(int i=0;i<STEPS;i++)
-    {
-        float t = (float(i)+0.5) * stepSize;
-
-        vec3 p = ro + rd*t;
-
-        float h = getHeight(p);
-
-        depthR += densityRayleigh(h) * stepSize;
-        depthM += densityMie(h) * stepSize;
-        depthO = densityOzone(h) * stepSize;
-    }
-
-    return vec3(depthR, depthM, depthO);
+    float x = (h - 25000.0) / 15000.0;
+    return exp(-4.0 * x * x);
 }
 
 float rayleighPhase(float mu)
 {
-    return (3.0/(16.0*PI))*(1.0+mu*mu);
+    return (3.0 / (16.0 * PI)) * (1.0 + mu * mu);
 }
 
 float miePhase(float mu)
 {
-    float gg = g * g;
+    float g = 0.76;
+    float g2 = g * g;
 
-    return
-        (3.0 * (1.0 - gg) * (1.0 + mu * mu)) /
-        (8.0 * PI * (2.0 + gg) *
-         pow(1.0 + gg - 2.0 * g * mu, 1.5));
+    return (1.0 - g2) /
+           (4.0 * PI * pow(1.0 + g2 - 2.0 * g * mu, 1.5));
+}
+
+vec3 opticalDepth(vec3 ro, vec3 rd, float maxDist)
+{
+    const int STEPS = 16;
+
+    float stepSize = maxDist / float(STEPS);
+
+    float dR = 0.0;
+    float dM = 0.0;
+    float dO = 0.0;
+
+    for (int i = 0; i < STEPS; i++)
+    {
+        float t = (float(i) + 0.5) * stepSize;
+        vec3 p = ro + rd * t;
+
+        float h = getHeight(p);
+
+        dR += rayleighDensity(h) * stepSize;
+        dM += mieDensity(h) * stepSize;
+        dO += ozoneDensity(h) * stepSize;
+    }
+
+    return vec3(dR, dM, dO);
 }
 
 vec3 atmosphere(vec3 cameraPos, vec3 viewDir, vec3 sunDir)
 {
     float t0, t1;
 
-    if(!raySphereIntersect(cameraPos, viewDir, ATMOS_RADIUS, t0, t1))
-    {
+    if (!raySphereIntersect(cameraPos, viewDir, ATMOS_RADIUS, t0, t1))
         return vec3(0.0);
-    }
 
     t0 = max(t0, 0.0);
 
-    const int VIEW_STEPS = 16;
-
-    float segment = (t1 - t0) / float(VIEW_STEPS);
-
-    vec3 result = vec3(0.0);
-
-    float accumulatedR = 0.0;
-    float accumulatedM = 0.0;
-    float accumulatedO = 0.0;
+    const int STEPS = 32;
+    float segment = (t1 - t0) / float(STEPS);
 
     float mu = dot(viewDir, sunDir);
 
     float phaseR = rayleighPhase(mu);
     float phaseM = miePhase(mu);
 
-    for(int i=0;i<VIEW_STEPS;i++)
+    vec3 result = vec3(0.0);
+
+    for (int i = 0; i < STEPS; i++)
     {
-        float t = t0 + (float(i)+0.5)*segment;
+        float t = t0 + (float(i) + 0.5) * segment;
+        vec3 p = cameraPos + viewDir * t;
 
-        vec3 samplePos = cameraPos + viewDir*t;
+        float h = getHeight(p);
 
-        float height = getHeight(samplePos);
+        float r = rayleighDensity(h);
+        float m = mieDensity(h);
+        float o = ozoneDensity(h);
 
-        float localR = densityRayleigh(height);
-        float localM = densityMie(height);
-        float localO = densityOzone(height);
-
-        accumulatedR += localR * segment;
-        accumulatedM += localM * segment;
-        accumulatedO += localO * segment;
-
-        float p0, p1;
+        float ground0, ground1;
 
         bool inShadow = false;
 
-        if(raySphereIntersect(samplePos, sunDir, PLANET_RADIUS, p0, p1))
+        if(raySphereIntersect(p, sunDir, PLANET_RADIUS, ground0, ground1))
         {
-            if(p1 > 0.0)
+            if(ground1 > 0.0)
                 inShadow = true;
         }
 
         if(inShadow)
             continue;
 
-        float s0, s1;
-        raySphereIntersect(samplePos, sunDir, ATMOS_RADIUS, s0, s1);
+        float sun0, sun1;
+        raySphereIntersect(p, sunDir, ATMOS_RADIUS, sun0, sun1);
 
-        vec3 sunDepth = opticalDepth(samplePos, sunDir, s1);
+        vec3 sunOD  = opticalDepth(p, sunDir, sun1);
+        vec3 viewOD = opticalDepth(cameraPos, viewDir, t);
 
-        vec3 tau = BETA_R * (accumulatedR + sunDepth.x) + BETA_M * (accumulatedM + sunDepth.y) + BETA_O * (accumulatedO + sunDepth.z);
+        vec3 tau =
+            BETA_R * air      * (sunOD.x + viewOD.x) +
+            BETA_M * aerosols * (sunOD.y + viewOD.y) +
+            BETA_O * ozone    * (sunOD.z + viewOD.z);
 
         vec3 transmittance = exp(-tau);
 
-        result += transmittance * (localR * BETA_R * phaseR + localM * BETA_M * phaseM) * segment;
+        vec3 scatter =
+            r * BETA_R * air * phaseR +
+            m * BETA_M * aerosols * phaseM;
+
+        result += scatter * transmittance * segment;
     }
 
-    return result;
+    return result * sun_color;
 }
 
 void main()
@@ -174,15 +168,30 @@ void main()
     vec3 cameraPos = vec3(0.0, PLANET_RADIUS + 2.0, 0.0);
 
     vec3 viewDir = normalize(dir);
-    vec3 sunDir  = normalize(sun_dir);
+    vec3 sunDir = normalize(sun_dir);
 
-    vec3 col = atmosphere(cameraPos, viewDir, sunDir)*8;
+    vec3 col = atmosphere(cameraPos, viewDir, sunDir);
 
-    float sunAmount = smoothstep(0.99995, 0.99999, dot(viewDir, sunDir));
+float mu = dot(viewDir, sunDir);
 
-    col += sun_color * 20000.0 * sunAmount;
+    if (mu > 0.9999)
+    {
+        float sun0, sun1;
+        raySphereIntersect(cameraPos, sunDir, ATMOS_RADIUS, sun0, sun1);
 
-    col = col / (col + vec3(1.0));
+        vec3 sunOD = opticalDepth(cameraPos, sunDir, sun1);
+
+        vec3 sunTau =
+            BETA_R * air      * sunOD.x +
+            BETA_M * aerosols * sunOD.y +
+            BETA_O * ozone    * sunOD.z;
+
+        vec3 sunTransmittance = exp(-sunTau);
+
+        col += sun_color * sunTransmittance * 25.0;
+    }
+
+    col = 1.0 - exp(-col * 8.0);
 
     col = pow(col, vec3(1.0 / 2.2));
 

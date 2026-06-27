@@ -28,6 +28,10 @@ class RenderPipeline:
         if self.skybox_settings.procedural:
             self.skybox_prog['sun_dir'].value = tuple(self.skybox_settings.sun_dir)
             self.skybox_prog['sun_color'].value = tuple(self.skybox_settings.sun_col)
+
+            self.skybox_prog['air'].value = self.skybox_settings.air
+            self.skybox_prog['aerosols'].value = self.skybox_settings.aerosols
+            self.skybox_prog['ozone'].value = self.skybox_settings.ozone
         else:
             self.skybox_prog['env_map'] = 3
 

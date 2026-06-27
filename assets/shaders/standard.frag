@@ -139,7 +139,7 @@ void main() {
     vec3 diffuse = kD * albedo / 3.14159265;
 
     float shadow = ShadowCalculation(fragPosLightSpace, n, L);
-    float sunVisibility = step(0.0, light_dir.y);
+    float sunVisibility = smoothstep(-0.1, 0.2, light_dir.y);
 
     float lightIntensity = 3.0;
     vec3 direct = (diffuse + specular) * NdotL * lightIntensity * sunVisibility * (1.0 - shadow);

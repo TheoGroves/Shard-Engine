@@ -61,6 +61,8 @@ class UIRenderer:
 
         self.elements.append(element)
 
+        return element
+
     def get_quad(self, index):
         """Returns a UI element by index."""
         return self.elements[index]

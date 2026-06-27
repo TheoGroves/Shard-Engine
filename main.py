@@ -5,6 +5,7 @@ import os
 import psutil
 import time
 import numpy as np
+import math
 
 from core import Renderer, RenderPipeline, InputManager, Scene, AssetManager, Engine, Material
 from core.components import MeshRenderer, Rigidbody, PlayerController, Input, CapsuleCollider, Transform, Camera, MeshCollider
@@ -35,7 +36,7 @@ clock = pygame.time.Clock()
 ld = Vec3(1.0, 0.5, 0.0)
 light_dir = ld.to_tuple()
 
-world_time = 320
+world_time = 75
 print(f"Pygame setup took {(time.perf_counter()-t)*1000:.1f}ms")
 
 # Setup OpenGL Context
@@ -111,7 +112,7 @@ print(f"Memory profiling setup took {(time.perf_counter()-t)*1000:.1f}ms")
 t = time.perf_counter()
 ui_renderer = UIRenderer(ctx, (screen_width, screen_height))
 editor_ui = EditorUI(ui_renderer, engine)
-editor_ui.initialize()
+editor_ui.initialize(skybox_settings)
 print(f"UI setup took {(time.perf_counter()-t)*1000:.1f}ms")
 
 # Setup render pipeline
@@ -150,9 +151,11 @@ while True:
         print(f"WARNING: {ram_use * 100:.1f}% of RAM used")
 
     # Update scene when reloaded
-    packed_state = editor_ui.update(PLAY_MODE, fps, dt, dt_real, curr_mem_usage, TOTAL_KB, camera_system)
+    packed_state = editor_ui.update(PLAY_MODE, fps, dt, dt_real, curr_mem_usage, TOTAL_KB, camera_system, skybox_settings)
     if packed_state:
         cam_t, cam, player_controller_system, player_eid, grid, triangles = packed_state
+
+    world_time = math.degrees(editor_ui.sky_ui["sun_rad"].update())
 
     # Enter and exit Play Mode
     if input_manager.is_key_just_pressed(pygame.K_c):

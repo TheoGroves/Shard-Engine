@@ -221,6 +221,8 @@ class UIFloat(UIText):
 
         self.update_text(f"{self.descriptor} {self.value:.1f}")
 
+        return self.value
+
     def is_blocking(self):
         """Block input while dragging or mouse is held."""
         return super().is_blocking() or self.mouse_held

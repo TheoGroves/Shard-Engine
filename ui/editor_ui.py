@@ -14,7 +14,7 @@ class EditorUI:
         self.ui_renderer = ui_renderer
         self.engine = engine
 
-    def initialize(self):
+    def initialize(self, skybox_settings):
         """Initialize the UI Renderer with the debug UI elements."""
 
         # Shows current editor state (editor/play)
@@ -183,19 +183,29 @@ class EditorUI:
             )
         )
 
-        # Asset browser
-        #self.ui_renderer.add_quad(
-        #    UIScrollGrid(
-        #        0.5,
-        #        0.88,
-        #        2000,
-        #        400,
-        #        self.engine.ctx,
-        #        "bottom"
-        #    )
-        #)
+        # Skybox Settings
+        s = skybox_settings
+        font = pygame.font.SysFont("consolas", 20)
 
-    def update(self, play_mode, fps, dt, dt_real, curr_mem_usage, total_kb, camera_system):
+        self.sky_ui = {}
+
+        self.sky_ui["air"] = self.ui_renderer.add_quad(
+            UIFloat(0.15, 0.30, "air:", s.air, font, self.engine.ctx, (255,255,255), "left")
+        ) 
+        
+        self.sky_ui["aerosols"] = self.ui_renderer.add_quad(
+            UIFloat(0.15, 0.33, "aerosols:", s.aerosols, font, self.engine.ctx, (255,255,255), "left")
+        )
+
+        self.sky_ui["ozone"] = self.ui_renderer.add_quad(
+            UIFloat(0.15, 0.36, "ozone:", s.ozone, font, self.engine.ctx, (255,255,255), "left")
+        )
+
+        self.sky_ui["sun_rad"] = self.ui_renderer.add_quad(
+            UIFloat(0.15, 0.39, "sun_rad:", 1.5, font, self.engine.ctx, (255,255,255), "left")
+        )
+
+    def update(self, play_mode, fps, dt, dt_real, curr_mem_usage, total_kb, camera_system, skybox_settings):
         """Update the Editor UI and process Editor interactions."""
         # Show editor state
         self.ui_renderer.get_quad(0).update_text(PLAY_TEXT[play_mode])
@@ -238,5 +248,12 @@ class EditorUI:
 
         #asset_browser = self.ui_renderer.get_quad(13)
         #asset_browser.update()
+
+        s = skybox_settings
+
+        # atmosphere
+        s.air = self.sky_ui["air"].update()
+        s.aerosols = self.sky_ui["aerosols"].update()
+        s.ozone = self.sky_ui["ozone"].update()
 
         return None

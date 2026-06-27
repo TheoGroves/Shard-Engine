@@ -72,3 +72,7 @@ class SkyboxSettings:
         self.procedural = procedural
         self.sun_dir = sun_dir
         self.sun_col = sun_col
+
+        self.air = 1.0
+        self.aerosols = 4.2
+        self.ozone = 3.2
