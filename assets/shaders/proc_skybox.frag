@@ -17,6 +17,7 @@ const float HM = 1200.0;
 
 const vec3 BETA_M = vec3(21e-6);
 const vec3 BETA_R = vec3(5.802e-6, 13.558e-6, 33.100e-6);
+const vec3 BETA_O = vec3(0.650e-6, 1.881e-6, 0.085e-6);
 
 bool raySphereIntersect(vec3 ro, vec3 rd, float radius, out float t0, out float t1)
 {
@@ -51,7 +52,13 @@ float densityMie(float height)
     return exp(-height / HM);
 }
 
-vec2 opticalDepth(vec3 ro, vec3 rd, float maxDist)
+float densityOzone(float height)
+{
+    float x = (height - 25000) / 15000.0;
+    return exp(-x * x);
+}
+
+vec3 opticalDepth(vec3 ro, vec3 rd, float maxDist)
 {
     const int STEPS = 8;
 
@@ -59,6 +66,7 @@ vec2 opticalDepth(vec3 ro, vec3 rd, float maxDist)
 
     float depthR = 0.0;
     float depthM = 0.0;
+    float depthO = 0.0;
 
     for(int i=0;i<STEPS;i++)
     {
@@ -70,9 +78,10 @@ vec2 opticalDepth(vec3 ro, vec3 rd, float maxDist)
 
         depthR += densityRayleigh(h) * stepSize;
         depthM += densityMie(h) * stepSize;
+        depthO = densityOzone(h) * stepSize;
     }
 
-    return vec2(depthR, depthM);
+    return vec3(depthR, depthM, depthO);
 }
 
 float rayleighPhase(float mu)
@@ -109,6 +118,7 @@ vec3 atmosphere(vec3 cameraPos, vec3 viewDir, vec3 sunDir)
 
     float accumulatedR = 0.0;
     float accumulatedM = 0.0;
+    float accumulatedO = 0.0;
 
     float mu = dot(viewDir, sunDir);
 
@@ -124,11 +134,12 @@ vec3 atmosphere(vec3 cameraPos, vec3 viewDir, vec3 sunDir)
         float height = getHeight(samplePos);
 
         float localR = densityRayleigh(height);
-
         float localM = densityMie(height);
+        float localO = densityOzone(height);
 
         accumulatedR += localR * segment;
         accumulatedM += localM * segment;
+        accumulatedO += localO * segment;
 
         float p0, p1;
 
@@ -146,9 +157,9 @@ vec3 atmosphere(vec3 cameraPos, vec3 viewDir, vec3 sunDir)
         float s0, s1;
         raySphereIntersect(samplePos, sunDir, ATMOS_RADIUS, s0, s1);
 
-        vec2 sunDepth = opticalDepth(samplePos, sunDir, s1);
+        vec3 sunDepth = opticalDepth(samplePos, sunDir, s1);
 
-        vec3 tau = BETA_R * (accumulatedR + sunDepth.x) + BETA_M * (accumulatedM + sunDepth.y);
+        vec3 tau = BETA_R * (accumulatedR + sunDepth.x) + BETA_M * (accumulatedM + sunDepth.y) + BETA_O * (accumulatedO + sunDepth.z);
 
         vec3 transmittance = exp(-tau);
 

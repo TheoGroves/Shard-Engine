@@ -1,7 +1,6 @@
 import time
 
 from core.systems import PlayerControllerSystem
-from collisions import SpatialGrid
 import spatial_collision_engine as sce
 
 class Engine:

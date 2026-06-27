@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import spatial_collision_engine as sce
 from ecs import EntityManager
@@ -36,30 +37,16 @@ class MeshColliderSystem:
         mesh_collider = mc_entity.components["MeshCollider"]
         transform = mc_entity.components["Transform"]
 
-        verts = mesh_collider.mesh.vertices.reshape(-1, 11)
+        verts = mesh_collider.mesh.vertices.reshape(-1, 11)[:, :3]
+        vecs = [sce.Vec3(*v) for v in verts]
 
-        model = transform.model
+        model = transform.model.flatten()
 
-        tris = []
-
-        for i in range(0, len(mesh_collider.mesh.indices), 3):
-            i0 = mesh_collider.mesh.indices[i]
-            i1 = mesh_collider.mesh.indices[i + 1]
-            i2 = mesh_collider.mesh.indices[i + 2]
-
-            p0 = verts[i0][:3]
-            p1 = verts[i1][:3]
-            p2 = verts[i2][:3]
-
-            p0 = (model @ np.array([*p0,1]))[:3]
-            p1 = (model @ np.array([*p1,1]))[:3]
-            p2 = (model @ np.array([*p2,1]))[:3]
-
-            p0_v = sce.Vec3(p0[0], p0[1], p0[2])
-            p1_v = sce.Vec3(p1[0], p1[1], p1[2])
-            p2_v = sce.Vec3(p2[0], p2[1], p2[2])
-
-            tris.append(sce.Triangle(p0_v, p1_v, p2_v))
+        tris = sce.get_world_triangles(
+            vecs,
+            list(mesh_collider.mesh.indices),
+            sce.Mat4(list(model))
+        )
 
         return tris
     
@@ -67,16 +54,21 @@ class MeshColliderSystem:
         triangles = []
 
         for eid in self.em.query("MeshCollider", "Transform"):
-            for tri in self.get_world_triangles(eid):
-                idx = len(triangles)
+            mc_entity = self.em.entities[eid]
+            mesh_collider = mc_entity.components["MeshCollider"]
+            transform = mc_entity.components["Transform"]
 
-                triangles.append(tri)
+            verts = mesh_collider.mesh.vertices.reshape(-1, 11)[:, :3]
+            vecs = [sce.Vec3(*v) for v in verts]
 
-                a,b,c = tri.a, tri.b, tri.c
+            model = transform.model.flatten()
 
-                grid.insert_triangle(
-                    idx,
-                    a,b,c
-                )
+            new = grid.insert_mesh(
+                vecs,
+                list(mesh_collider.mesh.indices),
+                sce.Mat4(list(model))
+            )
+
+            triangles.extend(new)
             
         return triangles

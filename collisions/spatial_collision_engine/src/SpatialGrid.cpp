@@ -1,6 +1,9 @@
 #include <iostream>
+#include <cstdint>
 #include "SpatialGrid.h"
 #include "Vec3.h"
+#include "Mat4.h"
+#include "Geometry.h"
 
 SpatialGrid::SpatialGrid(float cs)
     : cellSize(cs)
@@ -68,3 +71,38 @@ std::unordered_set<int> SpatialGrid::Query(Vec3 minBounds, Vec3 maxBounds) const
 
     return results;
 }
+
+std::vector<Triangle> SpatialGrid::InsertMesh(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices, const Mat4& model)
+{
+    std::vector<Triangle> tris;
+
+    for (const Triangle& tri : GetWorldTriangles(vertices, indices, model)) {
+        unsigned int idx = static_cast<unsigned int>(tris.size());
+
+        tris.push_back(tri);
+
+        InsertTriangle(idx, tri.a, tri.b, tri.c);
+    }
+
+    return tris;
+}
+
+std::vector<Triangle> GetWorldTriangles(const std::vector<Vec3>& vertices, const std::vector<uint32_t>& indices, const Mat4& model)
+{
+    std::vector<Triangle> tris;
+
+    for (size_t i = 0; i < indices.size(); i += 3) {
+        uint32_t i0 = indices[i];
+        uint32_t i1 = indices[i+1];
+        uint32_t i2 = indices[i+2];
+
+        Vec3 p0 = model * vertices[i0];
+        Vec3 p1 = model * vertices[i1];
+        Vec3 p2 = model * vertices[i2];
+
+        tris.emplace_back(Triangle{p0, p1, p2});
+    }
+
+    return tris;
+}
+
