@@ -21,7 +21,7 @@ set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
 add_library(spatial_core STATIC 
-    src/SpatialGrid.cpp 
+    src/BVH.cpp 
     src/Raycast.cpp 
     src/CollisionSolver.cpp 
 )

@@ -41,11 +41,11 @@ class Engine:
         print(f"Player setup and fetch took {(time.perf_counter()-t)*1000:.1f}ms")
 
         t = time.perf_counter()
-        grid = sce.SpatialGrid(20)
-        triangles = self.mesh_collider_system.get_collision_triangles(grid)
+        bvh = sce.BVH()
+        triangles = self.mesh_collider_system.get_collision_triangles(bvh)
         print(f"Collision mesh generation took {(time.perf_counter()-t)*1000:.1f}ms\n")
         
-        return cam_t, cam, player_controller_system, player_eid, grid, triangles
+        return cam_t, cam, player_controller_system, player_eid, bvh, triangles
     
     def save(self):
         self.scene.save_scene("main")

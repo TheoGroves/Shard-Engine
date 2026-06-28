@@ -11,7 +11,7 @@ class PlayerControllerSystem:
         self.base_speed = 2.5
         self.sprint_speed = 5.0
 
-    def update(self, dt, triangles, grid, gravity):
+    def update(self, dt, triangles, bvh, gravity):
         keys = pygame.key.get_pressed()
         
         for eid in self.em.query("PlayerController", "CapsuleCollider", "Rigidbody", "Transform", "Input"):
@@ -57,7 +57,7 @@ class PlayerControllerSystem:
                     transform,
                     capsule,
                     triangles,
-                    grid
+                    bvh
                 )
             
             if rigidbody.grounded and rigidbody.velocity[1] < 0:

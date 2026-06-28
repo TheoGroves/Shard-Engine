@@ -2,12 +2,12 @@ import numpy as np
 import time
 import spatial_collision_engine as sce
 
-def raycast(ray_o, ray_d, grid, triangles):
+def raycast(ray_o, ray_d, bvh, triangles):
     s = time.perf_counter()
     origin = sce.Vec3(ray_o[0], ray_o[1], ray_o[2])
     dir = sce.Vec3(ray_d[0], ray_d[1], ray_d[2])
 
-    ray_hit = sce.raycast(origin, dir, triangles, grid)
+    ray_hit = sce.raycast(origin, dir, triangles, bvh)
 
     print(f"Raycast took {(time.perf_counter()-s)*1000:.1f}ms")
 

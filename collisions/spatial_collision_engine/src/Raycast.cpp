@@ -3,7 +3,7 @@
 #include "Raycast.h"
 #include "Vec3.h"
 #include "Geometry.h"
-#include "SpatialGrid.h"
+#include "BVH.h"
 
 float RayTriangleIntersection(const Vec3& origin, const Vec3& dir, const Vec3& v0, const Vec3& v1, const Vec3& v2)
 {
@@ -43,7 +43,7 @@ float RayTriangleIntersection(const Vec3& origin, const Vec3& dir, const Vec3& v
     return -1.0f;
 }
 
-RayHit Raycast(const Vec3& origin, const Vec3& dir, const std::vector<Triangle>& triangles, const SpatialGrid& grid)
+RayHit Raycast(const Vec3& origin, const Vec3& dir, const std::vector<Triangle>& triangles, const BVH& bvh)
 {
     float bestT = INFINITY;
     RayHit rayHit;
@@ -51,7 +51,7 @@ RayHit Raycast(const Vec3& origin, const Vec3& dir, const std::vector<Triangle>&
     rayHit.triIndex = -1;
     Triangle hitTri;
 
-    std::unordered_set<int> candidates = grid.Query(Minimum(origin, origin + dir * 1000), Maximum(origin, origin + dir * 1000));
+    std::vector<int> candidates = bvh.Query(Minimum(origin, origin + dir * 1000), Maximum(origin, origin + dir * 1000));
 
     for (const auto& triIndex: candidates) {
         const Triangle& tri = triangles[triIndex];

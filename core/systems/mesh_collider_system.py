@@ -31,26 +31,8 @@ class MeshColliderSystem:
             ],
             mc.mesh.ibo
         )
-
-    def get_world_triangles(self, eid):
-        mc_entity = self.em.entities[eid]
-        mesh_collider = mc_entity.components["MeshCollider"]
-        transform = mc_entity.components["Transform"]
-
-        verts = mesh_collider.mesh.vertices.reshape(-1, 11)[:, :3]
-        vecs = [sce.Vec3(*v) for v in verts]
-
-        model = transform.model.flatten()
-
-        tris = sce.get_world_triangles(
-            vecs,
-            list(mesh_collider.mesh.indices),
-            sce.Mat4(list(model))
-        )
-
-        return tris
     
-    def get_collision_triangles(self, grid):
+    def get_collision_triangles(self, bvh):
         triangles = []
 
         for eid in self.em.query("MeshCollider", "Transform"):
@@ -63,12 +45,14 @@ class MeshColliderSystem:
 
             model = transform.model.flatten()
 
-            new = grid.insert_mesh(
+            new = sce.get_world_triangles(
                 vecs,
                 list(mesh_collider.mesh.indices),
                 sce.Mat4(list(model))
             )
 
             triangles.extend(new)
+
+        bvh.build(triangles)
             
         return triangles

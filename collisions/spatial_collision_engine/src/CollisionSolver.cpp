@@ -7,9 +7,10 @@
 #include "Vec3.h"
 #include "CollisionData.h"
 #include "Geometry.h"
-#include "SpatialGrid.h"
+#include "BVH.h"
 
 constexpr float EPS = 1e-6f;
+constexpr float overFetch = 2.0f;
 
 Vec3 ClosestPointOnTriangle(const Vec3& p, const Vec3& a, const Vec3& b, const Vec3& c)
 {
@@ -218,7 +219,7 @@ CollisionData CapsuleTriangleCollision(const Vec3& pos, const Capsule& capsule, 
     return {true, normal * (capsule.radius - d)};
 }
 
-CollisionData SolveCapsule(Vec3& pos, const Capsule& capsule, const std::vector<Triangle>& triangles, const SpatialGrid& grid)
+CollisionData SolveCapsule(Vec3& pos, const Capsule& capsule, const std::vector<Triangle>& triangles, const BVH& bvh)
 {
     bool grounded = false;
     Vec3 groundedNormal = Vec3(0.0f, 0.0f, 0.0f);
@@ -226,10 +227,10 @@ CollisionData SolveCapsule(Vec3& pos, const Capsule& capsule, const std::vector<
 
     float half = capsule.height * 0.5f;
 
-    Vec3 minBounds = pos - Vec3(r, half, r);
-    Vec3 maxBounds = pos + Vec3(r, half, r);
+    Vec3 minBounds = pos - Vec3(r*overFetch, half*overFetch, r*overFetch);
+    Vec3 maxBounds = pos + Vec3(r*overFetch, half*overFetch, r*overFetch);
 
-    std::unordered_set<int> candidates = grid.Query(minBounds, maxBounds);
+    std::vector<int> candidates = bvh.Query(minBounds, maxBounds);
 
     for (const auto& triIndex: candidates) {
         const Triangle& tri = triangles[triIndex];

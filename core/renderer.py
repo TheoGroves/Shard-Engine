@@ -48,9 +48,9 @@ class Renderer:
         self.camera = camera
         self.view = get_view_matrix(cam_transform)
 
-    def screen_to_world(self, screen_x, screen_y, grid, tris):
+    def screen_to_world(self, screen_x, screen_y, bvh, tris):
         origin, direction = screen_to_world_ray(screen_x, screen_y, (self.width, self.height), self.proj, self.view)
-        return raycast(origin, direction, grid, tris)
+        return raycast(origin, direction, bvh, tris)
 
     def generate_buffers(self, mesh_renderer):
         mesh_renderer.mesh.vbo = self.ctx.buffer(

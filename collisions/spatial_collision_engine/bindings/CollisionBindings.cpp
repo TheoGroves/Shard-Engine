@@ -2,7 +2,7 @@
 #include <pybind11/stl.h>
 #include "Vec3.h"
 #include "Mat4.h"
-#include "SpatialGrid.h"
+#include "BVH.h"
 #include "Raycast.h"
 #include "CollisionSolver.h"
 
@@ -20,17 +20,10 @@ PYBIND11_MODULE(spatial_collision_engine, m)
         .def(py::init<const std::array<float, 16>&>())
         .def_readwrite("m", &Mat4::m);
 
-    py::class_<Cell>(m, "Cell")
-        .def(py::init<int, int, int>());
-
-    py::class_<SpatialGrid>(m, "SpatialGrid")
-        .def(py::init<int>())
-        .def_readwrite("cellSize", &SpatialGrid::cellSize)
-        .def("clear", &SpatialGrid::Clear)
-        .def("world_to_cell", &SpatialGrid::WorldToCell)
-        .def("insert_triangle", &SpatialGrid::InsertTriangle)
-        .def("query", &SpatialGrid::Query)
-        .def("insert_mesh", &SpatialGrid::InsertMesh);
+    py::class_<BVH>(m, "BVH")
+        .def(py::init<>())
+        .def("build", &BVH::Build)
+        .def("query", &BVH::Query);
 
     py::class_<Triangle>(m, "Triangle")
         .def(py::init<Vec3, Vec3, Vec3>())

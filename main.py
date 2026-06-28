@@ -85,7 +85,7 @@ skybox, skybox_prog = generate_skybox(ctx, skybox_settings)
 print(f"Skybox generation completed in {(time.perf_counter()-t)*1000:.1f}ms")
 
 # Load main scene
-cam_t, cam, player_controller_system, player_eid, grid, triangles = engine.initialize()
+cam_t, cam, player_controller_system, player_eid, bvh, triangles = engine.initialize()
 
 # Create final systems
 t = time.perf_counter()
@@ -139,7 +139,7 @@ while True:
     keys = input_manager.current_keys
     
     input_system.update()
-    player_controller_system.update(dt, triangles, grid, GRAVITY)
+    player_controller_system.update(dt, triangles, bvh, GRAVITY)
 
     camera_system.update(keys, dt, ui_renderer)
 
@@ -153,7 +153,7 @@ while True:
     # Update scene when reloaded
     packed_state = editor_ui.update(PLAY_MODE, fps, dt, dt_real, curr_mem_usage, TOTAL_KB, camera_system, skybox_settings)
     if packed_state:
-        cam_t, cam, player_controller_system, player_eid, grid, triangles = packed_state
+        cam_t, cam, player_controller_system, player_eid, bvh, triangles = packed_state
 
     world_time = math.degrees(editor_ui.sky_ui["sun_rad"].update())
 
@@ -185,7 +185,7 @@ while True:
     # Place a temp model at mouse position in editor mode with raycast TODO: Implement proper asset placement rather than Suzanne
     if not PLAY_MODE and input_manager.is_mouse_just_pressed(2):
         mx, my = pygame.mouse.get_pos()
-        hit_pos, _ = renderer.screen_to_world(mx, my, grid, triangles)
+        hit_pos, _ = renderer.screen_to_world(mx, my, bvh, triangles)
         if isinstance(hit_pos, np.ndarray):
             eid, entity = scene.em.create_entity()
             scene.em.add_component(eid, Transform(hit_pos))
