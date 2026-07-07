@@ -1,14 +1,14 @@
 #version 330 core
 
-in vec3 in_pos;
-in vec2 in_uv_map;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aUV;
 
-out vec2 uv;
+out vec2 vUV;
 
-uniform mat4 model;
-uniform mat4 light_space;
+uniform mat4 uModel;
+uniform mat4 uLightSpace;
 
 void main() {
-    uv = in_uv_map;
-    gl_Position = light_space * model * vec4(in_pos, 1.0);
+    vUV = aUV;
+    gl_Position = uLightSpace * uModel * vec4(aPos, 1.0);
 }

@@ -238,3 +238,8 @@ Makefile
 cmake_install.cmake
 *.pyd
 *.pdb
+
+# Non-shader assets
+assets/*
+!assets/shaders/
+!assets/shaders/**rendering/render_core/dependencies/

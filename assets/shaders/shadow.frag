@@ -1,11 +1,11 @@
 #version 330 core
 
-uniform sampler2D tex;
+uniform sampler2D uTex;
 
-in vec2 uv;
+in vec2 vUV;
 
 void main() {
-    if (texture(tex, uv).a < 0.5)
+    if (texture(uTex, vUV).a < 0.5)
     {
         discard;
     }

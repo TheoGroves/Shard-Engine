@@ -9,9 +9,8 @@ from core.asset_manager import AssetManager
 
 
 class MeshColliderSystem:
-    def __init__(self, em: EntityManager, renderer: Renderer, asset_manager: AssetManager):
+    def __init__(self, em: EntityManager, asset_manager: AssetManager):
         self.em = em
-        self.renderer = renderer
         self.asset_manager = asset_manager
 
     def load_model(self, eid, path):

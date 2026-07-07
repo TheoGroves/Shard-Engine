@@ -213,15 +213,7 @@ def parse_obj(location):
                         face_uv_coords[i+1]
                     ])
                     tot += 1
-                         
-    print(f"Generated {tot} triangles from:")
-    if tris > 0:
-        print(f"  - Tris: {tris}")
-    if quads_split > 0:
-        print(f"  - Quads: {quads_split}")
-    if ngons_triangulated > 0:
-        print(f"  - N-gons: {ngons_triangulated}")
-
+                        
     # Correct tangents
     for i in range(len(tangents)):
         if length(tangents[i]) == 0:
@@ -268,8 +260,6 @@ def parse_obj(location):
         indices.reshape(-1, 3),
         uv_indices.reshape(-1, 3)
     )
-
-    print(f"Parsed {location.split('/')[-1]} in {(time.perf_counter()-start)*1000:.1f}ms")
     return vertices, normals, tangents, bitangents, uv_coords, indices, normal_indices, uv_indices
 
 def parse_objs(locations):
@@ -350,5 +340,9 @@ def build_interleaved(vertices, normals, tangents, bitangents, uvs,
 
     return (
         np.array(packed, dtype="f4"),
-        np.array(new_indices, dtype="i4")
+        np.array(new_indices, dtype=np.uint32)
     )
+
+def load_models(locations):
+    vertices, normals, tangents, bitangents, uv_coords, indices, normal_indices, uv_indices = parse_objs(locations)
+    return build_interleaved(vertices, normals, tangents, bitangents, uv_coords, indices, normal_indices, uv_indices)

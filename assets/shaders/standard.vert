@@ -1,42 +1,42 @@
-#version 330 core
+#version 460 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aUV;
+layout(location = 2) in vec3 aNormal;
+layout(location = 3) in vec3 aTangent;
 
-in vec3 in_pos;
-in vec2 in_uv_map;
-in vec3 in_normal;
-in vec3 in_tangent;
+uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProj;
 
-out mat3 TBN;
-out vec3 fragPos;
-out mat4 out_model;
-out vec2 uv;
-out vec4 fragPosLightSpace;
+uniform float uUVScale;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
+uniform mat4 uLightSpace;
 
-uniform float uv_scale;
+out mat3 vTBN;
+out vec3 vPos;
+out mat4 vModel;
+out vec2 vUV;
+out vec4 vFragPosLightSpace;
 
-uniform mat4 light_space;
+void main()
+{
+    mat4 mvp = uProj * uView * uModel;
 
-void main() {
-    mat4 mvp = proj * view * model;
+    mat3 model3 = mat3(uModel);
+    mat3 normalMatrix = transpose(inverse(mat3(uModel)));
 
-    mat3 model3 = mat3(model);
-    mat3 normalMatrix = transpose(inverse(mat3(model)));
-
-    vec3 T = normalize(model3 * in_tangent);
-    vec3 N = normalize(normalMatrix * in_normal);
+    vec3 T = normalize(model3 * aTangent);
+    vec3 N = normalize(normalMatrix * aNormal);
 
     T = normalize(T - dot(T, N) * N);
     vec3 B = cross(N, T);
 
-    TBN = mat3(T, B, N);
+    vTBN = mat3(T, B, N);
 
-    gl_Position = mvp * vec4(in_pos, 1.0);
+    gl_Position = mvp * vec4(aPos, 1.0);
 
-    fragPos = vec3(model * vec4(in_pos, 1.0));
-    out_model = model;
-    uv = in_uv_map * uv_scale;
-    fragPosLightSpace = light_space * vec4(fragPos, 1.0);
+    vPos = vec3(uModel * vec4(aPos, 1.0));
+    vModel = uModel;
+    vUV = aUV * uUVScale;
+    vFragPosLightSpace = uLightSpace * vec4(vPos, 1.0);
 }

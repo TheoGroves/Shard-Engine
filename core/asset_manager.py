@@ -3,8 +3,8 @@ from core.mesh import Mesh
 from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map
 
 class AssetManager:
-    def __init__(self, ctx):
-        self.ctx = ctx
+    def __init__(self, engine):
+        self.engine = engine
 
         self.meshes = {}
         self.textures = {}
@@ -42,8 +42,10 @@ class AssetManager:
             mesh.load_model(path)
             mesh.save_cooked(cooked_path)
 
-        self.meshes[path] = mesh
-        return mesh
+        mesh_id = self.engine.create_mesh(mesh.vertices, mesh.indices)
+
+        self.meshes[path] = mesh_id
+        return mesh_id
     
     @staticmethod
     def _recook_tex(ctx, path, cooked_path, fallback):
@@ -66,22 +68,22 @@ class AssetManager:
 
             if last_exported >= last_cooked:
                 print(f"WARNING: Texture at {path} has been modified since last cook. Recooking.")
-                texture, tex_path = AssetManager._recook_tex(self.ctx, path, cooked_path, fallback)
+                texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
             else:
                 try:
-                    texture, _ = load_cooked_tex(self.ctx, cooked_path)
+                    texture_handle, _ = load_cooked_tex(self.engine, cooked_path)
                     tex_path = path
                 except Exception as _:
-                    texture, tex_path = AssetManager._recook_tex(self.ctx, path, cooked_path, fallback)
+                    texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
         else:
-            texture, tex_path = AssetManager._recook_tex(self.ctx, path, cooked_path, fallback)
+            texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
 
-        self.textures[path] = texture
-        return texture, tex_path
+        self.textures[path] = texture_handle
+        return texture_handle, tex_path
     
     @staticmethod
-    def _recook_env_map(ctx, path, cooked_path):
-        env_map, img, width, height, env_map_path = load_env_map(ctx, path)
+    def _recook_env_map(engine, path, cooked_path):
+        env_map, img, width, height, env_map_path = load_env_map(engine, path)
         save_cooked_env_map(img, width, height, cooked_path)
 
         return env_map, env_map_path
@@ -100,15 +102,15 @@ class AssetManager:
 
             if last_exported >= last_cooked:
                 print(f"WARNING: Env map at {path} has been modified since last cook. Recooking.")
-                env_map, env_map_path = AssetManager._recook_env_map(self.ctx, path, cooked_path)
+                env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
             else:
                 try:
-                    env_map, _ = load_cooked_env_map(self.ctx, cooked_path)
+                    env_map, _ = load_cooked_env_map(self.engine, cooked_path)
                     env_map_path = path
                 except Exception as _:
-                    env_map, env_map_path = AssetManager._recook_env_map(self.ctx, path, cooked_path)
+                    env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
         else:
-            env_map, env_map_path = AssetManager._recook_env_map(self.ctx, path, cooked_path)
+            env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
 
         self.env_maps[path] = env_map
         return env_map, env_map_path

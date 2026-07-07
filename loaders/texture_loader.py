@@ -1,5 +1,4 @@
 from PIL import Image
-import moderngl
 import os
 import pickle
 import OpenEXR
@@ -13,60 +12,56 @@ def get_asset_type(filename):
         if name.endswith(suffix):
             return suffix
 
-def load_texture(ctx, path, fallback):
-    i = Image.open(path if path else fallback).convert("RGBA")
+def load_texture(engine, path, fallback):
+    filename = path if path else fallback
+    img = Image.open(filename).convert("RGBA")
 
-    if get_asset_type(path if path else fallback) in [" orm", "_orm"]:
-        r, g, b, a = i.split()
+    if get_asset_type(filename) in [" orm", "_orm"]:
+        r, g, b, a = img.split()
 
-        pixels = list(r.getdata())
-        avg_occ = sum(pixels) / len(pixels)
+        avg_occ = np.asarray(r, dtype=np.uint8).mean()
 
         if avg_occ < 10:
             print("WARNING: ORM map occlusion is very low, updating to be illuminated.")
             r = r.point(lambda _: 255)
-
-            out = Image.merge("RGBA", (r, g, b, a))
-            out.save(path)
-
-    img = Image.open(path if path else fallback).convert("RGBA")
+            img = Image.merge("RGBA", (r, g, b, a))
 
     img = img.transpose(Image.FLIP_TOP_BOTTOM)
 
-    tex = ctx.texture(img.size, 4, img.tobytes())
-    tex.build_mipmaps()
-    tex.filter = (moderngl.LINEAR_MIPMAP_LINEAR, moderngl.LINEAR)
+    pixels = np.asarray(img, dtype=np.uint8)
 
-    return tex, path if path else fallback
+    tex = engine.create_texture_rgba(pixels)
+    return tex, filename
 
 def save_cooked_tex(src_path, out_path):
     img = Image.open(src_path).convert("RGBA")
     img = img.transpose(Image.FLIP_TOP_BOTTOM)
 
+    pixels = np.asarray(img, dtype=np.uint8)
+
     data = {
         "width": img.width,
         "height": img.height,
-        "rgba": img.tobytes()
+        "rgba": pixels.tobytes()
     }
 
     with open(out_path, "wb") as f:
-        pickle.dump(data, f)
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-def load_cooked_tex(ctx, path):
+def load_cooked_tex(engine, path):
     with open(path, "rb") as f:
         data = pickle.load(f)
 
-    tex = ctx.texture(
-        (data["width"], data["height"]),
-        4,
-        data["rgba"]
-    )
-    tex.build_mipmaps()
-    tex.filter = (moderngl.LINEAR_MIPMAP_LINEAR, moderngl.LINEAR)
+    pixels = np.frombuffer(
+        data["rgba"],
+        dtype=np.uint8
+    ).reshape((data["height"], data["width"], 4))
+
+    tex = engine.create_texture_rgba(pixels)
 
     return tex, path
 
-def load_env_map(ctx, path):
+def load_env_map(engine, path):
     exr = OpenEXR.InputFile(path)
     dw = exr.header()['dataWindow']
 
@@ -83,7 +78,7 @@ def load_env_map(ctx, path):
     img = img.reshape((height, width, 3))
     img = np.flipud(img)
 
-    env_map = ctx.texture(size=(width, height), components=3, data=img.tobytes(), dtype='f4')
+    env_map = engine.create_texture_rgb32f(img)
 
     return env_map, img, width, height, path
 
@@ -91,21 +86,21 @@ def save_cooked_env_map(img, width, height, out_path):
     data = {
         "width": width,
         "height": height,
-        "rgb": img.tobytes()
+        "rgb": np.asarray(img, dtype=np.float32).tobytes()
     }
 
     with open(out_path, "wb") as f:
-        pickle.dump(data, f)
+        pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-def load_cooked_env_map(ctx, path):
+def load_cooked_env_map(engine, path):
     with open(path, "rb") as f:
         data = pickle.load(f)
 
-    tex = ctx.texture(
-        (data["width"], data["height"]), 
-        3, 
-        data["rgb"], 
-        dtype='f4'
-    )
+    pixels = np.frombuffer(
+        data["rgb"],
+        dtype=np.float32
+    ).reshape((data["height"], data["width"], 3))
+
+    tex = engine.create_texture_rgb32f(pixels)
 
     return tex, path

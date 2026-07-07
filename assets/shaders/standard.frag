@@ -1,51 +1,74 @@
-#version 330 core
+#version 460 core
 
-uniform sampler2D tex;
-uniform sampler2D normal_map;
-uniform sampler2D env_map;
-uniform sampler2D height_map;
-uniform sampler2D orm_map;
 
-uniform sampler2D shadow_map;
+uniform sampler2D uAlbedo;
+uniform sampler2D uNormal;
+uniform sampler2D uHeightMap;
+uniform sampler2D uOrmMap;
+uniform sampler2D uEnvMap;
 
-uniform vec3 light_dir;
-uniform vec3 cam_pos;
-uniform float height_scale;
-uniform float tonemapExposure;
+uniform sampler2D uShadowMap;
 
-in mat3 TBN;
-in mat4 out_model;
-in vec3 fragPos;
-in vec2 uv;
-in vec4 fragPosLightSpace;
+uniform vec3 uLightDir;
+uniform vec3 uCamPos;
+uniform float uHeightScale;
+uniform float uTonemapExposure;
 
-out vec4 color;
+in mat3 vTBN;
+in vec3 vPos;
+in mat4 vModel;
+in vec2 vUV;
+in vec4 vFragPosLightSpace;
+
+out vec4 FragColor;
+
+const vec2 poisson[16] = vec2[](
+    vec2(-0.942,-0.399),
+    vec2( 0.945,-0.769),
+    vec2(-0.094,-0.929),
+    vec2( 0.345, 0.294),
+    vec2(-0.916, 0.458),
+    vec2(-0.815,-0.879),
+    vec2(-0.383, 0.277),
+    vec2( 0.975, 0.756),
+    vec2( 0.443,-0.975),
+    vec2( 0.537,-0.474),
+    vec2(-0.265,-0.418),
+    vec2( 0.792, 0.191),
+    vec2(-0.242, 0.998),
+    vec2(-0.814, 0.914),
+    vec2( 0.200, 0.786),
+    vec2( 0.144,-0.141)
+);
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 n, vec3 l)
 {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    if(projCoords.z > 1.0)
+    if (projCoords.z > 1.0)
         return 0.0;
 
     float currentDepth = projCoords.z;
-    float bias = 0.0015 * (1.0 - dot(n, l)) + 0.0002;
+    float bias = 0.015 * (1.0 - dot(n, l)) + 0.002;
 
     float shadow = 0.0;
 
-    vec2 texelSize = 1.0 / textureSize(shadow_map, 0);
+    vec2 texelSize = 1.0 / textureSize(uShadowMap, 0);
 
-    for(int x = -1; x <= 1; x++)
+    // PCF 3x3 Poisson Sampling
+    float radius = 2.0;
+
+    for(int i = 0; i < 16; i++)
     {
-        for(int y = -1; y <= 1; y++)
-        {
-            float closestDepth = texture(shadow_map, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += (currentDepth - bias > closestDepth) ? 1.0 : 0.0;
-        }
+        float depth = texture(
+            uShadowMap,
+            projCoords.xy + poisson[i] * texelSize * radius
+        ).r;
+        
+        shadow += currentDepth - bias > depth ? 1.0 : 0.0;
     }
-
-    shadow /= 9.0;
+    shadow /= 16.0;
 
     return shadow;
 }
@@ -81,31 +104,32 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-void main() {
-    vec3 viewDir = normalize(cam_pos - fragPos);
-    vec3 view = normalize(TBN * viewDir);
+void main()
+{
+    vec3 viewDir = normalize(uCamPos - vPos);
+    vec3 view = normalize(vTBN * viewDir);
 
     float denom = max(view.z, 0.2);
 
-    float height = texture(height_map, uv).r;
+    float height = texture(uHeightMap, vUV).r;
     height = height * 2.0 - 1.0;
 
     vec2 parallaxDir = view.xy / denom;
-    vec2 parallaxOffset = parallaxDir * (height * height_scale);
+    vec2 parallaxOffset = parallaxDir * (height * uHeightScale);
 
-    vec2 uvParallax = uv - parallaxOffset;
+    vec2 uvParallax = fract(vUV - parallaxOffset);
 
-    vec3 nMap = texture(normal_map, uvParallax).rgb;
+    vec3 nMap = texture(uNormal, uvParallax).rgb;
     nMap = nMap * 2.0 - 1.0;
 
-    vec3 n = normalize(TBN * nMap);
-    vec3 l = normalize(light_dir);
-    vec3 v = normalize(cam_pos - fragPos);
+    vec3 n = normalize(vTBN * nMap);
+    vec3 l = normalize(-uLightDir);
+    vec3 v = viewDir;
 
-    // PBR model
-    vec3 orm = texture(orm_map, uvParallax).rgb;
+    // Cook-Torrance Reflectance model
+    vec3 orm = texture(uOrmMap, uvParallax).rgb;
 
-    vec4 baseSample = texture(tex, uvParallax);
+    vec4 baseSample = texture(uAlbedo, uvParallax);
 
     if(baseSample.a < 0.5)
         discard;
@@ -118,8 +142,8 @@ void main() {
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    vec3 L = normalize(light_dir);
-    vec3 V = normalize(cam_pos - fragPos);
+    vec3 L = l;
+    vec3 V = viewDir;
     vec3 H = normalize(L + V);
 
     float NdotL = max(dot(n, L), 0.0);
@@ -138,21 +162,18 @@ void main() {
 
     vec3 diffuse = kD * albedo / 3.14159265;
 
-    float shadow = ShadowCalculation(fragPosLightSpace, n, L);
-    float sunVisibility = smoothstep(-0.1, 0.2, light_dir.y);
+    float shadow = ShadowCalculation(vFragPosLightSpace, n, L);
+    float sunVisibility = smoothstep(-0.1, 0.2, uLightDir.y);
 
     float lightIntensity = 3.0;
-    vec3 direct = (diffuse + specular) * NdotL * lightIntensity * sunVisibility * (1.0 - shadow);
+    vec3 direct = (diffuse + specular) * NdotL * lightIntensity * (1.0-sunVisibility) * (1.0 - shadow);
 
     vec3 ambient = albedo * ao * 0.08;
 
     ambient += vec3(0.1) * albedo;
 
-    vec3 colorFinal = direct + ambient;
+    vec3 hdr = direct + ambient;
+    hdr = vec3(1.0) - exp(-hdr * uTonemapExposure);
 
-    vec3 hdr = colorFinal;
-
-    hdr = vec3(1.0) - exp(-hdr * tonemapExposure);
-
-    color = vec4(hdr, 1.0);
+    FragColor = vec4(hdr, 1.0);
 }

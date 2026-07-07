@@ -4,10 +4,9 @@ from core.systems import PlayerControllerSystem
 import spatial_collision_engine as sce
 
 class Engine:
-    def __init__(self, ctx, scene, renderer, mesh_collider_system, play_mode):
-        self.ctx = ctx
+    def __init__(self, render_engine, scene, mesh_collider_system, play_mode):
+        self.render_engine = render_engine
         self.scene = scene
-        self.renderer = renderer
         self.mesh_collider_system = mesh_collider_system
         self.play_mode = play_mode
 
