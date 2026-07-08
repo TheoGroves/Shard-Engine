@@ -1,4 +1,4 @@
-from rendering.render_core.texture_slots import *
+from rendering.texture_slots import *
 
 class SkyboxMaterial:
     def __init__(self, engine, asset_manager, hdri: str):

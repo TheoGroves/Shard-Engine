@@ -1,6 +1,6 @@
 import os
-from core.mesh import Mesh
 from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map
+from .mesh import Mesh
 
 class AssetManager:
     def __init__(self, engine):

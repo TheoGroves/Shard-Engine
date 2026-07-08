@@ -244,3 +244,4 @@ assets/*
 !assets/shaders/
 !assets/shaders/**rendering/render_core/dependencies/
 /rendering/render_core/dependencies
+rendering/dependencies/

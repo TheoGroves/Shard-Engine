@@ -1,4 +1,4 @@
-from rendering.render_core.texture_slots import *
+from rendering.texture_slots import *
 
 class PBRMaterial:
     def __init__(self, engine, asset_manager, albedo: str, normal: str, height: str, orm: str):
