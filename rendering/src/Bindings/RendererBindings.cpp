@@ -28,6 +28,7 @@ PYBIND11_MODULE(shard_render_engine, m)
     m.def("translate", &Translate);
     m.def("perspective", &Perspective);
     m.def("look_at", &LookAt);
+    m.def("model_matrix", &ModelMatrix);
 
     py::class_<Engine>(m, "Engine")
         .def(py::init<>())

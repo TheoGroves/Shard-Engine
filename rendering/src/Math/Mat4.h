@@ -47,6 +47,67 @@ inline Mat4 Translate(const Vec3& v)
     return r;
 }
 
+inline Mat4 Scale(const Vec3& s) 
+{
+    Mat4 r = Mat4::Identity();
+
+    r.m[0] =  s.x;
+    r.m[5] =  s.y;
+    r.m[10] = s.z;
+
+    return r;
+}
+
+inline Mat4 RotateX(float rad)
+{
+    Mat4 r = Mat4::Identity();
+
+    float c = std::cos(rad);
+    float s = std::sin(rad);
+
+    r.m[5] =   c;
+    r.m[6] =   s;
+    r.m[9] =  -s;
+    r.m[10] =  c;
+
+    return r;
+}
+
+inline Mat4 RotateY(float rad)
+{
+    Mat4 r = Mat4::Identity();
+
+    float c = std::cos(rad);
+    float s = std::sin(rad);
+
+    r.m[0] =  c;
+    r.m[2] = -s;
+    r.m[8] =  s;
+    r.m[10] = c;
+
+    return r;
+}
+
+inline Mat4 RotateZ(float rad)
+{
+    Mat4 r = Mat4::Identity();
+
+    float c = std::cos(rad);
+    float s = std::sin(rad);
+
+    r.m[0] = c;
+    r.m[1] = s;
+    r.m[4] = -s;
+    r.m[5] = c;
+
+    return r;
+}
+
+inline Mat4 ModelMatrix(const Vec3& position, const Vec3& rotation, const Vec3& scale)
+{
+    return Translate(position) * RotateZ(rotation.z) * RotateY(rotation.y) * RotateX(rotation.x) * Scale(scale);
+}
+
 inline Mat4 Perspective(float fov, float aspect, float near, float far)
 {
     Mat4 r = {};

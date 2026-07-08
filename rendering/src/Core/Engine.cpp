@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-constexpr std::string engineVersion = "0.1.1";
+constexpr std::string engineVersion = "0.1.2";
 
 #define ANSI_RESET   "\033[0m"
 #define ANSI_YELLOW  "\033[33m"

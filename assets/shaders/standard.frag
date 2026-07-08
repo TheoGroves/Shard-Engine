@@ -56,7 +56,7 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 n, vec3 l)
 
     vec2 texelSize = 1.0 / textureSize(uShadowMap, 0);
 
-    // PCF 3x3 Poisson Sampling
+    // 16-Sample Poisson PCF
     float radius = 2.0;
 
     for(int i = 0; i < 16; i++)
