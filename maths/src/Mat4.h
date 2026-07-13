@@ -36,6 +36,15 @@ inline Mat4 operator*(const Mat4& a, const Mat4& b)
     return r;
 }
 
+inline Vec3 operator*(const Mat4& m, const Vec3& v)
+{
+    return Vec3(
+        m.m[0]  * v.x + m.m[4]  * v.y + m.m[8]  * v.z + m.m[12],
+        m.m[1]  * v.x + m.m[5]  * v.y + m.m[9]  * v.z + m.m[13],
+        m.m[2]  * v.x + m.m[6]  * v.y + m.m[10] * v.z + m.m[14]
+    );
+}
+
 inline Mat4 Translate(const Vec3& v)
 {
     Mat4 r = Mat4::Identity();

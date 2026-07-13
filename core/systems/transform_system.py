@@ -1,5 +1,5 @@
 from ..entity import EntityManager
-from rendering import Vec3, model_matrix
+from shard_maths import Vec3, model_matrix
 
 class TransformSystem:
     def __init__(self, em: EntityManager):

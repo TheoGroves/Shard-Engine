@@ -1,7 +1,5 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include "Vec3.h"
-#include "Mat4.h"
 #include "BVH.h"
 #include "Raycast.h"
 #include "CollisionSolver.h"
@@ -10,15 +8,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(spatial_collision_engine, m)
 {
-    py::class_<Vec3>(m, "Vec3")
-        .def(py::init<float, float, float>())
-        .def_readwrite("x", &Vec3::x)
-        .def_readwrite("y", &Vec3::y)
-        .def_readwrite("z", &Vec3::z);
-
-    py::class_<Mat4>(m, "Mat4")
-        .def(py::init<const std::array<float, 16>&>())
-        .def_readwrite("m", &Mat4::m);
+    py::module_ maths = py::module_::import("shard_maths");
 
     py::class_<BVH>(m, "BVH")
         .def(py::init<>())

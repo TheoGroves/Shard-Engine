@@ -1,5 +1,5 @@
 from ..component import component
-from rendering import Vec3, model_matrix
+from shard_maths import Vec3, model_matrix
 
 @component
 class Transform:

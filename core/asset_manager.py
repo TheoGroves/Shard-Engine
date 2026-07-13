@@ -45,7 +45,7 @@ class AssetManager:
         mesh_id = self.engine.create_mesh(mesh.vertices, mesh.indices)
 
         self.meshes[path] = mesh_id
-        return mesh_id
+        return mesh_id, mesh
     
     @staticmethod
     def _recook_tex(ctx, path, cooked_path, fallback):

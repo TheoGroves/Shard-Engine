@@ -12,8 +12,8 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Material.h"
 #include "Rendering/Shadowmapper.h"
-#include "Math/Mat4.h"
-#include "Math/Vec3.h"
+#include "Mat4.h"
+#include "Vec3.h"
 #include "Core/Input.h"
 
 struct ShaderState

@@ -10,15 +10,9 @@ if config.getboolean("windows", "use_ucrt64_dll_path", fallback=False):
     if path:
         os.add_dll_directory(path)
 
-from .Release.shard_render_engine import Vec3, Mat4, translate, perspective, look_at, model_matrix, Engine, Camera, forward_from_euler, update_camera_vectors, Input, PlayerController
+from .Release.shard_render_engine import Engine, Camera, forward_from_euler, update_camera_vectors, Input, PlayerController
 
 __all__ = [
-    "Vec3",
-    "Mat4",
-    "translate",
-    "perspective",
-    "look_at",
-    "model_matrix",
     "Engine",
     "Camera",
     "forward_from_euler",

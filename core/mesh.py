@@ -32,7 +32,7 @@ class Mesh:
 
     @classmethod
     def deserialize(cls, data, ctx, asset_manager):
-        mesh = asset_manager.get_mesh(data)
+        mesh, _ = asset_manager.get_mesh(data)
         return mesh
     
     def save_cooked(self, path):

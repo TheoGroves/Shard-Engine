@@ -1,8 +1,8 @@
 #pragma once
 
 #include <GL/glew.h>
-#include "Math/Mat4.h"
-#include "Math/Vec3.h"
+#include "Mat4.h"
+#include "Vec3.h"
 #include "Rendering/Shader.h"
 #include <string>
 

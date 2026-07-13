@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 
 project(shard_render_engine LANGUAGES CXX)
 
+add_subdirectory("../maths" "${CMAKE_CURRENT_BINARY_DIR}/maths")
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -38,6 +40,8 @@ add_library(renderer_core STATIC
 target_include_directories(renderer_core PUBLIC
     ${CMAKE_SOURCE_DIR}/src
 )
+
+target_link_libraries(renderer_core PUBLIC maths)
 
 pybind11_add_module(shard_render_engine
     src/Bindings/RendererBindings.cpp

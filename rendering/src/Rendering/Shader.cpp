@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "Math/Mat4.h"
+#include "Mat4.h"
 
 std::string Shader::LoadFile(const std::string& path)
 {

@@ -1,4 +1,5 @@
-from rendering import RenderEngine, Camera, PlayerController, Mat4, model_matrix, Vec3, PBRMaterial, SkyboxMaterial
+from shard_maths import Mat4, model_matrix, Vec3
+from rendering import RenderEngine, Camera, PlayerController, PBRMaterial, SkyboxMaterial
 from ..entity import EntityManager
 from ..asset_manager import AssetManager
 
@@ -8,7 +9,7 @@ class MeshRendererSystem:
         self.asset_manager = asset_manager
 
     def set_mesh(self, eid, path):
-        self.entity_manager.entities[eid].components["MeshRenderer"].mesh_handle = self.asset_manager.get_mesh(path)
+        self.entity_manager.entities[eid].components["MeshRenderer"].mesh_handle, _ = self.asset_manager.get_mesh(path)
 
     def set_material(self, eid, material):
         self.entity_manager.entities[eid].components["MeshRenderer"].material = material

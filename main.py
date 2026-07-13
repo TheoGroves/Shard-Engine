@@ -1,10 +1,14 @@
 import time
 
-from core import AssetManager, EntityManager
-from rendering import RenderEngine, Camera, PlayerController, Mat4, model_matrix, Vec3, PBRMaterial, SkyboxMaterial
+from maths.python import Vec3, Mat4, model_matrix
 
-from core.systems import TransformSystem, MeshRendererSystem
+from core import AssetManager, EntityManager
+from rendering import RenderEngine, Camera, PlayerController, PBRMaterial, SkyboxMaterial
+
+from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem
 from core.components import Transform, MeshRenderer, Skybox
+
+from collisions import BVH
 
 # Engine Variables
 PLAY_MODE = True
@@ -22,6 +26,7 @@ asset_manager = AssetManager(render_engine)
 
 transform_system = TransformSystem(entity_manager)
 mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager)
+collision_system = CollisionSystem(entity_manager, asset_manager)
 
 # Load Scene
 skybox_eid, _ = entity_manager.create_entity()
@@ -41,6 +46,9 @@ light_dir = Vec3(-0.3, -1.0, -0.2)
 cam = Camera()
 controller = PlayerController()
 
+bvh = BVH()
+triangles = collision_system.get_collision_triangles(bvh)
+
 dt = 1/60
 try:
     while not render_engine.should_close():
@@ -50,8 +58,9 @@ try:
 
         mesh_renderer_system.update(render_engine, light_dir, cam)
 
+        collision_system.update()
+
         dt = time.perf_counter() - s
-        print(1/dt)
         time.sleep(max(0, 1/60-dt))
         dt = time.perf_counter() - s
 finally:

@@ -1,34 +1,15 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include "Math/Vec3.h"
-#include "Math/Mat4.h"
 #include "Core/Engine.h"
 #include "Core/Camera.h"
-#include "Math/Vec3.h"
 #include "Gameplay/PlayerController.h"
 
 namespace py = pybind11;
 
 PYBIND11_MODULE(shard_render_engine, m)
 {
-    py::class_<Vec3>(m, "Vec3")
-        .def(py::init<float, float, float>())
-        .def_readwrite("x", &Vec3::x)
-        .def_readwrite("y", &Vec3::y)
-        .def_readwrite("z", &Vec3::z);
-
-    py::class_<Mat4>(m, "Mat4")
-        .def(py::init([] {
-            return Mat4::Identity();
-        }))
-        .def_readwrite("m", &Mat4::m)
-        .def_static("identity", &Mat4::Identity);
-
-    m.def("translate", &Translate);
-    m.def("perspective", &Perspective);
-    m.def("look_at", &LookAt);
-    m.def("model_matrix", &ModelMatrix);
+    py::module_ maths = py::module_::import("shard_maths");
 
     py::class_<Engine>(m, "Engine")
         .def(py::init<>())
@@ -155,6 +136,4 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def_readwrite("move_speed", &PlayerController::moveSpeed)
         .def_readwrite("mouse_sensitivity", &PlayerController::mouseSensitivity)
         .def("update", &PlayerController::Update);
-
-
 }
