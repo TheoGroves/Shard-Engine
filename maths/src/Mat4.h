@@ -2,10 +2,11 @@
 
 #include <cmath>
 #include <array>
+#include <immintrin.h>
 #include "Vec3.h"
 
 // Column-major Mat4
-struct Mat4
+struct alignas(16) Mat4
 {
     std::array<float,16> m{};
 
@@ -17,32 +18,105 @@ struct Mat4
     }
 };
 
+// SIMD matrix-matrix multiplication
 inline Mat4 operator*(const Mat4& a, const Mat4& b)
 {
     Mat4 r{};
 
-    for (int col = 0; col < 4; col++)
-    {
-        for (int row = 0; row < 4; row++)
-        {
-            r.m[col * 4 + row] =
-                a.m[0 * 4 + row] * b.m[col * 4 + 0] +
-                a.m[1 * 4 + row] * b.m[col * 4 + 1] +
-                a.m[2 * 4 + row] * b.m[col * 4 + 2] +
-                a.m[3 * 4 + row] * b.m[col * 4 + 3];
-        }
-    }
+    // Load columns
+    __m128 a0 = _mm_load_ps(&a.m[0]);
+    __m128 a1 = _mm_load_ps(&a.m[4]);
+    __m128 a2 = _mm_load_ps(&a.m[8]);
+    __m128 a3 = _mm_load_ps(&a.m[12]);
+
+    #ifdef __FMA__
+        // Column 0
+        __m128 c0 = _mm_mul_ps(_mm_set1_ps(b.m[0]), a0);
+        c0 = _mm_fmadd_ps(_mm_set1_ps(b.m[1]), a1, c0);
+        c0 = _mm_fmadd_ps(_mm_set1_ps(b.m[2]), a2, c0);
+        c0 = _mm_fmadd_ps(_mm_set1_ps(b.m[3]), a3, c0);
+        _mm_store_ps(&r.m[0], c0);
+
+        // Column 1
+        __m128 c1 = _mm_mul_ps(_mm_set1_ps(b.m[4]), a0);
+        c1 = _mm_fmadd_ps(_mm_set1_ps(b.m[5]), a1, c1);
+        c1 = _mm_fmadd_ps(_mm_set1_ps(b.m[6]), a2, c1);
+        c1 = _mm_fmadd_ps(_mm_set1_ps(b.m[7]), a3, c1);
+        _mm_store_ps(&r.m[4], c1);
+
+        // Column 2
+        __m128 c2 = _mm_mul_ps(_mm_set1_ps(b.m[8]), a0);
+        c2 = _mm_fmadd_ps(_mm_set1_ps(b.m[9]), a1, c2);
+        c2 = _mm_fmadd_ps(_mm_set1_ps(b.m[10]), a2, c2);
+        c2 = _mm_fmadd_ps(_mm_set1_ps(b.m[11]), a3, c2);
+        _mm_store_ps(&r.m[8], c2);
+
+        // Column 3
+        __m128 c3 = _mm_mul_ps(_mm_set1_ps(b.m[12]), a0);
+        c3 = _mm_fmadd_ps(_mm_set1_ps(b.m[13]), a1, c3);
+        c3 = _mm_fmadd_ps(_mm_set1_ps(b.m[14]), a2, c3);
+        c3 = _mm_fmadd_ps(_mm_set1_ps(b.m[15]), a3, c3);
+        _mm_store_ps(&r.m[12], c3);
+    #else
+        // Column 0
+        __m128 c0 = _mm_mul_ps(_mm_set1_ps(b.m[0]), a0);
+        c0 = _mm_add_ps(c0, _mm_mul_ps(_mm_set1_ps(b.m[1]), a1));
+        c0 = _mm_add_ps(c0, _mm_mul_ps(_mm_set1_ps(b.m[2]), a2));
+        c0 = _mm_add_ps(c0, _mm_mul_ps(_mm_set1_ps(b.m[3]), a3));
+        _mm_store_ps(&r.m[0], c0);
+
+        // Column 1
+        __m128 c1 = _mm_mul_ps(_mm_set1_ps(b.m[4]), a0);
+        c1 = _mm_add_ps(c1, _mm_mul_ps(_mm_set1_ps(b.m[5]), a1));
+        c1 = _mm_add_ps(c1, _mm_mul_ps(_mm_set1_ps(b.m[6]), a2));
+        c1 = _mm_add_ps(c1, _mm_mul_ps(_mm_set1_ps(b.m[7]), a3));
+        _mm_store_ps(&r.m[4], c1);
+
+        // Column 2
+        __m128 c2 = _mm_mul_ps(_mm_set1_ps(b.m[8]), a0);
+        c2 = _mm_add_ps(c2, _mm_mul_ps(_mm_set1_ps(b.m[9]), a1));
+        c2 = _mm_add_ps(c2, _mm_mul_ps(_mm_set1_ps(b.m[10]), a2));
+        c2 = _mm_add_ps(c2, _mm_mul_ps(_mm_set1_ps(b.m[11]), a3));
+        _mm_store_ps(&r.m[8], c2);
+
+        // Column 3
+        __m128 c3 = _mm_mul_ps(_mm_set1_ps(b.m[12]), a0);
+        c3 = _mm_add_ps(c3, _mm_mul_ps(_mm_set1_ps(b.m[13]), a1));
+        c3 = _mm_add_ps(c3, _mm_mul_ps(_mm_set1_ps(b.m[14]), a2));
+        c3 = _mm_add_ps(c3, _mm_mul_ps(_mm_set1_ps(b.m[15]), a3));
+        _mm_store_ps(&r.m[12], c3);
+    #endif
 
     return r;
 }
 
+// SIMD matrix-vector multiplication
 inline Vec3 operator*(const Mat4& m, const Vec3& v)
 {
-    return Vec3(
-        m.m[0]  * v.x + m.m[4]  * v.y + m.m[8]  * v.z + m.m[12],
-        m.m[1]  * v.x + m.m[5]  * v.y + m.m[9]  * v.z + m.m[13],
-        m.m[2]  * v.x + m.m[6]  * v.y + m.m[10] * v.z + m.m[14]
-    );
+    // Load columns
+    __m128 m0 = _mm_load_ps(&m.m[0]);
+    __m128 m1 = _mm_load_ps(&m.m[4]);
+    __m128 m2 = _mm_load_ps(&m.m[8]);
+    __m128 m3 = _mm_load_ps(&m.m[12]);
+
+    // Calculate transformed vector
+    __m128 res = _mm_mul_ps(_mm_set1_ps(v.x), m0);
+
+    #ifdef __FMA__
+        res = _mm_fmadd_ps(_mm_set1_ps(v.y), m1, res);
+        res = _mm_fmadd_ps(_mm_set1_ps(v.z), m2, res);
+    #else
+        res = _mm_add_ps(res, _mm_mul_ps(_mm_set1_ps(v.y), m1));
+        res = _mm_add_ps(res, _mm_mul_ps(_mm_set1_ps(v.z), m2));
+    #endif
+
+    res = _mm_add_ps(res, m3);
+
+    // Store as scalar
+    alignas(16) float outFloats[4];
+    _mm_store_ps(outFloats, res);
+
+    return Vec3(outFloats[0], outFloats[1], outFloats[2]);
 }
 
 inline Mat4 Translate(const Vec3& v)
