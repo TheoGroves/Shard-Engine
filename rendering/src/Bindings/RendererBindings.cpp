@@ -128,6 +128,10 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def_readwrite("backward", &Input::backward)
         .def_readwrite("left", &Input::left)
         .def_readwrite("right", &Input::right)
+        .def_readwrite("up", &Input::up)
+        .def_readwrite("down", &Input::down)
+        .def_readwrite("jump", &Input::jump)
+        .def_readwrite("sprint", &Input::sprint)
         .def_readwrite("mouse_dx", &Input::mouseDeltaX)
         .def_readwrite("mouse_dy", &Input::mouseDeltaY);
 

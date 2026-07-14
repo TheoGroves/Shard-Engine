@@ -1,9 +1,9 @@
 import time
 
-from maths.python import Vec3, Mat4, model_matrix
+from maths.python import Vec3, Mat4, model_matrix, length, normalize
 
 from core import AssetManager, EntityManager
-from rendering import RenderEngine, Camera, PlayerController, PBRMaterial, SkyboxMaterial
+from rendering import RenderEngine, Camera, update_camera_vectors, PBRMaterial, SkyboxMaterial
 
 from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem
 from core.components import Transform, MeshRenderer, Skybox
@@ -44,8 +44,12 @@ mesh_renderer_system.set_material(warehouse_eid, PBRMaterial(render_engine, asse
 
 light_dir = Vec3(-0.3, -1.0, -0.2)
 cam = Camera()
-controller = PlayerController()
 
+# Setup camera controller
+move_speed = 5
+mouse_sensitivity = 0.0025
+
+# Build collision BVH
 bvh = BVH()
 triangles = collision_system.get_collision_triangles(bvh)
 
@@ -54,7 +58,42 @@ try:
     while not render_engine.should_close():
         s = time.perf_counter()
         player_input = render_engine.get_input()
-        controller.update(cam, player_input, dt)
+
+        move_dir = Vec3(0,0,0)
+
+        if player_input.sprint:
+            move_speed = 10
+        else:
+            move_speed = 5
+
+        if player_input.forward:
+            move_dir = move_dir + cam.forward
+
+        if player_input.backward:
+            move_dir = move_dir - cam.forward
+
+        if player_input.right:
+            move_dir = move_dir + cam.right
+
+        if player_input.left:
+            move_dir = move_dir - cam.right
+
+        if player_input.up:
+            move_dir = move_dir + cam.world_up
+
+        if player_input.down:
+            move_dir = move_dir - cam.world_up
+
+        if length(move_dir) > 0.0:
+            cam.position = cam.position + normalize(move_dir) * move_speed * dt;
+
+        cam.rotation.y += player_input.mouse_dx * mouse_sensitivity;
+        cam.rotation.x += player_input.mouse_dy * mouse_sensitivity;
+
+        if cam.rotation.x > 1.5: cam.rotation.x = 1.5
+        if cam.rotation.x < -1.5: cam.rotation.x = -1.5
+
+        update_camera_vectors(cam)
 
         mesh_renderer_system.update(render_engine, light_dir, cam)
 

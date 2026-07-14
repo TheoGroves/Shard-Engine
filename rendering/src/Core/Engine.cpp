@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-constexpr std::string engineVersion = "0.1.2";
+constexpr std::string engineVersion = "0.1.3";
 
 #define ANSI_RESET   "\033[0m"
 #define ANSI_YELLOW  "\033[33m"
@@ -157,10 +157,14 @@ Input Engine::GetInput()
 
     GLFWwindow* window = mWindow.GetNativeWindow();
 
-    input.forward  = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
-    input.backward = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
-    input.left     = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
-    input.right    = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+    input.forward  = glfwGetKey(window, GLFW_KEY_W)          == GLFW_PRESS;
+    input.backward = glfwGetKey(window, GLFW_KEY_S)          == GLFW_PRESS;
+    input.left     = glfwGetKey(window, GLFW_KEY_A)          == GLFW_PRESS;
+    input.right    = glfwGetKey(window, GLFW_KEY_D)          == GLFW_PRESS;
+    input.up       = glfwGetKey(window, GLFW_KEY_E)          == GLFW_PRESS;
+    input.down     = glfwGetKey(window, GLFW_KEY_Q)          == GLFW_PRESS;
+    input.jump     = glfwGetKey(window, GLFW_KEY_SPACE)      == GLFW_PRESS;
+    input.sprint   = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
