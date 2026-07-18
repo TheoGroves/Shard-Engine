@@ -7,6 +7,7 @@ class AssetManager:
     def __init__(self, engine):
         self.engine = engine
 
+        self.mesh_handles = {}
         self.meshes = {}
         self.textures = {}
         self.env_maps = {}
@@ -18,8 +19,8 @@ class AssetManager:
     def get_mesh(self, path):
         path = self._normalize_path(path)
 
-        if path in self.meshes:
-            return self.meshes[path]
+        if path in self.mesh_handles and path in self.meshes:
+            return self.mesh_handles[path], self.meshes[path]
         
         cooked_path = path + ".mesh"
         
@@ -29,14 +30,14 @@ class AssetManager:
             last_cooked   = os.path.getmtime(cooked_path)
 
             if last_exported >= last_cooked:
-                log_error(f"Mesh at {path} has been modified since last cook. Recooking.")
+                log_warning(f"Mesh at {path} has been modified since last cook. Recooking.")
                 mesh.load_model(path)
                 mesh.save_cooked(cooked_path)
             else:
                 try:
                     mesh.load_cooked(cooked_path)
                 except Exception as _:
-                    log_error("Outdated/corrupted cooked mesh. Recooking mesh.")
+                    log_warning("Outdated/corrupted cooked mesh. Recooking mesh.")
                     mesh.load_model(path)
                     mesh.save_cooked(cooked_path)
         else:
@@ -45,7 +46,8 @@ class AssetManager:
 
         mesh_id = self.engine.create_mesh(mesh.vertices, mesh.indices)
 
-        self.meshes[path] = mesh_id
+        self.mesh_handles[path] = mesh_id
+        self.meshes[path] = mesh
         return mesh_id, mesh
     
     @staticmethod

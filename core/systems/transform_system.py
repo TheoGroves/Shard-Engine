@@ -25,3 +25,7 @@ class TransformSystem:
 
     def update_model_matrix(self, t):
         t.model = model_matrix(t.pos, t.rot, t.scale)
+        
+    def update(self):
+        for eid in self.em.query("Transform"):
+            self.update_model_matrix(self.get_transform(eid))

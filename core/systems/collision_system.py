@@ -23,12 +23,12 @@ class CollisionSystem:
             verts = mesh_collider.mesh.vertices.reshape(-1, 11)[:, :3]
             vecs = [Vec3(*v) for v in verts]
 
-            model = transform.model.flatten()
+            model = transform.model
 
             new = get_world_triangles(
                 vecs,
                 list(mesh_collider.mesh.indices),
-                Mat4(list(model))
+                model
             )
 
             triangles.extend(new)
@@ -52,4 +52,9 @@ class CollisionSystem:
             transform = capsule_entity.components["Transform"]
             capsule   = capsule_entity.components["CapsuleCollider"]
             
-            solve_capsule(transform, capsule, self.triangles, self.bvh)
+            collision, normal = solve_capsule(transform, capsule, self.triangles, self.bvh)
+
+            linear_body = capsule_entity.components["LinearBody"]
+
+            if linear_body and collision and linear_body.velocity.y < 0:
+                linear_body.velocity.y = 0

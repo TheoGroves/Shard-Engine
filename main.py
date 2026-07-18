@@ -1,3 +1,4 @@
+import traceback
 import time
 import ctypes
 
@@ -6,62 +7,79 @@ from maths.python import Vec3, Mat4, model_matrix, length, normalize
 from core import AssetManager, EntityManager
 from rendering import RenderEngine, Camera, update_camera_vectors, PBRMaterial, SkyboxMaterial
 
-from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem
-from core.components import Transform, MeshRenderer, Skybox
+from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem
+from core.components import Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider
 
 from core.logger import *
 
 from collisions import BVH
 
-ENGINE_VERSION = "0.0.1"
+try:
+    ENGINE_VERSION = "0.1.0"
 
-log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
+    log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
 
-# Engine Variables
-PLAY_MODE = True
+    # Engine Variables
+    PLAY_MODE = True
 
-user32 = ctypes.windll.user32
+    user32 = ctypes.windll.user32
 
-screen_width = user32.GetSystemMetrics(0)
-screen_height = user32.GetSystemMetrics(1)
+    screen_width = user32.GetSystemMetrics(0)
+    screen_height = user32.GetSystemMetrics(1)
 
-# Setup Shard Renderer
-render_engine = RenderEngine()
-render_engine.initialize(screen_width, screen_height, "Shard Renderer")
-render_engine.hide_mouse()
+    # Setup Shard Renderer
+    render_engine = RenderEngine()
+    render_engine.initialize(screen_width, screen_height, "Shard Renderer")
+    render_engine.hide_mouse()
 
-# Setup systems
-entity_manager = EntityManager()
-asset_manager = AssetManager(render_engine)
+    # Setup systems
+    entity_manager = EntityManager()
+    asset_manager = AssetManager(render_engine)
 
-transform_system = TransformSystem(entity_manager)
-mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager)
-collision_system = CollisionSystem(entity_manager, asset_manager)
+    transform_system = TransformSystem(entity_manager)
+    mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager)
+    collision_system = CollisionSystem(entity_manager, asset_manager)
+    physics_system = PhysicsSystem(entity_manager)
+except Exception as e:
+    log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
 
-# Load Scene
-skybox_eid, _ = entity_manager.create_entity()
-entity_manager.add_component(skybox_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
-entity_manager.add_component(skybox_eid, MeshRenderer())
-entity_manager.add_component(skybox_eid, Skybox())
-mesh_renderer_system.set_mesh(skybox_eid, "assets/models/Cube.obj")
-mesh_renderer_system.set_material(skybox_eid, SkyboxMaterial(render_engine, asset_manager, "assets/textures/Day-HDRI.exr"))
+try:
+    # Load Scene
+    skybox_eid, _ = entity_manager.create_entity()
+    entity_manager.add_component(skybox_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
+    entity_manager.add_component(skybox_eid, MeshRenderer())
+    entity_manager.add_component(skybox_eid, Skybox())
+    mesh_renderer_system.set_mesh(skybox_eid, "assets/models/Cube.obj")
+    mesh_renderer_system.set_material(skybox_eid, SkyboxMaterial(render_engine, asset_manager, "assets/textures/Day-HDRI.exr"))
 
-warehouse_eid, _ = entity_manager.create_entity()
-entity_manager.add_component(warehouse_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
-entity_manager.add_component(warehouse_eid, MeshRenderer())
-mesh_renderer_system.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
-mesh_renderer_system.set_material(warehouse_eid, PBRMaterial(render_engine, asset_manager, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
+    player_eid, _ = entity_manager.create_entity()
+    entity_manager.add_component(player_eid, Transform(Vec3(0,2,0), Vec3(0,0,0), Vec3(1,1,1)))
+    entity_manager.add_component(player_eid, MeshRenderer())
+    entity_manager.add_component(player_eid, LinearBody())
+    entity_manager.add_component(player_eid, CapsuleCollider(2, 1, 0))
+    mesh_renderer_system.set_mesh(player_eid, "assets/models/Player.obj")
+    mesh_renderer_system.set_material(player_eid, PBRMaterial(render_engine, asset_manager, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
 
-light_dir = Vec3(-0.3, -1.0, -0.2)
-cam = Camera()
+    warehouse_eid, _ = entity_manager.create_entity()
+    entity_manager.add_component(warehouse_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
+    entity_manager.add_component(warehouse_eid, MeshRenderer())
+    entity_manager.add_component(warehouse_eid, MeshCollider(None))
+    mesh_renderer_system.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
+    mesh_renderer_system.set_material(warehouse_eid, PBRMaterial(render_engine, asset_manager, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
+    collision_system.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
 
-# Setup camera controller
-move_speed = 5
-mouse_sensitivity = 0.0025
+    light_dir = Vec3(-0.3, -1.0, -0.2)
+    cam = Camera()
 
-# Build collision BVH
-bvh = BVH()
-triangles = collision_system.get_collision_triangles(bvh)
+    # Setup camera controller
+    move_speed = 5
+    mouse_sensitivity = 0.0025
+
+    # Build collision BVH
+    bvh = BVH()
+    triangles = collision_system.get_collision_triangles(bvh)
+except Exception as e:
+    log_error(f"Scene loading failed:\n{traceback.format_exc()}")
 
 dt = 1/60
 try:
@@ -105,13 +123,19 @@ try:
 
         update_camera_vectors(cam)
 
-        mesh_renderer_system.update(render_engine, light_dir, cam)
+        physics_system.update(-9.81, dt)
 
         collision_system.update()
+
+        transform_system.update()
+
+        mesh_renderer_system.update(render_engine, light_dir, cam)
 
         dt = time.perf_counter() - s
         #log_trace(f"{1/dt:.1f} fps")
         time.sleep(max(0, 1/60-dt))
         dt = time.perf_counter() - s
+except Exception as e:
+    log_error(f"Unhandled exception in main loop:\n{traceback.format_exc()}")
 finally:
     render_engine.shutdown()
