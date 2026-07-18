@@ -3,11 +3,13 @@
 #include <iostream>
 #include <utility>
 
-constexpr std::string engineVersion = "0.1.3";
-
 #define ANSI_RESET   "\033[0m"
 #define ANSI_YELLOW  "\033[33m"
 #define ANSI_RED     "\033[31m"
+#define ANSI_GREY    "\033[90m"
+#define ANSI_CYAN    "\033[36m"
+#define ANSI_GREEN   "\033[32m"
+#define ANSI_BRIGHT_RED  "\033[91m"
 
 void Engine::GLFWErrorCallback(int error, const char* description)
 {
@@ -35,12 +37,17 @@ void APIENTRY Engine::GLDebug(GLenum source, GLenum type, GLuint id, GLenum seve
 
 void Engine::LogMessage(std::string_view message)
 {
-    std::cout << ANSI_RESET << "[SYSTEM] " << message << "\n";
+    std::cout << ANSI_GREEN << "[INFO] " << ANSI_RESET << message << "\n";
+}
+
+void Engine::LogDebug(std::string_view message) 
+{
+    std::cout << ANSI_CYAN << "[DEBUG] " << ANSI_RESET << message << "\n";
 }
 
 void Engine::LogWarning(std::string_view warning)
 {
-    std::cout << ANSI_YELLOW << "[WARNING] " << warning << ANSI_RESET << "\n";
+    std::cout << ANSI_YELLOW << "[WARNING] " << ANSI_RESET << warning << "\n";
 }
 
 void Engine::LogError(std::string_view error)
@@ -187,9 +194,6 @@ Input Engine::GetInput()
 
 bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std::string title)
 {
-    LogMessage(std::format("SHARD RENDERER v{}", engineVersion));
-    LogMessage(std::format("Compiled on: {} at {}", (std::string)__DATE__,  __TIME__));
-
     glfwSetErrorCallback(GLFWErrorCallback);
 
     if (!glfwInit())
@@ -197,7 +201,7 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
         LogError("Failed to initialize GLFW.");
         return false;
     }
-    LogMessage("GLFW initialized successfully.");
+    LogDebug("GLFW initialized successfully.");
 
     if (!mWindow.Create(screenWidth, screenHeight, title))
     {
@@ -214,7 +218,7 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
         glfwTerminate();
         return false;
     }
-    LogMessage("GLEW initialized successfully.");
+    LogDebug("GLEW initialized successfully.");
 
     mShadowMapper.CreateResources();
 

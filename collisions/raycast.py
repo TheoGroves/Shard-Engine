@@ -1,6 +1,7 @@
 import numpy as np
 import time
 import spatial_collision_engine as sce
+from core.logger import *
 
 def raycast(ray_o, ray_d, bvh, triangles):
     s = time.perf_counter()
@@ -9,6 +10,6 @@ def raycast(ray_o, ray_d, bvh, triangles):
 
     ray_hit = sce.raycast(origin, dir, triangles, bvh)
 
-    print(f"Raycast took {(time.perf_counter()-s)*1000:.1f}ms")
+    log_info(f"Raycast took {(time.perf_counter()-s)*1000:.1f}ms")
 
     return np.asarray([ray_hit.point.x, ray_hit.point.y, ray_hit.point.z]), ray_hit.tri_index

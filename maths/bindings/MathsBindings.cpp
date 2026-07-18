@@ -31,4 +31,5 @@ PYBIND11_MODULE(shard_maths, m)
     m.def("model_matrix", &ModelMatrix);
     m.def("length", &Length);
     m.def("normalize", &Normalize);
+    m.def("round_to", &Round);
 }

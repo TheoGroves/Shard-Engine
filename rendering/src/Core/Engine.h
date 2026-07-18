@@ -36,6 +36,7 @@ class Engine
 {
 public:
     static void LogMessage(std::string_view message);
+    static void LogDebug(std::string_view message);
     static void LogWarning(std::string_view warning);
     static void LogError(std::string_view error);
 

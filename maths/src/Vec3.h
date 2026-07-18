@@ -87,3 +87,13 @@ inline Vec3 Maximum(const Vec3& a, const Vec3& b)
         std::max(a.z, b.z)
     };
 }
+
+inline Vec3 Round(const Vec3& v, unsigned int digits = 0)
+{
+    float factor = std::pow(10.0f, digits);
+    return {
+        std::round(v.x * factor) / factor,
+        std::round(v.y * factor) / factor,
+        std::round(v.z * factor) / factor
+    };
+}

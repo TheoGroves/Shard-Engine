@@ -1,4 +1,4 @@
-from shard_maths import Mat4, model_matrix, Vec3
+from shard_maths import Mat4, model_matrix, Vec3, round_to
 from rendering import RenderEngine, Camera, PlayerController, PBRMaterial, SkyboxMaterial
 from ..entity import EntityManager
 from ..asset_manager import AssetManager
@@ -28,7 +28,7 @@ class MeshRendererSystem:
                 mesh_renderer.material.update(render_engine, cam, light_dir)
 
         # Shadow Pass
-        render_engine.begin_shadows(Vec3(-light_dir.x, -light_dir.y, -light_dir.z), cam.position)
+        render_engine.begin_shadows(Vec3(-light_dir.x, -light_dir.y, -light_dir.z), Vec3(0,0,0))
         for eid in self.entity_manager.query("MeshRenderer", "Transform"):
             entity = self.entity_manager.entities[eid]
 

@@ -1,4 +1,5 @@
 import os
+from .logger import *
 from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map
 from .mesh import Mesh
 
@@ -28,14 +29,14 @@ class AssetManager:
             last_cooked   = os.path.getmtime(cooked_path)
 
             if last_exported >= last_cooked:
-                print(f"WARNING: Mesh at {path} has been modified since last cook. Recooking.")
+                log_error(f"Mesh at {path} has been modified since last cook. Recooking.")
                 mesh.load_model(path)
                 mesh.save_cooked(cooked_path)
             else:
                 try:
                     mesh.load_cooked(cooked_path)
                 except Exception as _:
-                    print("WARNING: Outdated/corrupted cooked mesh. Recooking mesh.")
+                    log_error("Outdated/corrupted cooked mesh. Recooking mesh.")
                     mesh.load_model(path)
                     mesh.save_cooked(cooked_path)
         else:
@@ -67,7 +68,7 @@ class AssetManager:
             last_cooked   = os.path.getmtime(cooked_path)
 
             if last_exported >= last_cooked:
-                print(f"WARNING: Texture at {path} has been modified since last cook. Recooking.")
+                log_error(f"Texture at {path} has been modified since last cook. Recooking.")
                 texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
             else:
                 try:
@@ -101,7 +102,7 @@ class AssetManager:
             last_cooked   = os.path.getmtime(cooked_path)
 
             if last_exported >= last_cooked:
-                print(f"WARNING: Env map at {path} has been modified since last cook. Recooking.")
+                log_error(f"Env map at {path} has been modified since last cook. Recooking.")
                 env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
             else:
                 try:

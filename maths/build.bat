@@ -1,2 +1,2 @@
-cmake -S . -B build -G "Visual Studio 18 2026"
+cmake -S . -B build -G %*
 cmake --build build --config Release

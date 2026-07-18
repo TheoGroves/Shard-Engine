@@ -1,4 +1,5 @@
 import time
+import ctypes
 
 from maths.python import Vec3, Mat4, model_matrix, length, normalize
 
@@ -8,12 +9,21 @@ from rendering import RenderEngine, Camera, update_camera_vectors, PBRMaterial, 
 from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem
 from core.components import Transform, MeshRenderer, Skybox
 
+from core.logger import *
+
 from collisions import BVH
+
+ENGINE_VERSION = "0.0.1"
+
+log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
 
 # Engine Variables
 PLAY_MODE = True
 
-screen_width, screen_height = 2560, 1440
+user32 = ctypes.windll.user32
+
+screen_width = user32.GetSystemMetrics(0)
+screen_height = user32.GetSystemMetrics(1)
 
 # Setup Shard Renderer
 render_engine = RenderEngine()
@@ -100,6 +110,7 @@ try:
         collision_system.update()
 
         dt = time.perf_counter() - s
+        #log_trace(f"{1/dt:.1f} fps")
         time.sleep(max(0, 1/60-dt))
         dt = time.perf_counter() - s
 finally:

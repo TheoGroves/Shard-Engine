@@ -245,3 +245,5 @@ assets/*
 !assets/shaders/**rendering/render_core/dependencies/
 /rendering/render_core/dependencies
 rendering/dependencies/
+
+build_config.ini
