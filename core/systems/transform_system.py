@@ -1,5 +1,6 @@
 from ..entity import EntityManager
-from shard_maths import Vec3, model_matrix
+from shard_maths import Vec3, model_matrix, normalize, cross
+from rendering import forward_from_euler
 
 class TransformSystem:
     def __init__(self, em: EntityManager):
@@ -28,4 +29,9 @@ class TransformSystem:
         
     def update(self):
         for eid in self.em.query("Transform"):
-            self.update_model_matrix(self.get_transform(eid))
+            transform = self.get_transform(eid)
+            self.update_model_matrix(transform)
+
+            transform.forward = forward_from_euler(transform.rot)
+            transform.right   = normalize(cross(transform.forward, transform.world_up))
+            transform.up      = normalize(cross(transform.right, transform.forward))

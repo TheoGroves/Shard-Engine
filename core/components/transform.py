@@ -8,4 +8,10 @@ class Transform:
         self.rot = rot
         self.scale = scale
 
+        self.world_up = Vec3(0,1,0)
+
+        self.forward = Vec3(0,0,0)
+        self.right = Vec3(0,0,0)
+        self.up = Vec3(0,0,0)
+
         self.model = model_matrix(pos, rot, scale)

@@ -2,10 +2,10 @@ import traceback
 import time
 import ctypes
 
-from maths.python import Vec3, Mat4, model_matrix, length, normalize
+from maths.python import Vec3, length, normalize
 
 from core import AssetManager, EntityManager
-from rendering import RenderEngine, Camera, update_camera_vectors, PBRMaterial, SkyboxMaterial
+from rendering import RenderEngine, PBRMaterial, SkyboxMaterial
 
 from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem
 from core.components import Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider, Camera
@@ -14,8 +14,10 @@ from core.logger import *
 
 from collisions import BVH
 
+from editor import CameraController
+
 try:
-    ENGINE_VERSION = "0.1.1"
+    ENGINE_VERSION = "0.1.2"
 
     log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
 
@@ -76,8 +78,7 @@ try:
     light_dir = Vec3(-0.3, -1.0, -0.2)
 
     # Setup camera controller
-    move_speed = 5
-    mouse_sensitivity = 0.0025
+    camera_controller = CameraController()
 
     # Build collision BVH
     bvh = BVH()
@@ -93,39 +94,7 @@ try:
 
         cam_t = entity_manager.entities[cam_eid].components["Transform"]
 
-        move_dir = Vec3(0,0,0)
-
-        if player_input.sprint:
-            move_speed = 10
-        else:
-            move_speed = 5
-
-        if player_input.forward:
-            move_dir = move_dir + camera_system.render_camera.forward
-
-        if player_input.backward:
-            move_dir = move_dir - camera_system.render_camera.forward
-
-        if player_input.right:
-            move_dir = move_dir + camera_system.render_camera.right
-
-        if player_input.left:
-            move_dir = move_dir - camera_system.render_camera.right
-
-        if player_input.up:
-            move_dir = move_dir + camera_system.render_camera.world_up
-
-        if player_input.down:
-            move_dir = move_dir - camera_system.render_camera.world_up
-
-        if length(move_dir) > 0.0:
-            cam_t.pos = cam_t.pos + normalize(move_dir) * move_speed * dt;
-
-        cam_t.rot.y += player_input.mouse_dx * mouse_sensitivity;
-        cam_t.rot.x += player_input.mouse_dy * mouse_sensitivity;
-
-        if cam_t.rot.x > 1.5: cam_t.rot.x = 1.5
-        if cam_t.rot.x < -1.5: cam_t.rot.x = -1.5
+        camera_controller.update(cam_t, player_input, dt)
 
         camera_system.update()
 
