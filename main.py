@@ -7,15 +7,15 @@ from maths.python import Vec3, Mat4, model_matrix, length, normalize
 from core import AssetManager, EntityManager
 from rendering import RenderEngine, Camera, update_camera_vectors, PBRMaterial, SkyboxMaterial
 
-from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem
-from core.components import Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider
+from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem
+from core.components import Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider, Camera
 
 from core.logger import *
 
 from collisions import BVH
 
 try:
-    ENGINE_VERSION = "0.1.0"
+    ENGINE_VERSION = "0.1.1"
 
     log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
 
@@ -40,6 +40,7 @@ try:
     mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager)
     collision_system = CollisionSystem(entity_manager, asset_manager)
     physics_system = PhysicsSystem(entity_manager)
+    camera_system = CameraSystem(entity_manager)
 except Exception as e:
     log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
 
@@ -60,6 +61,10 @@ try:
     mesh_renderer_system.set_mesh(player_eid, "assets/models/Player.obj")
     mesh_renderer_system.set_material(player_eid, PBRMaterial(render_engine, asset_manager, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
 
+    cam_eid, _ = entity_manager.create_entity()
+    entity_manager.add_component(cam_eid, Transform(Vec3(0,5,0), Vec3(0,0,0), Vec3(1,1,1)))
+    entity_manager.add_component(cam_eid, Camera(True))
+
     warehouse_eid, _ = entity_manager.create_entity()
     entity_manager.add_component(warehouse_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
     entity_manager.add_component(warehouse_eid, MeshRenderer())
@@ -69,7 +74,6 @@ try:
     collision_system.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
 
     light_dir = Vec3(-0.3, -1.0, -0.2)
-    cam = Camera()
 
     # Setup camera controller
     move_speed = 5
@@ -87,6 +91,8 @@ try:
         s = time.perf_counter()
         player_input = render_engine.get_input()
 
+        cam_t = entity_manager.entities[cam_eid].components["Transform"]
+
         move_dir = Vec3(0,0,0)
 
         if player_input.sprint:
@@ -95,33 +101,33 @@ try:
             move_speed = 5
 
         if player_input.forward:
-            move_dir = move_dir + cam.forward
+            move_dir = move_dir + camera_system.render_camera.forward
 
         if player_input.backward:
-            move_dir = move_dir - cam.forward
+            move_dir = move_dir - camera_system.render_camera.forward
 
         if player_input.right:
-            move_dir = move_dir + cam.right
+            move_dir = move_dir + camera_system.render_camera.right
 
         if player_input.left:
-            move_dir = move_dir - cam.right
+            move_dir = move_dir - camera_system.render_camera.right
 
         if player_input.up:
-            move_dir = move_dir + cam.world_up
+            move_dir = move_dir + camera_system.render_camera.world_up
 
         if player_input.down:
-            move_dir = move_dir - cam.world_up
+            move_dir = move_dir - camera_system.render_camera.world_up
 
         if length(move_dir) > 0.0:
-            cam.position = cam.position + normalize(move_dir) * move_speed * dt;
+            cam_t.pos = cam_t.pos + normalize(move_dir) * move_speed * dt;
 
-        cam.rotation.y += player_input.mouse_dx * mouse_sensitivity;
-        cam.rotation.x += player_input.mouse_dy * mouse_sensitivity;
+        cam_t.rot.y += player_input.mouse_dx * mouse_sensitivity;
+        cam_t.rot.x += player_input.mouse_dy * mouse_sensitivity;
 
-        if cam.rotation.x > 1.5: cam.rotation.x = 1.5
-        if cam.rotation.x < -1.5: cam.rotation.x = -1.5
+        if cam_t.rot.x > 1.5: cam_t.rot.x = 1.5
+        if cam_t.rot.x < -1.5: cam_t.rot.x = -1.5
 
-        update_camera_vectors(cam)
+        camera_system.update()
 
         physics_system.update(-9.81, dt)
 
@@ -129,7 +135,7 @@ try:
 
         transform_system.update()
 
-        mesh_renderer_system.update(render_engine, light_dir, cam)
+        mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera)
 
         dt = time.perf_counter() - s
         #log_trace(f"{1/dt:.1f} fps")

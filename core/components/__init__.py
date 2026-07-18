@@ -4,6 +4,7 @@ from .skybox import Skybox
 from .capsule_collider import CapsuleCollider
 from .mesh_collider import MeshCollider
 from .linear_body import LinearBody
+from .camera import Camera
 
 __all__ = [
     "Transform",
@@ -11,5 +12,6 @@ __all__ = [
     "Skybox",
     "CapsuleCollider",
     "MeshCollider",
-    "LinearBody"
+    "LinearBody",
+    "Camera"
 ]
