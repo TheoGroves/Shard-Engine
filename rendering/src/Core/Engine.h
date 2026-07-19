@@ -69,6 +69,18 @@ public:
 
     void DrawShadow(int meshID, const Mat4& model);
 
+    bool Begin(const char* name);
+    void End();
+    void Text(const char* text);
+    void TextColoured(const char* text, Vec3 col);
+    bool Button(const char* label);
+    float SliderFloat(const char* label, float& value, float min, float max);
+    int SliderInt(const char* label, int& value, int min, int max);
+    bool Checkbox(const char* label, bool value);
+    void SameLine();
+    void Separator();
+    void Image(GLuint texture, float width, float height);
+
     GLFWwindow* GetNativeWindow() const;
 
     void DisableDepthMask();

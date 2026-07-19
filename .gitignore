@@ -246,4 +246,6 @@ assets/*
 /rendering/render_core/dependencies
 rendering/dependencies/
 
+#configs
 build_config.ini
+imgui.ini

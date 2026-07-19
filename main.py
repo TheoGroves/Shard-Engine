@@ -2,7 +2,7 @@ import traceback
 import time
 import ctypes
 
-from maths.python import Vec3, length, normalize
+from maths.python import Vec3
 
 from core import AssetManager, EntityManager
 from rendering import RenderEngine, PBRMaterial, SkyboxMaterial
@@ -14,10 +14,10 @@ from core.logger import *
 
 from collisions import BVH
 
-from editor import CameraController
+from editor import CameraController, TestUI
 
 try:
-    ENGINE_VERSION = "0.1.2"
+    ENGINE_VERSION = "0.2.0"
 
     log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
 
@@ -43,6 +43,9 @@ try:
     collision_system = CollisionSystem(entity_manager, asset_manager)
     physics_system = PhysicsSystem(entity_manager)
     camera_system = CameraSystem(entity_manager)
+
+    # Setup UI
+    test_ui = TestUI(render_engine)
 except Exception as e:
     log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
 
@@ -94,7 +97,7 @@ try:
 
         cam_t = entity_manager.entities[cam_eid].components["Transform"]
 
-        camera_controller.update(cam_t, player_input, dt)
+        camera_controller.update(render_engine, cam_t, player_input, dt)
 
         camera_system.update()
 
@@ -105,6 +108,11 @@ try:
         transform_system.update()
 
         mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera)
+
+        test_ui.update()
+
+        render_engine.end_frame()
+
 
         dt = time.perf_counter() - s
         #log_trace(f"{1/dt:.1f} fps")

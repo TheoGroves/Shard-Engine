@@ -9,6 +9,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(DEPS_DIR ${CMAKE_SOURCE_DIR}/dependencies)
 
+set(IMGUI_DIR ${DEPS_DIR}/third_party/imgui)
+
 include_directories(
     ${DEPS_DIR}/include
 )
@@ -35,10 +37,20 @@ add_library(renderer_core STATIC
     src/Rendering/Window.cpp
     src/Rendering/Shader.cpp
     src/Rendering/ShadowMapper.cpp
+
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+    ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
 )
 
 target_include_directories(renderer_core PUBLIC
     ${CMAKE_SOURCE_DIR}/src
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
 )
 
 target_link_libraries(renderer_core PUBLIC maths)

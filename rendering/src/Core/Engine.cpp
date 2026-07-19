@@ -1,4 +1,7 @@
 #include "Engine.h"
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
 #include <format>
 #include <iostream>
 #include <utility>
@@ -164,14 +167,20 @@ Input Engine::GetInput()
 
     GLFWwindow* window = mWindow.GetNativeWindow();
 
-    input.forward  = glfwGetKey(window, GLFW_KEY_W)          == GLFW_PRESS;
-    input.backward = glfwGetKey(window, GLFW_KEY_S)          == GLFW_PRESS;
-    input.left     = glfwGetKey(window, GLFW_KEY_A)          == GLFW_PRESS;
-    input.right    = glfwGetKey(window, GLFW_KEY_D)          == GLFW_PRESS;
-    input.up       = glfwGetKey(window, GLFW_KEY_E)          == GLFW_PRESS;
-    input.down     = glfwGetKey(window, GLFW_KEY_Q)          == GLFW_PRESS;
-    input.jump     = glfwGetKey(window, GLFW_KEY_SPACE)      == GLFW_PRESS;
-    input.sprint   = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (!io.WantCaptureKeyboard)
+    {
+        input.forward  = glfwGetKey(window, GLFW_KEY_W)          == GLFW_PRESS;
+        input.backward = glfwGetKey(window, GLFW_KEY_S)          == GLFW_PRESS;
+        input.left     = glfwGetKey(window, GLFW_KEY_A)          == GLFW_PRESS;
+        input.right    = glfwGetKey(window, GLFW_KEY_D)          == GLFW_PRESS;
+        input.up       = glfwGetKey(window, GLFW_KEY_E)          == GLFW_PRESS;
+        input.down     = glfwGetKey(window, GLFW_KEY_Q)          == GLFW_PRESS;
+        input.jump     = glfwGetKey(window, GLFW_KEY_SPACE)      == GLFW_PRESS;
+        input.sprint   = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
+        input.escape   = glfwGetKey(window, GLFW_KEY_ESCAPE)     == GLFW_PRESS;
+    }
 
     double x, y;
     glfwGetCursorPos(window, &x, &y);
@@ -183,8 +192,15 @@ Input Engine::GetInput()
         mFirstMouse = false;
     }
 
-    input.mouseDeltaX = static_cast<float>(x - mLastMouseX);
-    input.mouseDeltaY = static_cast<float>(mLastMouseY - y);
+    if (io.WantCaptureMouse)
+    {
+        input.mouseDeltaX = 0.0f;
+        input.mouseDeltaY = 0.0f;
+    } else 
+    {
+        input.mouseDeltaX = static_cast<float>(x - mLastMouseX);
+        input.mouseDeltaY = static_cast<float>(mLastMouseY - y);
+    }
 
     mLastMouseX = x;
     mLastMouseY = y;
@@ -220,6 +236,18 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
     }
     LogDebug("GLEW initialized successfully.");
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(GetNativeWindow(), true);
+    ImGui_ImplOpenGL3_Init("#version 460 core");
+
+    LogDebug("ImGui initialized successfully.");
+
     mShadowMapper.CreateResources();
 
     glEnable(GL_DEBUG_OUTPUT);
@@ -241,16 +269,25 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
     return true;
 }
 
+// Rendering
 void Engine::BeginFrame()
 {
+    mWindow.PollEvents();
+
     glEnable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 }
 
 void Engine::EndFrame()
 {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
     mWindow.SwapBuffers();
-    mWindow.PollEvents();
 }
 
 int Engine::CreateMesh(const float* vertices, size_t vertexFloatCount, const uint32_t* indices, size_t indexCount)
@@ -365,6 +402,7 @@ void Engine::DrawMesh(int meshID, int materialID, const Mat4& model)
     glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
 }
 
+// Shadowmapping
 void Engine::BeginShadows(Vec3 lightDir, Vec3 target)
 {
     mShadowMapper.Update(lightDir, target);
@@ -397,6 +435,66 @@ void Engine::DrawShadow(int meshID, const Mat4& model)
     mShadowMapper.RenderDepthMesh(mesh.vao, mesh.indexCount, model);
 }
 
+// UI
+bool Engine::Begin(const char* name)
+{
+    return ImGui::Begin(name);
+}
+
+void Engine::End()
+{
+    ImGui::End();
+}
+
+void Engine::Text(const char* text)
+{
+    ImGui::Text("%s", text);
+}
+
+void Engine::TextColoured(const char* text, Vec3 col)
+{
+    ImGui::TextColored(ImVec4(col.x, col.y, col.z, 1.0f), "%s", text);
+}
+
+bool Engine::Button(const char* label)
+{
+    return ImGui::Button(label);
+}
+
+float Engine::SliderFloat(const char* label, float& value, float min, float max)
+{
+    ImGui::SliderFloat(label, &value, min, max);
+    return value;
+}
+
+int Engine::SliderInt(const char* label, int& value, int min, int max)
+{
+    ImGui::SliderInt(label, &value, min, max);
+    return value;
+}
+
+bool Engine::Checkbox(const char* label, bool value)
+{
+    ImGui::Checkbox(label, &value);
+    return value;
+}
+
+void Engine::SameLine()
+{
+    ImGui::SameLine();
+}
+
+void Engine::Separator()
+{
+    ImGui::Separator();
+}
+
+void Engine::Image(GLuint texture, float width, float height)
+{
+    ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2(width, height));
+}
+
+// Helpers
 GLFWwindow* Engine::GetNativeWindow() const
 {
     return mWindow.GetNativeWindow();
@@ -451,8 +549,13 @@ void Engine::Shutdown()
 {
     LogMessage("Engine shutting down.");
 
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     mWindow.Destroy();
     glfwTerminate();
+
     mRunning = false;
 
     LogMessage("Engine shutdown complete.");

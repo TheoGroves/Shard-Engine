@@ -62,6 +62,3 @@ class MeshRendererSystem:
                 render_engine.enable_depth_test()
                 render_engine.enable_cull_face()
 
-        render_engine.end_frame()
-
-
