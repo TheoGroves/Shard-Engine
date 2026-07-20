@@ -205,7 +205,9 @@ Input Engine::GetInput()
         mFirstMouse = false;
     }
 
-    if (io.WantCaptureMouse)
+    int cursorMode = glfwGetInputMode(window, GLFW_CURSOR);
+
+    if (io.WantCaptureMouse && cursorMode == GLFW_CURSOR_NORMAL)
     {
         input.mouseDeltaX = 0.0f;
         input.mouseDeltaY = 0.0f;
@@ -256,6 +258,9 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
 
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
     ImGui::StyleColorsDark();
 
     ImGui_ImplGlfw_InitForOpenGL(GetNativeWindow(), true);
@@ -295,12 +300,51 @@ void Engine::BeginFrame()
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+    ImGui::SetNextWindowPos(viewport->WorkPos);
+    ImGui::SetNextWindowSize(viewport->WorkSize);
+    ImGui::SetNextWindowViewport(viewport->ID);
+
+    window_flags |=
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoBringToFrontOnFocus |
+        ImGuiWindowFlags_NoNavFocus;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+    ImGui::Begin("DockSpace", nullptr, window_flags);
+
+    ImGui::PopStyleVar(2);
+
+    ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
+    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
 }
 
 void Engine::EndFrame()
 {
+    ImGui::End();
+
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    ImGuiIO& io = ImGui::GetIO();
+
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        GLFWwindow* backup = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+
+        glfwMakeContextCurrent(backup);
+    }
 
     mWindow.SwapBuffers();
 }
@@ -506,7 +550,7 @@ void Engine::Separator()
 
 void Engine::Image(GLuint texture, float width, float height)
 {
-    ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2(width, height));
+    ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2(width, height), ImVec2(0,1), ImVec2(1,0));
 }
 
 void Engine::BeginChild(const char* name, float width, float height)
@@ -519,10 +563,27 @@ void Engine::EndChild()
     ImGui::EndChild();
 }
 
+Vec3 Engine::GetAvailableRegion()
+{
+    ImVec2 size = ImGui::GetContentRegionAvail();
+
+    return Vec3(size.x, size.y, 0.0f);
+}
+
 // Helpers
 GLFWwindow* Engine::GetNativeWindow() const
 {
     return mWindow.GetNativeWindow();
+}
+
+int Engine::GetWidth()
+{
+    return mWidth;
+}
+
+int Engine::GetHeight()
+{
+    return mHeight;
 }
 
 void Engine::DisableDepthMask()

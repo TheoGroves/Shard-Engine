@@ -5,7 +5,7 @@ import ctypes
 from maths.python import Vec3
 
 from core import AssetManager, EntityManager
-from rendering import RenderEngine, PBRMaterial, SkyboxMaterial
+from rendering import RenderEngine, PBRMaterial, SkyboxMaterial, Viewport
 
 from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem
 from core.components import Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider, Camera
@@ -14,7 +14,7 @@ from core.logger import Logger
 
 from collisions import BVH
 
-from editor import CameraController, Console
+from editor import CameraController, Console, ViewportUI
 
 try:
     ENGINE_VERSION = "0.2.0"
@@ -38,6 +38,13 @@ try:
     render_engine.initialize(screen_width, screen_height, "Shard Renderer")
     render_engine.hide_mouse()
     console.set_render_engine(render_engine)
+
+    viewport = Viewport()
+    viewport.create(1280, 720)
+
+    # Setup UI
+    viewport_ui = ViewportUI()
+    viewport_ui.set_render_engine(render_engine)
 
     # Setup systems
     entity_manager = EntityManager()
@@ -109,9 +116,10 @@ try:
 
         transform_system.update()
 
-        mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera)
+        mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera, viewport)
 
         console.update(logger)
+        viewport_ui.update(viewport, camera_system.render_camera)
 
         render_engine.end_frame()
 

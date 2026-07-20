@@ -37,6 +37,7 @@ add_library(renderer_core STATIC
     src/Rendering/Window.cpp
     src/Rendering/Shader.cpp
     src/Rendering/ShadowMapper.cpp
+    src/Rendering/Viewport.cpp
 
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
@@ -73,7 +74,7 @@ if (WIN32)
         message(FATAL_ERROR "GLEW not found.")
     endif()
 
-    target_link_libraries(renderer_core PRIVATE
+    target_link_libraries(renderer_core PUBLIC
         glfw3
         ${GLEW_LIB}
         opengl32

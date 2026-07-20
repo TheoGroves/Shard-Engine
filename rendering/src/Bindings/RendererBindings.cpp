@@ -4,6 +4,7 @@
 #include "Core/Engine.h"
 #include "Core/Camera.h"
 #include "Gameplay/PlayerController.h"
+#include "Rendering/Viewport.h"
 
 namespace py = pybind11;
 
@@ -103,6 +104,9 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def("image", &Engine::Image)
         .def("begin_child", &Engine::BeginChild)
         .def("end_child", &Engine::EndChild)
+        .def("get_available_region", &Engine::GetAvailableRegion)
+        .def("get_width", &Engine::GetWidth)
+        .def("get_height", &Engine::GetHeight)
         .def("disable_depth_mask", &Engine::DisableDepthMask)
         .def("enable_depth_mask", &Engine::EnableDepthMask)
         .def("disable_cull_face", &Engine::DisableCullFace)
@@ -167,4 +171,18 @@ PYBIND11_MODULE(shard_render_engine, m)
         .value("Error", LogEntry::Level::Error)
         .value("Fatal", LogEntry::Level::Fatal)
         .export_values();
+
+    py::class_<Viewport>(m, "Viewport")
+        .def(py::init<>())
+        .def("create", &Viewport::Create)
+        .def("destroy", &Viewport::Destroy)
+        .def("resize", &Viewport::Resize)
+        .def("bind", &Viewport::Bind)
+        .def("unbind", &Viewport::Unbind)
+
+        .def_readonly("fbo", &Viewport::fbo)
+        .def_readonly("colour", &Viewport::colour)
+        .def_readonly("depth", &Viewport::depth)
+        .def_readonly("width", &Viewport::width)
+        .def_readonly("height", &Viewport::height);
 }

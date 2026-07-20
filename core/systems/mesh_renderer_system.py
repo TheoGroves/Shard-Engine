@@ -14,7 +14,7 @@ class MeshRendererSystem:
     def set_material(self, eid, material):
         self.entity_manager.entities[eid].components["MeshRenderer"].material = material
 
-    def update(self, render_engine, light_dir, cam):
+    def update(self, render_engine, light_dir, cam, viewport):
         # Update materials
         for eid in self.entity_manager.query("MeshRenderer", "Transform"):
             entity = self.entity_manager.entities[eid]
@@ -45,6 +45,8 @@ class MeshRendererSystem:
         # Render Pass
         render_engine.begin_frame()
 
+        viewport.bind()
+
         for eid in self.entity_manager.query("MeshRenderer", "Transform"):
             entity = self.entity_manager.entities[eid]
             transform = entity.components["Transform"]
@@ -62,3 +64,4 @@ class MeshRendererSystem:
                 render_engine.enable_depth_test()
                 render_engine.enable_cull_face()
 
+        viewport.unbind(render_engine.get_width(), render_engine.get_height())

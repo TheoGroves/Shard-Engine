@@ -1,4 +1,4 @@
-from .shard_renderer import Camera, forward_from_euler, update_camera_vectors, Input, PlayerController, LogEntry, LogLevel
+from .shard_renderer import Camera, forward_from_euler, update_camera_vectors, Input, PlayerController, LogEntry, LogLevel, Viewport
 from .shard_renderer import Engine as RenderEngine
 from .materials import PBRMaterial, SkyboxMaterial
 __all__ = [
@@ -11,5 +11,6 @@ __all__ = [
     "PBRMaterial", 
     "SkyboxMaterial", 
     "LogEntry", 
-    "LogLevel"
+    "LogLevel",
+    "Viewport"
 ]

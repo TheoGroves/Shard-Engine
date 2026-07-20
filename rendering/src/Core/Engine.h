@@ -100,9 +100,11 @@ public:
     void Image(GLuint texture, float width, float height);
     void BeginChild(const char* name, float width, float height);
     void EndChild();
-
+    Vec3 GetAvailableRegion();
 
     GLFWwindow* GetNativeWindow() const;
+    int GetWidth();
+    int GetHeight();
 
     void DisableDepthMask();
     void EnableDepthMask();
@@ -117,6 +119,7 @@ public:
     void Shutdown();
 
     bool ShouldClose() const;
+
 private:
     static Engine* sInstance;
 
