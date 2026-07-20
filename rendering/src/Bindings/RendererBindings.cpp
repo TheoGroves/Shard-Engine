@@ -42,7 +42,7 @@ PYBIND11_MODULE(shard_render_engine, m)
             auto buf = image.request();
 
             if (buf.ndim != 3 || buf.shape[2] != 4)
-                Engine::LogError("Expected HxWx4 image");
+                engine.LogError("Expected HxWx4 image");
 
             int height = static_cast<int>(buf.shape[0]);
             int width  = static_cast<int>(buf.shape[1]);
@@ -63,7 +63,7 @@ PYBIND11_MODULE(shard_render_engine, m)
             auto buf = image.request();
 
             if (buf.ndim != 3 || buf.shape[2] != 3)
-                Engine::LogError("Expected HxWx4 image");
+                engine.LogError("Expected HxWx4 image");
 
             int height = static_cast<int>(buf.shape[0]);
             int width  = static_cast<int>(buf.shape[1]);
@@ -78,8 +78,8 @@ PYBIND11_MODULE(shard_render_engine, m)
             return engine.CreateTextureRGB32F(width, height, pixels);
         })
 
+        .def("consume_logs", &Engine::ConsumeLogs)
         .def("bind_texture", &Engine::BindTexture)
-
         .def("get_input", &Engine::GetInput)
         .def("should_close", &Engine::ShouldClose)
         .def("begin_frame", &Engine::BeginFrame)
@@ -101,6 +101,8 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def("same_line", &Engine::SameLine)
         .def("separator", &Engine::Separator)
         .def("image", &Engine::Image)
+        .def("begin_child", &Engine::BeginChild)
+        .def("end_child", &Engine::EndChild)
         .def("disable_depth_mask", &Engine::DisableDepthMask)
         .def("enable_depth_mask", &Engine::EnableDepthMask)
         .def("disable_cull_face", &Engine::DisableCullFace)
@@ -152,4 +154,17 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def_readwrite("move_speed", &PlayerController::moveSpeed)
         .def_readwrite("mouse_sensitivity", &PlayerController::mouseSensitivity)
         .def("update", &PlayerController::Update);
+
+    py::class_<LogEntry>(m, "LogEntry")
+        .def_readonly("text", &LogEntry::text)
+        .def_readonly("level", &LogEntry::level);
+
+    py::enum_<LogEntry::Level>(m, "LogLevel")
+        .value("Trace", LogEntry::Level::Trace)
+        .value("Debug", LogEntry::Level::Debug)
+        .value("Info", LogEntry::Level::Info)
+        .value("Warning", LogEntry::Level::Warning)
+        .value("Error", LogEntry::Level::Error)
+        .value("Fatal", LogEntry::Level::Fatal)
+        .export_values();
 }

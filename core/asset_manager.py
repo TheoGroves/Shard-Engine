@@ -4,8 +4,9 @@ from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_te
 from .mesh import Mesh
 
 class AssetManager:
-    def __init__(self, engine):
+    def __init__(self, engine, logger):
         self.engine = engine
+        self.logger = logger
 
         self.mesh_handles = {}
         self.meshes = {}
@@ -30,14 +31,14 @@ class AssetManager:
             last_cooked   = os.path.getmtime(cooked_path)
 
             if last_exported >= last_cooked:
-                log_warning(f"Mesh at {path} has been modified since last cook. Recooking.")
+                self.logger.log_warning(f"Mesh at {path} has been modified since last cook. Recooking.")
                 mesh.load_model(path)
                 mesh.save_cooked(cooked_path)
             else:
                 try:
                     mesh.load_cooked(cooked_path)
                 except Exception as _:
-                    log_warning("Outdated/corrupted cooked mesh. Recooking mesh.")
+                    self.logger.log_warning("Outdated/corrupted cooked mesh. Recooking mesh.")
                     mesh.load_model(path)
                     mesh.save_cooked(cooked_path)
         else:
@@ -70,7 +71,7 @@ class AssetManager:
             last_cooked   = os.path.getmtime(cooked_path)
 
             if last_exported >= last_cooked:
-                log_error(f"Texture at {path} has been modified since last cook. Recooking.")
+                self.logger.log_error(f"Texture at {path} has been modified since last cook. Recooking.")
                 texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
             else:
                 try:
@@ -104,7 +105,7 @@ class AssetManager:
             last_cooked   = os.path.getmtime(cooked_path)
 
             if last_exported >= last_cooked:
-                log_error(f"Env map at {path} has been modified since last cook. Recooking.")
+                self.logger.log_error(f"Env map at {path} has been modified since last cook. Recooking.")
                 env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
             else:
                 try:

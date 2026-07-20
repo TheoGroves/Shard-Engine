@@ -14,48 +14,61 @@
 #define ANSI_GREEN   "\033[32m"
 #define ANSI_BRIGHT_RED  "\033[91m"
 
+Engine* Engine::sInstance = nullptr;
+
 void Engine::GLFWErrorCallback(int error, const char* description)
 {
-    LogError(std::format("GLFW {}: {}", error, description));
+    if (sInstance)
+        sInstance->LogError(std::format("GLFW {}: {}", error, description));
 }
 
 void APIENTRY Engine::GLDebug(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 {
+    if (!sInstance)
+        return;
+
     switch (severity)
     {
     case GL_DEBUG_SEVERITY_HIGH:
-        LogError(message);
+        sInstance->LogError(message);
         break;
     case GL_DEBUG_SEVERITY_MEDIUM:
-        LogWarning(message);
+        sInstance->LogWarning(message);
         break;
     case GL_DEBUG_SEVERITY_LOW:
-        LogWarning(message);
+        sInstance->LogWarning(message);
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        LogMessage(message);
+        sInstance->LogMessage(message);
         break;
     }
 }
 
 void Engine::LogMessage(std::string_view message)
 {
-    std::cout << ANSI_GREEN << "[INFO] " << ANSI_RESET << message << "\n";
+    mPendingLogs.push_back({ LogEntry::Level::Info, std::string(message) });
 }
 
 void Engine::LogDebug(std::string_view message) 
 {
-    std::cout << ANSI_CYAN << "[DEBUG] " << ANSI_RESET << message << "\n";
+    mPendingLogs.push_back({ LogEntry::Level::Debug, std::string(message) });
 }
 
 void Engine::LogWarning(std::string_view warning)
 {
-    std::cout << ANSI_YELLOW << "[WARNING] " << ANSI_RESET << warning << "\n";
+    mPendingLogs.push_back({ LogEntry::Level::Warning, std::string(warning) });
 }
 
 void Engine::LogError(std::string_view error)
 {
-    std::cerr << ANSI_RED << "[ERROR] " << error << ANSI_RESET << "\n";
+    mPendingLogs.push_back({ LogEntry::Level::Error, std::string(error) });
+}
+
+std::vector<LogEntry> Engine::ConsumeLogs()
+{
+    auto logs = std::move(mPendingLogs);
+    mPendingLogs.clear();
+    return logs;
 }
 
 void Engine::UpdateInt(int matID, const std::string& uniform, int value)
@@ -210,31 +223,33 @@ Input Engine::GetInput()
 
 bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std::string title)
 {
+    sInstance = this;
+
     glfwSetErrorCallback(GLFWErrorCallback);
 
     if (!glfwInit())
     {
-        LogError("Failed to initialize GLFW.");
+        this->LogError("Failed to initialize GLFW.");
         return false;
     }
-    LogDebug("GLFW initialized successfully.");
+    this->LogDebug("GLFW initialized successfully.");
 
     if (!mWindow.Create(screenWidth, screenHeight, title))
     {
         glfwTerminate();
-        LogError("Failed to create OpenGL context.");
+        this->LogError("Failed to create OpenGL context.");
         return false;
     }
 
-    LogMessage(std::format("Created Window of size {}x{}", screenWidth, screenHeight));
+    this->LogMessage(std::format("Created Window of size {}x{}", screenWidth, screenHeight));
 
     if (glewInit() != GLEW_OK)
     {
-        LogError("Failed to initialize GLEW.");
+        this->LogError("Failed to initialize GLEW.");
         glfwTerminate();
         return false;
     }
-    LogDebug("GLEW initialized successfully.");
+    this->LogDebug("GLEW initialized successfully.");
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -246,7 +261,7 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
     ImGui_ImplGlfw_InitForOpenGL(GetNativeWindow(), true);
     ImGui_ImplOpenGL3_Init("#version 460 core");
 
-    LogDebug("ImGui initialized successfully.");
+    this->LogDebug("ImGui initialized successfully.");
 
     mShadowMapper.CreateResources();
 
@@ -257,9 +272,9 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
     const GLubyte* renderer = glGetString(GL_RENDERER);
     const GLubyte* version  = glGetString(GL_VERSION);
 
-    LogMessage(std::format("GPU Vendor: {}", reinterpret_cast<const char*>(vendor)));
-    LogMessage(std::format("Renderer  : {}", reinterpret_cast<const char*>(renderer)));
-    LogMessage(std::format("GL Version: {}", reinterpret_cast<const char*>(version)));
+    this->LogMessage(std::format("GPU Vendor: {}", reinterpret_cast<const char*>(vendor)));
+    this->LogMessage(std::format("Renderer  : {}", reinterpret_cast<const char*>(renderer)));
+    this->LogMessage(std::format("GL Version: {}", reinterpret_cast<const char*>(version)));
 
     glClearColor(0.05f, 0.07f, 0.09f, 1.0f);
 
@@ -494,6 +509,16 @@ void Engine::Image(GLuint texture, float width, float height)
     ImGui::Image((ImTextureID)(intptr_t)texture, ImVec2(width, height));
 }
 
+void Engine::BeginChild(const char* name, float width, float height)
+{
+    ImGui::BeginChild(name, ImVec2(width, height), true);
+}
+
+void Engine::EndChild()
+{
+    ImGui::EndChild();
+}
+
 // Helpers
 GLFWwindow* Engine::GetNativeWindow() const
 {
@@ -547,7 +572,7 @@ bool Engine::ShouldClose() const
 
 void Engine::Shutdown()
 {
-    LogMessage("Engine shutting down.");
+    this->LogMessage("Engine shutting down.");
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
@@ -558,5 +583,7 @@ void Engine::Shutdown()
 
     mRunning = false;
 
-    LogMessage("Engine shutdown complete.");
+    this->LogMessage("Engine shutdown complete.");
+
+    sInstance = nullptr;
 }

@@ -32,13 +32,31 @@ struct ShaderState
     }
 };
 
+struct LogEntry
+{
+    enum class Level
+    {
+        Trace,
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Fatal
+    };
+
+    Level level;
+    std::string text;
+};
+
 class Engine
 {
 public:
-    static void LogMessage(std::string_view message);
-    static void LogDebug(std::string_view message);
-    static void LogWarning(std::string_view warning);
-    static void LogError(std::string_view error);
+    void LogMessage(std::string_view message);
+    void LogDebug(std::string_view message);
+    void LogWarning(std::string_view warning);
+    void LogError(std::string_view error);
+
+    std::vector<LogEntry> ConsumeLogs();
 
     GLuint CreateTextureRGBA(int width, int height, const std::vector<uint8_t>& pixels);
     GLuint CreateTextureRGB32F(int width, int height, const std::vector<float>& pixels);
@@ -80,6 +98,9 @@ public:
     void SameLine();
     void Separator();
     void Image(GLuint texture, float width, float height);
+    void BeginChild(const char* name, float width, float height);
+    void EndChild();
+
 
     GLFWwindow* GetNativeWindow() const;
 
@@ -97,6 +118,8 @@ public:
 
     bool ShouldClose() const;
 private:
+    static Engine* sInstance;
+
     static void GLFWErrorCallback(int error, const char* description);
     static void APIENTRY GLDebug(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam);
 
@@ -109,6 +132,8 @@ private:
 
     Shader mShader;
     ShaderState mCurrentShader;
+
+    std::vector<LogEntry> mPendingLogs;
 
     struct Mesh
     {

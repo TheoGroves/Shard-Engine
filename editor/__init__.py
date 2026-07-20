@@ -1,5 +1,5 @@
 from .camera_controller import CameraController
-from .test_ui import TestUI
+from .console import Console
 
 __all__ = [
     "CameraController",

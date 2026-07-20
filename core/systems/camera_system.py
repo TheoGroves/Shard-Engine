@@ -10,17 +10,17 @@ class CameraSystem:
     def get_camera(self, eid):
         return self.entity_manager.entities[eid].components["Camera"]
 
-    def update(self):
+    def update(self, logger):
         cameras = self.entity_manager.query("Transform", "Camera")
 
         if not cameras:
-            log_warning("No cameras found in scene.")
+            logger.log_warning("No cameras found in scene.")
 
         if not any(self.get_camera(eid).active for eid in cameras):
-            log_warning("No active cameras found in scene.")
+            logger.log_warning("No active cameras found in scene.")
 
         if sum(self.get_camera(eid).active for eid in cameras) > 1:
-            log_warning("Several active cameras found in scene.")
+            logger.log_warning("Several active cameras found in scene.")
 
         for eid in cameras:
             cam = self.get_camera(eid)

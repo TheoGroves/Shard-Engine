@@ -1,4 +1,4 @@
-from .Release.shard_render_engine import Engine, Camera, forward_from_euler, update_camera_vectors, Input, PlayerController
+from .Release.shard_render_engine import Engine, Camera, forward_from_euler, update_camera_vectors, Input, PlayerController, LogEntry, LogLevel
 
 __all__ = [
     "Engine",
@@ -6,5 +6,7 @@ __all__ = [
     "forward_from_euler",
     "update_camera_vectors",
     "Input",
-    "PlayerController"
+    "PlayerController",
+    "LogEntry",
+    "LogLevel"
 ]

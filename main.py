@@ -10,16 +10,20 @@ from rendering import RenderEngine, PBRMaterial, SkyboxMaterial
 from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem
 from core.components import Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider, Camera
 
-from core.logger import *
+from core.logger import Logger
 
 from collisions import BVH
 
-from editor import CameraController, TestUI
+from editor import CameraController, Console
 
 try:
     ENGINE_VERSION = "0.2.0"
 
-    log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
+    # Setup Console
+    console = Console()
+    logger = Logger(console)
+
+    logger.log_info(f"SHARD ENGINE v{ENGINE_VERSION}")
 
     # Engine Variables
     PLAY_MODE = True
@@ -33,21 +37,19 @@ try:
     render_engine = RenderEngine()
     render_engine.initialize(screen_width, screen_height, "Shard Renderer")
     render_engine.hide_mouse()
+    console.set_render_engine(render_engine)
 
     # Setup systems
     entity_manager = EntityManager()
-    asset_manager = AssetManager(render_engine)
+    asset_manager = AssetManager(render_engine, logger)
 
     transform_system = TransformSystem(entity_manager)
     mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager)
     collision_system = CollisionSystem(entity_manager, asset_manager)
     physics_system = PhysicsSystem(entity_manager)
     camera_system = CameraSystem(entity_manager)
-
-    # Setup UI
-    test_ui = TestUI(render_engine)
 except Exception as e:
-    log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
+    logger.log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
 
 try:
     # Load Scene
@@ -87,7 +89,7 @@ try:
     bvh = BVH()
     triangles = collision_system.get_collision_triangles(bvh)
 except Exception as e:
-    log_error(f"Scene loading failed:\n{traceback.format_exc()}")
+    logger.log_error(f"Scene loading failed:\n{traceback.format_exc()}")
 
 dt = 1/60
 try:
@@ -99,7 +101,7 @@ try:
 
         camera_controller.update(render_engine, cam_t, player_input, dt)
 
-        camera_system.update()
+        camera_system.update(logger)
 
         physics_system.update(-9.81, dt)
 
@@ -109,16 +111,17 @@ try:
 
         mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera)
 
-        test_ui.update()
+        console.update(logger)
 
         render_engine.end_frame()
 
-
         dt = time.perf_counter() - s
-        #log_trace(f"{1/dt:.1f} fps")
+        #logger.log_trace(f"{1/dt:.1f} fps")
         time.sleep(max(0, 1/60-dt))
         dt = time.perf_counter() - s
 except Exception as e:
-    log_error(f"Unhandled exception in main loop:\n{traceback.format_exc()}")
+    logger.log_error(f"Unhandled exception in main loop:\n{traceback.format_exc()}")
 finally:
     render_engine.shutdown()
+
+console.update(logger)
