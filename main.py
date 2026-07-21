@@ -14,10 +14,10 @@ from core.logger import Logger
 
 from collisions import BVH
 
-from editor import CameraController, Console, ViewportUI
+from editor import CameraController, Console, ViewportUI, Hierarchy
 
 try:
-    ENGINE_VERSION = "0.2.0"
+    ENGINE_VERSION = "0.2.2"
 
     # Setup Console
     console = Console()
@@ -42,19 +42,20 @@ try:
     viewport = Viewport()
     viewport.create(1280, 720)
 
-    # Setup UI
-    viewport_ui = ViewportUI()
-    viewport_ui.set_render_engine(render_engine)
-
     # Setup systems
     entity_manager = EntityManager()
     asset_manager = AssetManager(render_engine, logger)
 
-    transform_system = TransformSystem(entity_manager)
+    transform_system = TransformSystem(entity_manager, logger)
     mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager)
     collision_system = CollisionSystem(entity_manager, asset_manager)
     physics_system = PhysicsSystem(entity_manager)
     camera_system = CameraSystem(entity_manager)
+
+    # Setup UI
+    viewport_ui = ViewportUI(render_engine)
+    hierarchy = Hierarchy(render_engine, entity_manager)
+
 except Exception as e:
     logger.log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
 
@@ -104,36 +105,39 @@ except Exception as e:
     logger.log_error(f"Scene loading failed:\n{traceback.format_exc()}")
 
 dt = 1/60
+
 try:
     while not render_engine.should_close():
-        s = time.perf_counter()
-        player_input = render_engine.get_input()
+        try:
+            s = time.perf_counter()
+            player_input = render_engine.get_input()
 
-        cam_t = entity_manager.entities[cam_eid].components["Transform"]
+            cam_t = entity_manager.entities[cam_eid].components["Transform"]
 
-        camera_controller.update(render_engine, cam_t, player_input, dt)
+            camera_controller.update(render_engine, cam_t, player_input, dt)
 
-        physics_system.update(-9.81, dt)
+            physics_system.update(-9.81, dt)
 
-        collision_system.update()
+            collision_system.update()
 
-        transform_system.update()
+            transform_system.update()
 
-        camera_system.update(logger)
+            camera_system.update(logger)
 
-        mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera, viewport)
+            mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera, viewport)
 
-        console.update(logger)
-        viewport_ui.update(viewport, camera_system.render_camera)
+            console.update(logger)
+            viewport_ui.update(viewport, camera_system.render_camera)
+            hierarchy.update()
 
-        render_engine.end_frame()
+            render_engine.end_frame()
 
-        dt = time.perf_counter() - s
-        #logger.log_trace(f"{1/dt:.1f} fps")
-        time.sleep(max(0, 1/60-dt))
-        dt = time.perf_counter() - s
-except Exception as e:
-    logger.log_error(f"Unhandled exception in main loop:\n{traceback.format_exc()}")
+            dt = time.perf_counter() - s
+            #logger.log_trace(f"{1/dt:.1f} fps")
+            time.sleep(max(0, 1/60-dt))
+            dt = time.perf_counter() - s
+        except Exception as e:
+            logger.log_error(f"Unhandled exception in main loop:\n{traceback.format_exc()}")
 finally:
     render_engine.shutdown()
 

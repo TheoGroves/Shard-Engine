@@ -26,6 +26,8 @@ class EntityManager:
         return eid, entity
     
     def add_component(self, eid, component):
+        component.entity = eid
+
         type_name = type(component).__name__
         self.entities[eid].components[type_name] = component
         self.components[type_name][eid] = component

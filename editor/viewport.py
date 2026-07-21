@@ -2,10 +2,7 @@ from rendering import RenderEngine
 from core.logger import *
 
 class ViewportUI:
-    def __init__(self):
-        self.render_engine = None
-
-    def set_render_engine(self, render_engine: RenderEngine):
+    def __init__(self, render_engine: RenderEngine):
         self.render_engine = render_engine
 
     def update(self, viewport, camera):

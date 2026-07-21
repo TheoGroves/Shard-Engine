@@ -2,4 +2,5 @@ from ..component import component
 
 @component
 class Skybox:
-    pass
+    def __init__(self):
+        self.entity = None

@@ -4,6 +4,8 @@ from shard_maths import Vec3, model_matrix
 @component
 class Transform:
     def __init__(self, pos: Vec3, rot: Vec3, scale: Vec3):
+        self.entity = None
+        
         self.pos = pos
         self.rot = rot
         self.scale = scale
@@ -22,3 +24,4 @@ class Transform:
         self.world = model_matrix(pos, rot, scale)
 
         self.parent = None
+        self.children = []
