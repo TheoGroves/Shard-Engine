@@ -29,7 +29,7 @@ class CameraSystem:
 
             transform = self.entity_manager.entities[eid].components["Transform"]
 
-            self.render_camera.position = transform.pos
-            self.render_camera.rotation = transform.rot
-
-            update_camera_vectors(self.render_camera)
+            self.render_camera.position = transform.world_pos
+            self.render_camera.forward = transform.world_forward
+            self.render_camera.right = transform.world_right
+            self.render_camera.up = transform.world_up

@@ -38,7 +38,7 @@ class MeshRendererSystem:
             transform = entity.components["Transform"]
             mesh_renderer = entity.components["MeshRenderer"]
 
-            render_engine.draw_shadow(mesh_renderer.mesh_handle, transform.model)
+            render_engine.draw_shadow(mesh_renderer.mesh_handle, transform.world)
 
         render_engine.end_shadows()
 
@@ -58,7 +58,7 @@ class MeshRendererSystem:
                 render_engine.disable_depth_test()
                 render_engine.disable_cull_face()
 
-            render_engine.draw_mesh(mesh_renderer.mesh_handle, mesh_renderer.material.material, transform.model)
+            render_engine.draw_mesh(mesh_renderer.mesh_handle, mesh_renderer.material.material, transform.world)
 
             if is_skybox:
                 render_engine.enable_depth_test()

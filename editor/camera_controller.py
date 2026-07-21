@@ -18,22 +18,22 @@ class CameraController:
             self.move_speed = 5
 
         if player_input.forward:
-            move_dir = move_dir + cam_t.forward
+            move_dir = move_dir + cam_t.world_forward
 
         if player_input.backward:
-            move_dir = move_dir - cam_t.forward
+            move_dir = move_dir - cam_t.world_forward
 
         if player_input.right:
-            move_dir = move_dir + cam_t.right
+            move_dir = move_dir + cam_t.world_right
 
         if player_input.left:
-            move_dir = move_dir - cam_t.right
+            move_dir = move_dir - cam_t.world_right
 
         if player_input.up:
-            move_dir = move_dir + cam_t.world_up
+            move_dir = move_dir + Vec3(0,1,0)
 
         if player_input.down:
-            move_dir = move_dir - cam_t.world_up
+            move_dir = move_dir - Vec3(0,1,0)
 
         # Toggle mouse on escape
         if player_input.escape:
@@ -52,8 +52,8 @@ class CameraController:
             cam_t.pos = cam_t.pos + normalize(move_dir) * self.move_speed * dt
 
         if self.mouse_hidden:
-            cam_t.rot.y += player_input.mouse_dx * self.mouse_sensitivity
-            cam_t.rot.x += player_input.mouse_dy * self.mouse_sensitivity
+            cam_t.rot.y -= player_input.mouse_dx * self.mouse_sensitivity
+            cam_t.rot.x -= player_input.mouse_dy * self.mouse_sensitivity
 
         if cam_t.rot.x > 1.5: cam_t.rot.x = 1.5
         if cam_t.rot.x < -1.5: cam_t.rot.x = -1.5

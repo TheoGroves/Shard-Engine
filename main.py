@@ -8,7 +8,7 @@ from core import AssetManager, EntityManager
 from rendering import RenderEngine, PBRMaterial, SkyboxMaterial, Viewport
 
 from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem
-from core.components import Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider, Camera
+from core.components import Name, Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider, Camera
 
 from core.logger import Logger
 
@@ -61,6 +61,7 @@ except Exception as e:
 try:
     # Load Scene
     skybox_eid, _ = entity_manager.create_entity()
+    entity_manager.add_component(skybox_eid, Name("Skybox"))
     entity_manager.add_component(skybox_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
     entity_manager.add_component(skybox_eid, MeshRenderer())
     entity_manager.add_component(skybox_eid, Skybox())
@@ -68,7 +69,8 @@ try:
     mesh_renderer_system.set_material(skybox_eid, SkyboxMaterial(render_engine, asset_manager, "assets/textures/Day-HDRI.exr"))
 
     player_eid, _ = entity_manager.create_entity()
-    entity_manager.add_component(player_eid, Transform(Vec3(0,2,0), Vec3(0,0,0), Vec3(1,1,1)))
+    entity_manager.add_component(player_eid, Name("Player"))
+    entity_manager.add_component(player_eid, Transform(Vec3(0,10,0), Vec3(0,0,0), Vec3(1,1,1)))
     entity_manager.add_component(player_eid, MeshRenderer())
     entity_manager.add_component(player_eid, LinearBody())
     entity_manager.add_component(player_eid, CapsuleCollider(2, 1, 0))
@@ -76,10 +78,13 @@ try:
     mesh_renderer_system.set_material(player_eid, PBRMaterial(render_engine, asset_manager, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
 
     cam_eid, _ = entity_manager.create_entity()
+    entity_manager.add_component(cam_eid, Name("Camera", "MainCamera"))
     entity_manager.add_component(cam_eid, Transform(Vec3(0,5,0), Vec3(0,0,0), Vec3(1,1,1)))
+    transform_system.set_parent(cam_eid, transform_system.get_transform(player_eid))
     entity_manager.add_component(cam_eid, Camera(True))
 
     warehouse_eid, _ = entity_manager.create_entity()
+    entity_manager.add_component(warehouse_eid, Name("Warehouse"))
     entity_manager.add_component(warehouse_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
     entity_manager.add_component(warehouse_eid, MeshRenderer())
     entity_manager.add_component(warehouse_eid, MeshCollider(None))
@@ -108,13 +113,13 @@ try:
 
         camera_controller.update(render_engine, cam_t, player_input, dt)
 
-        camera_system.update(logger)
-
         physics_system.update(-9.81, dt)
 
         collision_system.update()
 
         transform_system.update()
+
+        camera_system.update(logger)
 
         mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera, viewport)
 

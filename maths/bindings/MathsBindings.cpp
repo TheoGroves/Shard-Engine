@@ -22,6 +22,7 @@ PYBIND11_MODULE(shard_maths, m)
         .def(py::init([] {
             return Mat4::Identity();
         }))
+        .def(py::self * py::self)
         .def_readwrite("m", &Mat4::m)
         .def_static("identity", &Mat4::Identity);
 

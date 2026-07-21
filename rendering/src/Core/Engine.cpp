@@ -563,6 +563,56 @@ void Engine::EndChild()
     ImGui::EndChild();
 }
 
+bool Engine::TreeNode(const char* label)
+{
+    return ImGui::TreeNode(label);
+}
+
+bool Engine::TreeNodeEx(const char* id, const char* label, int flags)
+{
+    return ImGui::TreeNodeEx(id, flags, "%s", label);
+}
+
+void Engine::TreePop()
+{
+    ImGui::TreePop();
+}
+
+bool Engine::IsItemClicked()
+{
+    return ImGui::IsItemClicked();
+}
+
+bool Engine::Selectable(const char* label, bool selected)
+{
+    return ImGui::Selectable(label, selected);
+}
+
+bool Engine::CollapsingHeader(const char* label)
+{
+    return ImGui::CollapsingHeader(label);
+}
+
+bool Engine::InputText(const char* label, char* buffer, size_t size)
+{
+    return ImGui::InputText(label, buffer, size);
+}
+
+bool Engine::BeginPopupContextItem()
+{
+    return ImGui::BeginPopupContextItem();
+}
+
+void Engine::EndPopup()
+{
+    ImGui::EndPopup();
+}
+
+bool Engine::MenuItem(const char* label)
+{
+    return ImGui::MenuItem(label);
+}
+
 Vec3 Engine::GetAvailableRegion()
 {
     ImVec2 size = ImGui::GetContentRegionAvail();

@@ -100,6 +100,16 @@ public:
     void Image(GLuint texture, float width, float height);
     void BeginChild(const char* name, float width, float height);
     void EndChild();
+    bool TreeNode(const char* label);
+    bool TreeNodeEx(const char* id, const char* label, int flags);
+    void TreePop();
+    bool IsItemClicked();
+    bool Selectable(const char* label, bool selected);
+    bool CollapsingHeader(const char* label);
+    bool InputText(const char* label, char* buffer, size_t size);
+    bool BeginPopupContextItem();
+    void EndPopup();
+    bool MenuItem(const char* label);
     Vec3 GetAvailableRegion();
 
     GLFWwindow* GetNativeWindow() const;
