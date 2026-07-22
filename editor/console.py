@@ -78,3 +78,20 @@ class Console:
 
             self.render_engine.end_child()
         self.render_engine.end_window()
+
+    def cleanup(self):
+        for log in self.render_engine.consume_logs():
+            if log.level == LogLevel.Trace:
+                print(f"{ANSI_GREY}[TRACE] {log.text}{ANSI_RESET}")
+            elif log.level == LogLevel.Debug:
+                print(f"{ANSI_CYAN}[DEBUG]{ANSI_RESET} {log.text}")
+            elif log.level == LogLevel.Info:
+                print(f"{ANSI_GREEN}[INFO]{ANSI_RESET} {log.text}")
+            elif log.level == LogLevel.Warning:
+                print(f"{ANSI_YELLOW}[WARNING]{ANSI_RESET} {log.text}")
+            elif log.level == LogLevel.Error:
+                print(f"{ANSI_RED}[ERROR] {log.text}{ANSI_RESET}")
+            elif log.level == LogLevel.Fatal:
+                print(f"{ANSI_BRIGHT_RED}[FATAL] {log.text} {ANSI_RESET}")
+            else:
+                self.add_log(f"Recieved log of unknown type: {log.text}", "warning")

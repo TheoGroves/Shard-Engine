@@ -2,6 +2,11 @@ from ..component import component
 
 @component
 class Name:
+    __inspect__ = [
+        "name",
+        "tag"
+    ]
+
     def __init__(self, name: str, tag: str = "None"):
         self.entity = None
 

@@ -3,6 +3,10 @@ from maths.python import Vec3
 
 @component
 class LinearBody:
+    __inspect__ = [
+        "velocity"
+    ]
+
     def __init__(self):
         self.entity = None
 

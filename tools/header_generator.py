@@ -5,14 +5,15 @@ def snake_case(text):
     text = re.sub(r"[\s\-]+", "_", text)
     return text.lower()
 
-to_edit = """"""
+to_edit = """
+"""
 
 generate_header = input("h/b: ").strip().lower() == "h" 
 
 for line in to_edit.splitlines():
     line = line.strip()
 
-    if "(" not in line or not line.endswith(")"):
+    if "(" not in line or not line.endswith(")") or "::" not in line:
         continue
 
     before, args = line[:-1].split("(", 1)

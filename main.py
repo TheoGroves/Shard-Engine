@@ -8,16 +8,16 @@ from core import AssetManager, EntityManager
 from rendering import RenderEngine, PBRMaterial, SkyboxMaterial, Viewport
 
 from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem
-from core.components import Name, Transform, MeshRenderer, MeshCollider, Skybox, LinearBody, CapsuleCollider, Camera
+from core.components import Name, Transform, MeshRenderer, MeshCollider, LinearBody, CapsuleCollider, Camera
 
 from core.logger import Logger
 
 from collisions import BVH
 
-from editor import CameraController, Console, ViewportUI, Hierarchy, Inspector
+from editor import CameraController, Console, ViewportUI, Hierarchy, Inspector, Profiler
 
 try:
-    ENGINE_VERSION = "0.2.4"
+    ENGINE_VERSION = "0.2.5"
 
     # Setup Console
     console = Console()
@@ -54,8 +54,9 @@ try:
 
     # Setup UI
     viewport_ui = ViewportUI(render_engine)
-    hierarchy = Hierarchy(render_engine, entity_manager)
+    hierarchy = Hierarchy(render_engine, entity_manager, transform_system)
     inspector = Inspector(render_engine, entity_manager, hierarchy)
+    profiler = Profiler(render_engine)
 
 except Exception as e:
     logger.log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
@@ -63,10 +64,9 @@ except Exception as e:
 try:
     # Load Scene
     skybox_eid, _ = entity_manager.create_entity()
-    entity_manager.add_component(skybox_eid, Name("Skybox"))
+    entity_manager.add_component(skybox_eid, Name("Skybox", "Skybox"))
     entity_manager.add_component(skybox_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
     entity_manager.add_component(skybox_eid, MeshRenderer())
-    entity_manager.add_component(skybox_eid, Skybox())
     mesh_renderer_system.set_mesh(skybox_eid, "assets/models/Cube.obj")
     mesh_renderer_system.set_material(skybox_eid, SkyboxMaterial(render_engine, asset_manager, "assets/textures/Day-HDRI.exr"))
 
@@ -131,6 +131,7 @@ try:
             viewport_ui.update(viewport, camera_system.render_camera)
             hierarchy.update()
             inspector.update(logger)
+            profiler.update(dt)
 
             render_engine.end_frame()
 
@@ -142,5 +143,4 @@ try:
             logger.log_error(f"Unhandled exception in main loop:\n{traceback.format_exc()}")
 finally:
     render_engine.shutdown()
-
-console.update(logger)
+    console.cleanup()

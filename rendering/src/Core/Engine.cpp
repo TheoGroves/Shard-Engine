@@ -738,6 +738,53 @@ Vec3 Engine::GetAvailableRegion()
     return Vec3(size.x, size.y, 0.0f);
 }
 
+bool Engine::BeginDragDropSource()
+{
+    return ImGui::BeginDragDropSource();
+}
+
+void Engine::EndDragDropSource()
+{
+    return ImGui::EndDragDropSource();
+}
+
+bool Engine::BeginDragDropTarget()
+{
+    return ImGui::BeginDragDropTarget();
+}
+
+int Engine::AcceptDragDropPayload(const char* type)
+{
+    const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(type);
+
+    if (!payload)
+        return -1;
+
+    if (payload->DataSize != sizeof(int))
+        return -1;
+
+    return *static_cast<int*>(payload->Data);
+}
+void Engine::EndDragDropTarget()
+{
+    ImGui::EndDragDropTarget();
+}
+
+bool Engine::BeginPopupContextWindow()
+{
+    return ImGui::BeginPopupContextWindow();
+}
+
+void Engine::SetDragDropPayload(const char* type, int id)
+{
+    ImGui::SetDragDropPayload(type, &id, sizeof(int));
+}
+
+void Engine::Dummy(float width, float height)
+{
+    return ImGui::Dummy(ImVec2(width, height));
+}
+
 // Helpers
 GLFWwindow* Engine::GetNativeWindow() const
 {

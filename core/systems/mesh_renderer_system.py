@@ -21,7 +21,7 @@ class MeshRendererSystem:
             entity = self.entity_manager.entities[eid]
             mesh_renderer = entity.components["MeshRenderer"]
 
-            is_skybox = "Skybox" in entity.components
+            is_skybox = entity.components["Name"].tag == "Skybox"
 
             if is_skybox:
                 mesh_renderer.material.update(render_engine, cam)
@@ -33,7 +33,7 @@ class MeshRendererSystem:
         for eid in self.entity_manager.query("MeshRenderer", "Transform"):
             entity = self.entity_manager.entities[eid]
 
-            if "Skybox" in entity.components:
+            if entity.components["Name"].tag == "Skybox":
                 continue
             
             transform = entity.components["Transform"]
@@ -53,7 +53,7 @@ class MeshRendererSystem:
             transform = entity.components["Transform"]
             mesh_renderer = entity.components["MeshRenderer"]
         
-            is_skybox = "Skybox" in entity.components
+            is_skybox = entity.components["Name"].tag == "Skybox"
 
             if is_skybox:
                 render_engine.disable_depth_test()

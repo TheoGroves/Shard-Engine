@@ -128,6 +128,14 @@ public:
     void SetTooltip(const char* text);
     void ScrollToBottom();
     Vec3 GetAvailableRegion();
+    bool BeginDragDropSource();
+    void EndDragDropSource();
+    bool BeginDragDropTarget();
+    int AcceptDragDropPayload(const char* type);
+    void EndDragDropTarget();
+    bool BeginPopupContextWindow();
+    void SetDragDropPayload(const char* type, int id);
+    void Dummy(float width, float height);
 
     GLFWwindow* GetNativeWindow() const;
     int GetWidth();

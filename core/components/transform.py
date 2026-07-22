@@ -3,6 +3,12 @@ from shard_maths import Vec3, model_matrix
 
 @component
 class Transform:
+    __inspect__ = [
+        "pos",
+        "rot",
+        "scale"
+    ]
+
     def __init__(self, pos: Vec3, rot: Vec3, scale: Vec3):
         self.entity = None
         

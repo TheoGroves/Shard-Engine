@@ -20,14 +20,19 @@ class Inspector:
 
     def get_attributes(self, component_type, component):
         if component_type not in self.cache:
-            self.cache[component_type] = [
-                (
-                    name,
-                    type(value)
-                )
-                for name, value in vars(component).items()
-                if name != "entity"
-            ]
+            inspect_fields = getattr(component, "__inspect__", None)
+
+            if inspect_fields is not None:
+                self.cache[component_type] = [
+                    (name, type(getattr(component, name)))
+                    for name in inspect_fields
+                ]
+            else:
+                self.cache[component_type] = [
+                    (name, type(value))
+                    for name, value in vars(component).items()
+                    if name != "entity"
+                ]
 
         return self.cache[component_type]
 

@@ -2,6 +2,9 @@ from ..component import component
 
 @component
 class Camera:
+    __inspect__ = [
+        "active"
+    ]
     def __init__(self, active: bool):
         self.entity = None
 
