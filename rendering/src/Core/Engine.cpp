@@ -532,10 +532,11 @@ int Engine::SliderInt(const char* label, int& value, int min, int max)
     return value;
 }
 
-bool Engine::Checkbox(const char* label, bool value)
+std::pair<bool, bool> Engine::Checkbox(const char* label, bool value)
 {
-    ImGui::Checkbox(label, &value);
-    return value;
+    bool changed = ImGui::Checkbox(label, &value);
+
+    return { changed, value };
 }
 
 void Engine::SameLine()
@@ -570,7 +571,7 @@ bool Engine::TreeNode(const char* label)
 
 bool Engine::TreeNodeEx(const char* id, const char* label, int flags)
 {
-    return ImGui::TreeNodeEx(id, flags, "%s", label);
+    return ImGui::TreeNodeEx(id, static_cast<ImGuiTreeNodeFlags>(flags), "%s", label);
 }
 
 void Engine::TreePop()
@@ -583,6 +584,11 @@ bool Engine::IsItemClicked()
     return ImGui::IsItemClicked();
 }
 
+bool Engine::IsWindowClicked()
+{
+    return ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+}
+
 bool Engine::Selectable(const char* label, bool selected)
 {
     return ImGui::Selectable(label, selected);
@@ -593,9 +599,23 @@ bool Engine::CollapsingHeader(const char* label)
     return ImGui::CollapsingHeader(label);
 }
 
-bool Engine::InputText(const char* label, char* buffer, size_t size)
+std::pair<bool, std::string> Engine::InputText(const char* label, const std::string& value)
 {
-    return ImGui::InputText(label, buffer, size);
+    auto& buffer = mInputBuffers[label];
+
+    if (buffer[0] == '\0')
+    {
+        strncpy(buffer.data(), value.c_str(), buffer.size());
+        buffer[buffer.size() - 1] = '\0';
+    }
+
+    bool changed = ImGui::InputText(
+        label,
+        buffer.data(),
+        buffer.size()
+    );
+
+    return { changed, std::string(buffer.data()) };
 }
 
 bool Engine::BeginPopupContextItem()
@@ -611,6 +631,99 @@ void Engine::EndPopup()
 bool Engine::MenuItem(const char* label)
 {
     return ImGui::MenuItem(label);
+}
+
+std::pair<bool, float> Engine::DragFloat(const char* label, float value, float speed, float min, float max)
+{
+    float original = value;
+
+    bool changed = ImGui::DragFloat(
+        label,
+        &value,
+        speed,
+        min,
+        max
+    );
+
+    return { changed, value };
+}
+
+bool Engine::DragFloat3(const char* label, Vec3& v, float speed, float min, float max)
+{
+    return ImGui::DragFloat3(label, &v.x, speed, min, max);
+}
+
+std::pair<bool, int> Engine::DragInt(const char* label, int value, float speed, int min, int max)
+{
+    bool changed = ImGui::DragInt(
+        label,
+        &value,
+        speed,
+        min,
+        max
+    );
+
+    return { changed, value };
+}
+
+bool Engine::ColourEdit3(const char* label, Vec3& colour)
+{
+    return ImGui::ColorEdit3(label, &colour.x);
+}
+
+void Engine::SeparatorText(const char* text)
+{
+    ImGui::SeparatorText(text);
+}
+
+void Engine::PushID(int id)
+{
+    ImGui::PushID(id);
+}
+
+void Engine::PushID(const char* id)
+{
+    ImGui::PushID(id);
+}
+
+void Engine::PopId()
+{
+    ImGui::PopID();
+}
+
+void Engine::OpenPopup(const char* id)
+{
+    ImGui::OpenPopup(id);
+}
+
+bool Engine::ImageButton(const char* id, GLuint texture, float width, float height)
+{
+    return ImGui::ImageButton(id, (ImTextureID)(intptr_t)texture, ImVec2(width, height));
+}
+
+bool Engine::IsItemHovered()
+{
+    return ImGui::IsItemHovered();
+}
+
+void Engine::SetNextItemWidth(float width)
+{
+    ImGui::SetNextItemWidth(width);
+}
+
+void Engine::BeginDisabled(bool disabled)
+{
+    ImGui::BeginDisabled(disabled);
+}
+
+void Engine::EndDisabled()
+{
+    ImGui::EndDisabled();
+}
+
+void Engine::SetTooltip(const char* text)
+{
+    ImGui::SetTooltip("%s", text);
 }
 
 void Engine::ScrollToBottom()

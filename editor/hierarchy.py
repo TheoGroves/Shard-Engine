@@ -1,4 +1,4 @@
-from rendering import RenderEngine
+from rendering import RenderEngine, TreeNodeFlags
 from core import EntityManager
 from core.logger import *
 
@@ -26,17 +26,25 @@ class Hierarchy:
 
         has_children = len(transform.children) > 0
 
-        if has_children:
-            opened = self.render_engine.tree_node(name)
+        flags = TreeNodeFlags.OpenOnArrow | TreeNodeFlags.SpanAvailWidth
 
-            if self.render_engine.is_item_clicked():
-                self.selected = eid
+        if self.selected == eid:
+            flags |= TreeNodeFlags.Selected
 
-            if opened:
-                for t in transform.children:
-                    self.draw_entity(t.entity)
+        if not has_children:
+            flags |= TreeNodeFlags.Leaf
+            flags |= TreeNodeFlags.NoTreePushOnOpen
 
-                self.render_engine.tree_pop()
-        else:
-            if self.render_engine.selectable(name, self.selected == eid):
-                self.selected = eid
+        opened = self.render_engine.tree_node_ex(str(eid), name, flags)
+
+        if self.render_engine.is_item_clicked():
+            self.selected = eid
+
+        if self.render_engine.is_window_clicked() and not self.render_engine.is_item_clicked():
+            self.selected = None
+
+        if opened and has_children:
+            for t in transform.children:
+                self.draw_entity(t.entity)
+
+            self.render_engine.tree_pop()

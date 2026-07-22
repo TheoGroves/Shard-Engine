@@ -5,6 +5,7 @@
 #include "Core/Camera.h"
 #include "Gameplay/PlayerController.h"
 #include "Rendering/Viewport.h"
+#include "imgui.h"
 
 namespace py = pybind11;
 
@@ -108,12 +109,28 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def("tree_node_ex", &Engine::TreeNodeEx)
         .def("tree_pop", &Engine::TreePop)
         .def("is_item_clicked", &Engine::IsItemClicked)
+        .def("is_window_clicked", &Engine::IsWindowClicked)
         .def("selectable", &Engine::Selectable)
         .def("collapsing_header", &Engine::CollapsingHeader)
         .def("input_text", &Engine::InputText)
         .def("begin_popup_context_item", &Engine::BeginPopupContextItem)
         .def("end_popup", &Engine::EndPopup)
         .def("menu_item", &Engine::MenuItem)
+        .def("drag_float", &Engine::DragFloat)
+        .def("drag_float3", &Engine::DragFloat3)
+        .def("drag_int", &Engine::DragInt)
+        .def("colour_edit3", &Engine::ColourEdit3)
+        .def("separator_text", &Engine::SeparatorText)
+        .def("push_id", py::overload_cast<int>(&Engine::PushID))
+        .def("push_id", py::overload_cast<const char*>(&Engine::PushID))
+        .def("pop_id", &Engine::PopId)
+        .def("open_popup", &Engine::OpenPopup)
+        .def("image_button", &Engine::ImageButton)
+        .def("is_item_hovered", &Engine::IsItemHovered)
+        .def("set_next_item_width", &Engine::SetNextItemWidth)
+        .def("begin_disabled", &Engine::BeginDisabled)
+        .def("end_disabled", &Engine::EndDisabled)
+        .def("set_tooltip", &Engine::SetTooltip)
         .def("scroll_to_bottom", &Engine::ScrollToBottom)
         .def("get_available_region", &Engine::GetAvailableRegion)
         .def("get_width", &Engine::GetWidth)
@@ -196,4 +213,22 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def_readonly("depth", &Viewport::depth)
         .def_readonly("width", &Viewport::width)
         .def_readonly("height", &Viewport::height);
+
+    py::enum_<ImGuiTreeNodeFlags_>(m, "TreeNodeFlags", py::arithmetic())
+        .value("None", ImGuiTreeNodeFlags_None)
+        .value("Selected", ImGuiTreeNodeFlags_Selected)
+        .value("Framed", ImGuiTreeNodeFlags_Framed)
+        .value("AllowOverlap", ImGuiTreeNodeFlags_AllowOverlap)
+        .value("NoTreePushOnOpen", ImGuiTreeNodeFlags_NoTreePushOnOpen)
+        .value("NoAutoOpenOnLog", ImGuiTreeNodeFlags_NoAutoOpenOnLog)
+        .value("DefaultOpen", ImGuiTreeNodeFlags_DefaultOpen)
+        .value("OpenOnDoubleClick", ImGuiTreeNodeFlags_OpenOnDoubleClick)
+        .value("OpenOnArrow", ImGuiTreeNodeFlags_OpenOnArrow)
+        .value("Leaf", ImGuiTreeNodeFlags_Leaf)
+        .value("Bullet", ImGuiTreeNodeFlags_Bullet)
+        .value("FramePadding", ImGuiTreeNodeFlags_FramePadding)
+        .value("SpanAvailWidth", ImGuiTreeNodeFlags_SpanAvailWidth)
+        .value("SpanFullWidth", ImGuiTreeNodeFlags_SpanFullWidth)
+        .value("SpanAllColumns", ImGuiTreeNodeFlags_SpanAllColumns)
+        .export_values();
 }

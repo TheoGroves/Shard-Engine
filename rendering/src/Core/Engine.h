@@ -94,7 +94,7 @@ public:
     bool Button(const char* label);
     float SliderFloat(const char* label, float& value, float min, float max);
     int SliderInt(const char* label, int& value, int min, int max);
-    bool Checkbox(const char* label, bool value);
+    std::pair<bool, bool> Checkbox(const char* label, bool value);
     void SameLine();
     void Separator();
     void Image(GLuint texture, float width, float height);
@@ -104,12 +104,28 @@ public:
     bool TreeNodeEx(const char* id, const char* label, int flags);
     void TreePop();
     bool IsItemClicked();
+    bool IsWindowClicked();
     bool Selectable(const char* label, bool selected);
     bool CollapsingHeader(const char* label);
-    bool InputText(const char* label, char* buffer, size_t size);
+    std::pair<bool, std::string> InputText(const char* label, const std::string& value);
     bool BeginPopupContextItem();
     void EndPopup();
     bool MenuItem(const char* label);
+    std::pair<bool, float> DragFloat(const char* label, float value, float speed, float min, float max);
+    bool DragFloat3(const char* label, Vec3& v, float speed, float min, float max);
+    std::pair<bool, int> DragInt(const char* label, int value, float speed, int min, int max);
+    bool ColourEdit3(const char* label, Vec3& colour);
+    void SeparatorText(const char* text);
+    void PushID(int id);
+    void PushID(const char* id);
+    void PopId();
+    void OpenPopup(const char* id);
+    bool ImageButton(const char* id, GLuint texture, float width, float height);
+    bool IsItemHovered();
+    void SetNextItemWidth(float width);
+    void BeginDisabled(bool disabled);
+    void EndDisabled();
+    void SetTooltip(const char* text);
     void ScrollToBottom();
     Vec3 GetAvailableRegion();
 
@@ -148,6 +164,8 @@ private:
     ShaderState mCurrentShader;
 
     std::vector<LogEntry> mPendingLogs;
+
+    std::unordered_map<std::string, std::array<char, 256>> mInputBuffers;
 
     struct Mesh
     {

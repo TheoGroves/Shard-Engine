@@ -14,10 +14,10 @@ from core.logger import Logger
 
 from collisions import BVH
 
-from editor import CameraController, Console, ViewportUI, Hierarchy
+from editor import CameraController, Console, ViewportUI, Hierarchy, Inspector
 
 try:
-    ENGINE_VERSION = "0.2.3"
+    ENGINE_VERSION = "0.2.4"
 
     # Setup Console
     console = Console()
@@ -35,7 +35,7 @@ try:
 
     # Setup Shard Renderer
     render_engine = RenderEngine()
-    render_engine.initialize(screen_width, screen_height, "Shard Renderer")
+    render_engine.initialize(screen_width, screen_height, "Shard Engine")
     render_engine.hide_mouse()
     console.set_render_engine(render_engine)
 
@@ -55,6 +55,7 @@ try:
     # Setup UI
     viewport_ui = ViewportUI(render_engine)
     hierarchy = Hierarchy(render_engine, entity_manager)
+    inspector = Inspector(render_engine, entity_manager, hierarchy)
 
 except Exception as e:
     logger.log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
@@ -129,6 +130,7 @@ try:
             console.update(logger)
             viewport_ui.update(viewport, camera_system.render_camera)
             hierarchy.update()
+            inspector.update(logger)
 
             render_engine.end_frame()
 
