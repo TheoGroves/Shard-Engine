@@ -27,12 +27,14 @@ class Console:
         self.render_engine = None
 
         self.logs = []
+        self.scroll_to_bottom = False
 
     def set_render_engine(self, render_engine: RenderEngine):
         self.render_engine = render_engine
 
     def add_log(self, message: str, severity: str):
         self.logs.append(Log(message, severity))
+        self.scroll_to_bottom = True
 
     def update(self, logger):
         for log in self.render_engine.consume_logs():
@@ -69,6 +71,10 @@ class Console:
                     self.render_engine.text_coloured(f"{log.prefix} {log.text}", log.colour)
                 else:
                     logger.log_warning("Log has undefined colour mode.")
+
+            if self.scroll_to_bottom:
+                self.render_engine.scroll_to_bottom()
+                self.scroll_to_bottom = False
 
             self.render_engine.end_child()
         self.render_engine.end_window()

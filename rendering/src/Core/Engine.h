@@ -110,6 +110,7 @@ public:
     bool BeginPopupContextItem();
     void EndPopup();
     bool MenuItem(const char* label);
+    void ScrollToBottom();
     Vec3 GetAvailableRegion();
 
     GLFWwindow* GetNativeWindow() const;

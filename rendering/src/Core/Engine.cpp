@@ -613,6 +613,11 @@ bool Engine::MenuItem(const char* label)
     return ImGui::MenuItem(label);
 }
 
+void Engine::ScrollToBottom()
+{
+    ImGui::SetScrollHereY(1.0f);
+}
+
 Vec3 Engine::GetAvailableRegion()
 {
     ImVec2 size = ImGui::GetContentRegionAvail();

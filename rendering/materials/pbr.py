@@ -1,23 +1,23 @@
 from rendering.texture_slots import *
 
 class PBRMaterial:
-    def __init__(self, engine, asset_manager, albedo: str, normal: str, height: str, orm: str):
+    def __init__(self, engine, asset_manager, logger, albedo: str, normal: str, height: str, orm: str):
         self.material = engine.create_material("assets/shaders/standard.frag", "assets/shaders/standard.vert")
 
-        self.albedo, _ = asset_manager.get_texture(albedo, "assets/textures/Empty.png")
+        self.albedo, _ = asset_manager.get_texture(albedo, "assets/textures/Empty.png", logger)
         engine.bind_texture(self.albedo, ALBEDO)
         engine.update_int(self.material, "uAlbedo", ALBEDO)
 
-        self.normal, _ = asset_manager.get_texture(normal, "assets/textures/EmptyNormal.png")
+        self.normal, _ = asset_manager.get_texture(normal, "assets/textures/EmptyNormal.png", logger)
         engine.bind_texture(self.normal, NORMAL)
         engine.update_int(self.material, "uNormal", NORMAL)
 
-        self.height, _ = asset_manager.get_texture(height, "assets/textures/EmptyHeightmap.png")
+        self.height, _ = asset_manager.get_texture(height, "assets/textures/EmptyHeightmap.png", logger)
         engine.bind_texture(self.height, HEIGHT_MAP)
         engine.update_int(self.material, "uHeightMap", HEIGHT_MAP)
         engine.update_float(self.material, "uHeightScale", 0.01)
 
-        self.orm, _ = asset_manager.get_texture(orm, "assets/textures/EmptyORM.png")
+        self.orm, _ = asset_manager.get_texture(orm, "assets/textures/EmptyORM.png", logger)
         engine.bind_texture(self.orm, ORM)
         engine.update_int(self.material, "uOrmMap", ORM)
 

@@ -1,4 +1,5 @@
-from .obj_parser import parse_obj, parse_objs, build_interleaved
+from .obj_parser import parse_obj, parse_objs
+from .helpers import build_interleaved
 from .texture_loader import load_texture
 
 __all__ = [

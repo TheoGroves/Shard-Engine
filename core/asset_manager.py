@@ -1,4 +1,5 @@
 import os
+import time
 from .logger import *
 from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map
 from .mesh import Mesh
@@ -18,6 +19,7 @@ class AssetManager:
         return os.path.realpath(path)
 
     def get_mesh(self, path):
+        start = time.perf_counter()
         path = self._normalize_path(path)
 
         if path in self.mesh_handles and path in self.meshes:
@@ -32,33 +34,34 @@ class AssetManager:
 
             if last_exported >= last_cooked:
                 self.logger.log_warning(f"Mesh at {path} has been modified since last cook. Recooking.")
-                mesh.load_model(path)
+                mesh.load_model(path, self.logger)
                 mesh.save_cooked(cooked_path)
             else:
                 try:
                     mesh.load_cooked(cooked_path)
                 except Exception as _:
                     self.logger.log_warning("Outdated/corrupted cooked mesh. Recooking mesh.")
-                    mesh.load_model(path)
+                    mesh.load_model(path, self.logger)
                     mesh.save_cooked(cooked_path)
         else:
-            mesh.load_model(path)
+            mesh.load_model(path, self.logger)
             mesh.save_cooked(cooked_path)
 
         mesh_id = self.engine.create_mesh(mesh.vertices, mesh.indices)
 
         self.mesh_handles[path] = mesh_id
         self.meshes[path] = mesh
+        self.logger.log_info(f"Loaded mesh {os.path.split(path)[-1]} in {(time.perf_counter()-start)*1000:.1f}ms")
         return mesh_id, mesh
     
     @staticmethod
-    def _recook_tex(ctx, path, cooked_path, fallback):
-        tex, tex_path = load_texture(ctx, path, fallback)
+    def _recook_tex(ctx, path, cooked_path, fallback, logger):
+        tex, tex_path = load_texture(ctx, path, fallback, logger)
         save_cooked_tex(tex_path, cooked_path)
 
         return tex, tex_path
     
-    def get_texture(self, path, fallback):
+    def get_texture(self, path, fallback, logger):
         path = self._normalize_path(path)
 
         if path in self.textures:
@@ -72,15 +75,15 @@ class AssetManager:
 
             if last_exported >= last_cooked:
                 self.logger.log_error(f"Texture at {path} has been modified since last cook. Recooking.")
-                texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
+                texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback, logger)
             else:
                 try:
                     texture_handle, _ = load_cooked_tex(self.engine, cooked_path)
                     tex_path = path
                 except Exception as _:
-                    texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
+                    texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback, logger)
         else:
-            texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback)
+            texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback, logger)
 
         self.textures[path] = texture_handle
         return texture_handle, tex_path

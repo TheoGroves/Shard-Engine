@@ -1,6 +1,7 @@
 import numpy as np
 import pickle
-from loaders.obj_parser import parse_objs, build_interleaved
+from loaders.obj_parser import parse_objs
+from loaders.helpers import build_interleaved
 
 class Mesh:
     def __init__(self, vertices=None, indices=None, vbo=None, ibo=None, vao=None, shadow_vao=None, path=None):
@@ -15,9 +16,13 @@ class Mesh:
 
         self.path = path
 
-    def load_model(self, path):
+    def load_model(self, path, logger):
         self.path = path
-        vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
+
+        if ".obj" in path:
+            vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
+        else:
+            logger.log_warning(f"Attempted to load mesh with unsupported format: {path}")
 
         self.vertices, self.indices = build_interleaved(
             vertex_buffer,

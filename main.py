@@ -17,7 +17,7 @@ from collisions import BVH
 from editor import CameraController, Console, ViewportUI, Hierarchy
 
 try:
-    ENGINE_VERSION = "0.2.2"
+    ENGINE_VERSION = "0.2.3"
 
     # Setup Console
     console = Console()
@@ -47,7 +47,7 @@ try:
     asset_manager = AssetManager(render_engine, logger)
 
     transform_system = TransformSystem(entity_manager, logger)
-    mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager)
+    mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager, logger)
     collision_system = CollisionSystem(entity_manager, asset_manager)
     physics_system = PhysicsSystem(entity_manager)
     camera_system = CameraSystem(entity_manager)
@@ -76,7 +76,7 @@ try:
     entity_manager.add_component(player_eid, LinearBody())
     entity_manager.add_component(player_eid, CapsuleCollider(2, 1, 0))
     mesh_renderer_system.set_mesh(player_eid, "assets/models/Player.obj")
-    mesh_renderer_system.set_material(player_eid, PBRMaterial(render_engine, asset_manager, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
+    mesh_renderer_system.set_material(player_eid, PBRMaterial(render_engine, asset_manager, logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
 
     cam_eid, _ = entity_manager.create_entity()
     entity_manager.add_component(cam_eid, Name("Camera", "MainCamera"))
@@ -90,7 +90,7 @@ try:
     entity_manager.add_component(warehouse_eid, MeshRenderer())
     entity_manager.add_component(warehouse_eid, MeshCollider(None))
     mesh_renderer_system.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
-    mesh_renderer_system.set_material(warehouse_eid, PBRMaterial(render_engine, asset_manager, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
+    mesh_renderer_system.set_material(warehouse_eid, PBRMaterial(render_engine, asset_manager, logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
     collision_system.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
 
     light_dir = Vec3(-0.3, -1.0, -0.2)
@@ -102,7 +102,7 @@ try:
     bvh = BVH()
     triangles = collision_system.get_collision_triangles(bvh)
 except Exception as e:
-    logger.log_error(f"Scene loading failed:\n{traceback.format_exc()}")
+    logger.log_fatal(f"Scene loading failed:\n{traceback.format_exc()}")
 
 dt = 1/60
 

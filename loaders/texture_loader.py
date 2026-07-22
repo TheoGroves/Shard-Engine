@@ -5,8 +5,6 @@ import OpenEXR
 import Imath
 import numpy as np
 
-from core.logger import *
-
 def get_asset_type(filename):
     name = os.path.splitext(filename)[0].lower()
 
@@ -14,7 +12,7 @@ def get_asset_type(filename):
         if name.endswith(suffix):
             return suffix
 
-def load_texture(engine, path, fallback):
+def load_texture(engine, path, fallback, logger):
     filename = path if path else fallback
     img = Image.open(filename).convert("RGBA")
 
@@ -24,7 +22,7 @@ def load_texture(engine, path, fallback):
         avg_occ = np.asarray(r, dtype=np.uint8).mean()
 
         if avg_occ < 10:
-            log_warning("ORM map occlusion is very low, updating to be illuminated.")
+            logger.log_warning("ORM map occlusion is very low, updating to be illuminated.")
             r = r.point(lambda _: 255)
             img = Image.merge("RGBA", (r, g, b, a))
 

@@ -4,9 +4,10 @@ from ..entity import EntityManager
 from ..asset_manager import AssetManager
 
 class MeshRendererSystem:
-    def __init__(self, entity_manager: EntityManager, asset_manager: AssetManager):
+    def __init__(self, entity_manager: EntityManager, asset_manager: AssetManager, logger):
         self.entity_manager = entity_manager
         self.asset_manager = asset_manager
+        self.logger = logger
 
     def set_mesh(self, eid, path):
         self.entity_manager.entities[eid].components["MeshRenderer"].mesh_handle, _ = self.asset_manager.get_mesh(path)
