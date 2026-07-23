@@ -7,17 +7,23 @@ from maths.python import Vec3
 from core import AssetManager, EntityManager
 from rendering import RenderEngine, PBRMaterial, SkyboxMaterial, Viewport
 
-from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem
-from core.components import Name, Transform, MeshRenderer, MeshCollider, LinearBody, CapsuleCollider, Camera
+from core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem
+from core.components import Name, Transform, MeshRenderer, MeshCollider, LinearBody, CapsuleCollider, Camera, FlyController
 
 from core.logger import Logger
 
 from collisions import BVH
 
-from editor import CameraController, Console, ViewportUI, Hierarchy, Inspector, Profiler
+from editor import Console, ViewportUI, Hierarchy, Inspector, Profiler
+
+def safe_update(name, callback, *args):
+    try:
+        callback(*args)
+    except Exception as e:
+        logger.log_error(f"Unhandled exception in system {name}:\n{traceback.format_exc()}")
 
 try:
-    ENGINE_VERSION = "0.2.5"
+    ENGINE_VERSION = "0.2.6"
 
     # Setup Console
     console = Console()
@@ -51,11 +57,12 @@ try:
     collision_system = CollisionSystem(entity_manager, asset_manager)
     physics_system = PhysicsSystem(entity_manager)
     camera_system = CameraSystem(entity_manager)
+    fly_controller_system = FlyControllerSystem(entity_manager, render_engine)
 
     # Setup UI
     viewport_ui = ViewportUI(render_engine)
     hierarchy = Hierarchy(render_engine, entity_manager, transform_system)
-    inspector = Inspector(render_engine, entity_manager, hierarchy)
+    inspector = Inspector(render_engine, entity_manager, hierarchy, asset_manager)
     profiler = Profiler(render_engine)
 
 except Exception as e:
@@ -84,6 +91,7 @@ try:
     entity_manager.add_component(cam_eid, Transform(Vec3(0,5,0), Vec3(0,0,0), Vec3(1,1,1)))
     transform_system.set_parent(cam_eid, transform_system.get_transform(player_eid))
     entity_manager.add_component(cam_eid, Camera(True))
+    entity_manager.add_component(cam_eid, FlyController())
 
     warehouse_eid, _ = entity_manager.create_entity()
     entity_manager.add_component(warehouse_eid, Name("Warehouse"))
@@ -96,9 +104,6 @@ try:
 
     light_dir = Vec3(-0.3, -1.0, -0.2)
 
-    # Setup camera controller
-    camera_controller = CameraController()
-
     # Build collision BVH
     bvh = BVH()
     triangles = collision_system.get_collision_triangles(bvh)
@@ -109,38 +114,32 @@ dt = 1/60
 
 try:
     while not render_engine.should_close():
-        try:
-            s = time.perf_counter()
-            player_input = render_engine.get_input()
+        s = time.perf_counter()
+        player_input = render_engine.get_input()
 
-            cam_t = entity_manager.entities[cam_eid].components["Transform"]
+        safe_update("FlyController", fly_controller_system.update, player_input, dt)
 
-            camera_controller.update(render_engine, cam_t, player_input, dt)
+        safe_update("Physics", physics_system.update, -9.81, dt)
 
-            physics_system.update(-9.81, dt)
+        safe_update("Collision", collision_system.update)
 
-            collision_system.update()
+        safe_update("Transform", transform_system.update)
 
-            transform_system.update()
+        safe_update("Camera", camera_system.update, logger)
 
-            camera_system.update(logger)
+        safe_update("MeshRenderer", mesh_renderer_system.update, render_engine, light_dir, camera_system.render_camera, viewport)
 
-            mesh_renderer_system.update(render_engine, light_dir, camera_system.render_camera, viewport)
+        safe_update("ConsoleUI", console.update, logger)
+        safe_update("ViewportUI", viewport_ui.update, viewport, camera_system.render_camera)
+        safe_update("HierarchyUI", hierarchy.update)
+        safe_update("InspectorUI", inspector.update, logger)
+        safe_update("ProfilerUI", profiler.update, dt)
 
-            console.update(logger)
-            viewport_ui.update(viewport, camera_system.render_camera)
-            hierarchy.update()
-            inspector.update(logger)
-            profiler.update(dt)
+        render_engine.end_frame()
 
-            render_engine.end_frame()
-
-            dt = time.perf_counter() - s
-            #logger.log_trace(f"{1/dt:.1f} fps")
-            time.sleep(max(0, 1/60-dt))
-            dt = time.perf_counter() - s
-        except Exception as e:
-            logger.log_error(f"Unhandled exception in main loop:\n{traceback.format_exc()}")
+        dt = time.perf_counter() - s
+        time.sleep(max(0, 1/60-dt))
+        dt = time.perf_counter() - s
 finally:
     render_engine.shutdown()
     console.cleanup()

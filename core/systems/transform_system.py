@@ -1,5 +1,5 @@
 from ..entity import EntityManager
-from shard_maths import Vec3, Mat4, model_matrix, normalize, cross
+from shard_maths import Vec3, Mat4, model_matrix, normalize, cross, radians
 from rendering import forward_from_euler
 
 class TransformSystem:
@@ -40,7 +40,7 @@ class TransformSystem:
         t.children.append(child)
 
     def update_model_matrix(self, t):
-        t.model = model_matrix(t.pos, t.rot, t.scale)
+        t.model = model_matrix(t.pos, radians(t.rot), t.scale)
 
     def resolve_transform(self, eid):
         # Traverse up tree to root node and store transforms in chain

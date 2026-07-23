@@ -12,6 +12,7 @@ class AssetManager:
         self.mesh_handles = {}
         self.meshes = {}
         self.textures = {}
+        self.texture_paths = {}
         self.env_maps = {}
 
     @staticmethod
@@ -86,6 +87,7 @@ class AssetManager:
             texture_handle, tex_path = AssetManager._recook_tex(self.engine, path, cooked_path, fallback, logger)
 
         self.textures[path] = texture_handle
+        self.texture_paths[texture_handle] = path
         return texture_handle, tex_path
     
     @staticmethod

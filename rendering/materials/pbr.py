@@ -1,6 +1,7 @@
 from rendering.texture_slots import *
+from rendering.materials.material import Material
 
-class PBRMaterial:
+class PBRMaterial(Material):
     def __init__(self, engine, asset_manager, logger, albedo: str, normal: str, height: str, orm: str):
         self.material = engine.create_material("assets/shaders/standard.frag", "assets/shaders/standard.vert")
 
@@ -21,9 +22,21 @@ class PBRMaterial:
         engine.bind_texture(self.orm, ORM)
         engine.update_int(self.material, "uOrmMap", ORM)
 
-        engine.update_float(self.material, "uUVScale", 1.0)
+        self.uv_scale = 1.0
+        engine.update_float(self.material, "uUVScale", self.uv_scale)
 
     def update(self, engine, cam, light_dir):
+        engine.bind_texture(self.albedo, ALBEDO)
+        engine.update_int(self.material, "uAlbedo", ALBEDO)
+
+        engine.bind_texture(self.normal, NORMAL)
+        engine.update_int(self.material, "uNormal", NORMAL)
+
+        engine.bind_texture(self.height, HEIGHT_MAP)
+        engine.update_int(self.material, "uHeightMap", HEIGHT_MAP)
+
+        engine.bind_texture(self.orm, ORM)
+        engine.update_int(self.material, "uOrmMap", ORM)
 
         engine.bind_texture(engine.get_shadow_depth(), SHADOW_MAP)
         engine.update_int(self.material, "uShadowMap", SHADOW_MAP)
@@ -37,3 +50,10 @@ class PBRMaterial:
 
         engine.update_vec3(self.material, "uLightDir", light_dir)
         engine.update_float(self.material, "uTonemapExposure", 3.0)
+
+        engine.update_float(self.material, "uUVScale", self.uv_scale)
+
+    def draw_inspector(self, inspector):
+        inspector.edit_texture("albedo", self)
+        inspector.edit_texture("normal", self)
+        inspector.edit_float("uv_scale", self)

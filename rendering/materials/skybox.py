@@ -1,6 +1,7 @@
 from rendering.texture_slots import *
+from rendering.materials.material import Material
 
-class SkyboxMaterial:
+class SkyboxMaterial(Material):
     def __init__(self, engine, asset_manager, hdri: str):
         self.material = engine.create_material("assets/shaders/skybox.frag", "assets/shaders/skybox.vert")
 

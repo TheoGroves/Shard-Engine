@@ -2,6 +2,8 @@ from rendering import RenderEngine, TreeNodeFlags
 from core import EntityManager
 from core.logger import *
 from core.systems import TransformSystem
+from core.components import Name, Transform
+from maths.python import Vec3
 
 class Hierarchy:
     def __init__(self, render_engine: RenderEngine, entity_manager: EntityManager, transform_system: TransformSystem):
@@ -9,6 +11,7 @@ class Hierarchy:
         self.entity_manager = entity_manager
         self.transform_system = transform_system
         self.selected = None
+        self.to_delete = None
 
     def is_descendant(self, eid, possible_parent):
         t = self.entity_manager.entities[eid].components["Transform"]
@@ -44,6 +47,15 @@ class Hierarchy:
 
             transform.pos = old_world_pos
 
+    def delete_entity(self, eid):
+        transform = self.entity_manager.entities[eid].components["Transform"]
+
+        if transform.parent is not None:
+            transform.parent.children.remove(transform)
+            transform.parent = None
+
+        self.entity_manager.remove_entity(eid)
+
     def update(self):
         self.render_engine.begin_window("Hierarchy")
         
@@ -64,7 +76,24 @@ class Hierarchy:
 
             self.render_engine.end_drag_drop_target()
 
+        if self.render_engine.begin_popup_context_window():
+            if self.render_engine.menu_item("Create Empty"):
+                new_eid, _ = self.entity_manager.create_entity()
+                self.entity_manager.add_component(new_eid, Name("Empty"))
+                self.entity_manager.add_component(new_eid, Transform(Vec3(0,0,0),Vec3(0,0,0),Vec3(1,1,1)))
+
+
+            self.render_engine.end_popup()
+
         self.render_engine.end_window()
+
+        if self.to_delete is not None:
+            self.delete_entity(self.to_delete)
+
+            if self.selected == self.to_delete:
+                self.selected = None
+
+            self.to_delete = None
 
     def draw_entity(self, eid):
         entity = self.entity_manager.entities[eid]
@@ -87,6 +116,18 @@ class Hierarchy:
         # Selection
         if self.render_engine.is_item_clicked():
             self.selected = eid
+
+        if self.render_engine.begin_popup_context_item():
+            if self.render_engine.menu_item("Create Child"):
+                child, _ = self.entity_manager.create_entity()
+                self.entity_manager.add_component(child, Name("Empty"))
+                self.entity_manager.add_component(child, Transform(Vec3(0,0,0),Vec3(0,0,0),Vec3(1,1,1)))
+                self.reparent(child, eid)
+
+            if self.render_engine.menu_item("Delete"):
+                self.to_delete = self.selected
+
+            self.render_engine.end_popup()
 
         # Drag source
         if self.render_engine.begin_drag_drop_source():

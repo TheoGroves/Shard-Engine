@@ -3,6 +3,8 @@
 #include <cmath>
 #include <algorithm>
 
+constexpr float PI = 3.14159f;
+
 struct Vec3
 {
     float x, y, z;
@@ -95,5 +97,23 @@ inline Vec3 Round(const Vec3& v, unsigned int digits = 0)
         std::round(v.x * factor) / factor,
         std::round(v.y * factor) / factor,
         std::round(v.z * factor) / factor
+    };
+}
+
+inline Vec3 Radians(const Vec3& v)
+{
+    return {
+        v.x * (PI / 180),
+        v.y * (PI / 180),
+        v.z * (PI / 180)
+    };
+}
+
+inline Vec3 Degrees(const Vec3& v)
+{
+    return {
+        v.x * (180 / PI),
+        v.y * (180 / PI),
+        v.z * (180 / PI)
     };
 }

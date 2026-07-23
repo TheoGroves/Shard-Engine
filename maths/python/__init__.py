@@ -14,7 +14,7 @@ if config.getboolean("windows", "use_ucrt64_dll_path", fallback=False):
     if path:
         os.add_dll_directory(path)
 
-from shard_maths import Vec3, Mat4, translate, perspective, look_at, model_matrix, length, normalize, round_to
+from shard_maths import Vec3, Mat4, translate, perspective, look_at, model_matrix, length, normalize, round_to, radians, degrees
 
 __all__ = [
     "Vec3",
@@ -25,5 +25,7 @@ __all__ = [
     "model_matrix",
     "length",
     "normalize",
-    "round_to"
+    "round_to", 
+    "radians", 
+    "degrees"
 ]

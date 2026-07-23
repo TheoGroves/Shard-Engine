@@ -91,7 +91,7 @@ public:
     void End();
     void Text(const char* text);
     void TextColoured(const char* text, Vec3 col);
-    bool Button(const char* label);
+    bool Button(const char* label, float width, float height);
     float SliderFloat(const char* label, float& value, float min, float max);
     int SliderInt(const char* label, int& value, int min, int max);
     std::pair<bool, bool> Checkbox(const char* label, bool value);
@@ -109,6 +109,7 @@ public:
     bool CollapsingHeader(const char* label);
     std::pair<bool, std::string> InputText(const char* label, const std::string& value);
     bool BeginPopupContextItem();
+    bool BeginPopup(const char* id);
     void EndPopup();
     bool MenuItem(const char* label);
     std::pair<bool, float> DragFloat(const char* label, float value, float speed, float min, float max);
@@ -126,6 +127,8 @@ public:
     void BeginDisabled(bool disabled);
     void EndDisabled();
     void SetTooltip(const char* text);
+    void BeginTooltip();
+    void EndTooltip();
     void ScrollToBottom();
     Vec3 GetAvailableRegion();
     bool BeginDragDropSource();

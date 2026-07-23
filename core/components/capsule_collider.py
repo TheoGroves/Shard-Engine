@@ -8,7 +8,7 @@ class CapsuleCollider:
         "offset"
     ]
 
-    def __init__(self, height, radius, offset):
+    def __init__(self, height = 2.0, radius = 1.0, offset = 0.0):
         self.entity = None
 
         self.height = height

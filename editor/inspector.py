@@ -1,8 +1,13 @@
+import os
+
 from rendering import RenderEngine
+from rendering.materials import Material
 from core import EntityManager
 from editor.hierarchy import Hierarchy
 from core.logger import Logger
 from maths.python import Vec3
+from core.component import COMPONENT_REGISTRY
+from core.asset_manager import AssetManager
 
 NINF = -2_147_483_648
 INF = 2_147_483_647
@@ -11,30 +16,95 @@ NINF_FLOAT = float("-inf")
 INF_FLOAT = float("inf")
 
 class Inspector:
-    def __init__(self, render_engine: RenderEngine, entity_manager: EntityManager, hierarchy: Hierarchy):
+    def __init__(self, render_engine: RenderEngine, entity_manager: EntityManager, hierarchy: Hierarchy, asset_manager: AssetManager):
         self.render_engine = render_engine
         self.entity_manager = entity_manager
         self.hierarchy = hierarchy
+        self.asset_manager = asset_manager
 
         self.cache = {}
+
+        self.texture_to_edit = None
 
     def get_attributes(self, component_type, component):
         if component_type not in self.cache:
             inspect_fields = getattr(component, "__inspect__", None)
 
             if inspect_fields is not None:
-                self.cache[component_type] = [
-                    (name, type(getattr(component, name)))
-                    for name in inspect_fields
-                ]
+                self.cache[component_type] = list(inspect_fields)
             else:
                 self.cache[component_type] = [
-                    (name, type(value))
-                    for name, value in vars(component).items()
+                    name
+                    for name in vars(component)
                     if name != "entity"
                 ]
 
         return self.cache[component_type]
+
+    def edit_float(self, name, obj, speed=0.1, min_value=NINF_FLOAT, max_value=INF_FLOAT):
+        value = getattr(obj, name)
+
+        changed, new_value = self.render_engine.drag_float(name, value, speed, min_value, max_value)
+
+        if changed:
+            setattr(obj, name, new_value)
+
+    def edit_texture(self, name, obj):
+        self.render_engine.text(name)
+
+        value = getattr(obj, name)
+
+        clicked = self.render_engine.image_button(name, value, 32, 32)
+
+        if self.render_engine.is_item_hovered():
+            self.render_engine.begin_tooltip()
+
+            img_path = self.asset_manager.texture_paths[value]
+            img_name = os.path.basename(img_path)
+
+            self.render_engine.text(img_name)
+            self.render_engine.image(value, 128, 128)
+
+            self.render_engine.end_tooltip()
+        if clicked:
+            self.texture_to_edit = (obj, name)
+            self.render_engine.open_popup("edit_texture")
+
+    def draw_property(self, obj, name, logger, selected_eid):
+        value = getattr(obj, name)
+
+        if isinstance(value, bool):
+            changed, new_value = self.render_engine.checkbox(name, value)
+
+            if changed:
+                setattr(obj, name, new_value)
+
+        elif isinstance(value, int):
+            changed, new_value = self.render_engine.drag_int(name, value, 1.0, NINF, INF)
+
+            if changed:
+                setattr(obj, name, new_value)
+
+        elif isinstance(value, float):
+            changed, new_value = self.render_engine.drag_float(name, value, 1.0, NINF_FLOAT, INF_FLOAT)
+            
+            if changed:
+                setattr(obj, name, new_value)
+
+        elif isinstance(value, str):
+            changed, new_value = self.render_engine.input_text(f"{name}##{selected_eid}", value)
+
+            if changed:
+                setattr(obj, name, new_value)
+
+        elif isinstance(value, Vec3):
+            self.render_engine.drag_float3(name, value, 1.0, NINF_FLOAT, INF_FLOAT)
+
+        elif isinstance(value, Material):
+            value.draw_inspector(self)
+        
+        else:
+            logger.log_warning(f"Unsupported type {type(value)} in inspector")
 
     def update(self, logger: Logger):
         selected_eid = self.hierarchy.selected
@@ -47,36 +117,38 @@ class Inspector:
             for component_type, component_instance in entity.components.items():
                 self.render_engine.separator_text(component_type)
 
-                for name, value_type in self.get_attributes(component_type, component_instance):
-                    value = getattr(component_instance, name)
+                for field in self.get_attributes(component_type, component_instance):
+                    self.draw_property(component_instance, field, logger, selected_eid)
 
-                    if value_type == bool:
-                        changed, new_value = self.render_engine.checkbox(name, value)
+            self.render_engine.separator()
+            if self.render_engine.button("Add Component", -1, 0):
+                self.render_engine.open_popup("component_selector")
 
-                        if changed:
-                            setattr(component_instance, name, new_value)
+            if self.render_engine.begin_popup("component_selector"):
+                for comp_name in COMPONENT_REGISTRY:
+                    if self.render_engine.menu_item(comp_name):
+                        component_class = COMPONENT_REGISTRY[comp_name]
+                        self.entity_manager.add_component(self.hierarchy.selected, component_class())
 
-                    elif value_type == int:
-                        changed, new_value = self.render_engine.drag_int(name, value, 1.0, NINF, INF)
+                self.render_engine.end_popup()
 
-                        if changed:
-                            setattr(component_instance, name, new_value)
+            if self.render_engine.begin_popup("edit_texture"):
+                obj, name = self.texture_to_edit
 
-                    elif value_type == float:
-                        changed, new_value = self.render_engine.drag_float(name, value, 1.0, NINF_FLOAT, INF_FLOAT)
-                        
-                        if changed:
-                            setattr(component_instance, name, new_value)
+                columns = 4
+                count = 0
 
-                    elif value_type == str:
-                        changed, new_value = self.render_engine.input_text(f"{name}##{selected_eid}", value)
+                for texture_id, path in self.asset_manager.texture_paths.items():
+                    filename = os.path.basename(path)
 
-                        if changed:
-                            setattr(component_instance, name, new_value)
+                    if self.render_engine.image_button(filename, texture_id, 64, 64):
+                        setattr(obj, name, texture_id)
 
-                    elif value_type == Vec3:
-                        self.render_engine.drag_float3(name, value, 1.0, NINF_FLOAT, INF_FLOAT)
-                    else:
-                        logger.log_warning(f"Unsupported type {type(value)} in inspector")
+                    count += 1
+
+                    if count % columns != 0:
+                        self.render_engine.same_line()
+
+                self.render_engine.end_popup()
 
         self.render_engine.end_window()

@@ -515,9 +515,9 @@ void Engine::TextColoured(const char* text, Vec3 col)
     ImGui::TextColored(ImVec4(col.x, col.y, col.z, 1.0f), "%s", text);
 }
 
-bool Engine::Button(const char* label)
+bool Engine::Button(const char* label, float width, float height)
 {
-    return ImGui::Button(label);
+    return ImGui::Button(label, ImVec2(width, height));
 }
 
 float Engine::SliderFloat(const char* label, float& value, float min, float max)
@@ -623,6 +623,11 @@ bool Engine::BeginPopupContextItem()
     return ImGui::BeginPopupContextItem();
 }
 
+bool Engine::BeginPopup(const char* id)
+{
+    return ImGui::BeginPopup(id);
+}
+
 void Engine::EndPopup()
 {
     ImGui::EndPopup();
@@ -650,7 +655,7 @@ std::pair<bool, float> Engine::DragFloat(const char* label, float value, float s
 
 bool Engine::DragFloat3(const char* label, Vec3& v, float speed, float min, float max)
 {
-    return ImGui::DragFloat3(label, &v.x, speed, min, max);
+    return ImGui::DragFloat3(label, &v.x, speed, min, max, "%.1f");
 }
 
 std::pair<bool, int> Engine::DragInt(const char* label, int value, float speed, int min, int max)
@@ -726,6 +731,16 @@ void Engine::SetTooltip(const char* text)
     ImGui::SetTooltip("%s", text);
 }
 
+void Engine::BeginTooltip()
+{
+    ImGui::BeginTooltip();
+}
+
+void Engine::EndTooltip()
+{
+    ImGui::EndTooltip();
+}
+
 void Engine::ScrollToBottom()
 {
     ImGui::SetScrollHereY(1.0f);
@@ -772,7 +787,7 @@ void Engine::EndDragDropTarget()
 
 bool Engine::BeginPopupContextWindow()
 {
-    return ImGui::BeginPopupContextWindow();
+    return ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_NoOpenOverItems);
 }
 
 void Engine::SetDragDropPayload(const char* type, int id)

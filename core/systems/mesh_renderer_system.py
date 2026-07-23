@@ -16,18 +16,6 @@ class MeshRendererSystem:
         self.entity_manager.entities[eid].components["MeshRenderer"].material = material
 
     def update(self, render_engine, light_dir, cam, viewport):
-        # Update materials
-        for eid in self.entity_manager.query("MeshRenderer", "Transform"):
-            entity = self.entity_manager.entities[eid]
-            mesh_renderer = entity.components["MeshRenderer"]
-
-            is_skybox = entity.components["Name"].tag == "Skybox"
-
-            if is_skybox:
-                mesh_renderer.material.update(render_engine, cam)
-            else:
-                mesh_renderer.material.update(render_engine, cam, light_dir)
-
         # Shadow Pass
         render_engine.begin_shadows(Vec3(-light_dir.x, -light_dir.y, -light_dir.z), Vec3(0,0,0))
         for eid in self.entity_manager.query("MeshRenderer", "Transform"):
@@ -54,6 +42,12 @@ class MeshRendererSystem:
             mesh_renderer = entity.components["MeshRenderer"]
         
             is_skybox = entity.components["Name"].tag == "Skybox"
+
+            if mesh_renderer.material is not None:
+                if is_skybox:
+                    mesh_renderer.material.update(render_engine, cam)
+                else:
+                    mesh_renderer.material.update(render_engine, cam, light_dir)
 
             if is_skybox:
                 render_engine.disable_depth_test()

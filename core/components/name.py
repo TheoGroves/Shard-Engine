@@ -7,7 +7,7 @@ class Name:
         "tag"
     ]
 
-    def __init__(self, name: str, tag: str = "None"):
+    def __init__(self, name: str = "Empty", tag: str = "None"):
         self.entity = None
 
         self.name = name

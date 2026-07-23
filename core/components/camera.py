@@ -5,7 +5,7 @@ class Camera:
     __inspect__ = [
         "active"
     ]
-    def __init__(self, active: bool):
+    def __init__(self, active: bool = False):
         self.entity = None
 
         self.active = active

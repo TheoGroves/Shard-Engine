@@ -54,7 +54,8 @@ class CollisionSystem:
             
             collision, normal = solve_capsule(transform, capsule, self.triangles, self.bvh)
 
-            linear_body = capsule_entity.components["LinearBody"]
+            if "LinearBody" in capsule_entity.components:
+                linear_body = capsule_entity.components["LinearBody"]
 
-            if linear_body and collision and linear_body.velocity.y < 0:
-                linear_body.velocity.y = 0
+                if linear_body and collision and linear_body.velocity.y < 0:
+                    linear_body.velocity.y = 0

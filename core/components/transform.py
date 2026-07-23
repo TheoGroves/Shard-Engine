@@ -1,6 +1,5 @@
 from ..component import component
-from shard_maths import Vec3, model_matrix
-
+from shard_maths import Vec3, model_matrix, radians
 @component
 class Transform:
     __inspect__ = [
@@ -9,7 +8,7 @@ class Transform:
         "scale"
     ]
 
-    def __init__(self, pos: Vec3, rot: Vec3, scale: Vec3):
+    def __init__(self, pos: Vec3 = Vec3(0,0,0), rot: Vec3 = Vec3(0,0,0), scale: Vec3 = Vec3(1,1,1)):
         self.entity = None
         
         self.pos = pos

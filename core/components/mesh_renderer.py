@@ -3,7 +3,8 @@ from ..component import component
 @component
 class MeshRenderer:
     __inspect__ = [
-        "mesh_handle"
+        "mesh_handle",
+        "material"
     ]
 
     def __init__(self):

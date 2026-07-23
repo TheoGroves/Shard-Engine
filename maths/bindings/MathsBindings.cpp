@@ -34,4 +34,6 @@ PYBIND11_MODULE(shard_maths, m)
     m.def("normalize", &Normalize);
     m.def("round_to", &Round);
     m.def("cross", &Cross);
+    m.def("degrees", &Degrees);
+    m.def("radians", &Radians);
 }
