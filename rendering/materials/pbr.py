@@ -54,6 +54,8 @@ class PBRMaterial(Material):
         engine.update_float(self.material, "uUVScale", self.uv_scale)
 
     def draw_inspector(self, inspector):
-        inspector.edit_texture("albedo", self)
-        inspector.edit_texture("normal", self)
-        inspector.edit_float("uv_scale", self)
+        inspector.edit_texture(f"albedo", self)
+        inspector.edit_texture(f"normal", self)
+        inspector.edit_texture(f"height", self)
+        inspector.edit_texture(f"orm", self)
+        inspector.edit_float(f"uv_scale##{id(self)}", self)

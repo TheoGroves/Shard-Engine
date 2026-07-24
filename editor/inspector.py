@@ -42,12 +42,12 @@ class Inspector:
         return self.cache[component_type]
 
     def edit_float(self, name, obj, speed=0.1, min_value=NINF_FLOAT, max_value=INF_FLOAT):
-        value = getattr(obj, name)
+        value = getattr(obj, name.split("##")[0])
 
         changed, new_value = self.render_engine.drag_float(name, value, speed, min_value, max_value)
 
         if changed:
-            setattr(obj, name, new_value)
+            setattr(obj, name.split("##")[0], new_value)
 
     def edit_texture(self, name, obj):
         self.render_engine.text(name)
@@ -70,23 +70,44 @@ class Inspector:
             self.texture_to_edit = (obj, name)
             self.render_engine.open_popup("edit_texture")
 
+    def edit_texture_env(self, name, obj):
+        self.render_engine.text(name)
+
+        value = getattr(obj, name)
+
+        clicked = self.render_engine.image_button(name, value, 32, 32)
+
+        if self.render_engine.is_item_hovered():
+            self.render_engine.begin_tooltip()
+
+            env_path = self.asset_manager.env_paths[value]
+            env_name = os.path.basename(env_path)
+
+            self.render_engine.text(env_name)
+            self.render_engine.image(value, 128, 128)
+
+            self.render_engine.end_tooltip()
+        if clicked:
+            self.texture_to_edit = (obj, name)
+            self.render_engine.open_popup("edit_texture_env")
+
     def draw_property(self, obj, name, logger, selected_eid):
         value = getattr(obj, name)
 
         if isinstance(value, bool):
-            changed, new_value = self.render_engine.checkbox(name, value)
+            changed, new_value = self.render_engine.checkbox(f"{name}##{id(obj)}", value)
 
             if changed:
                 setattr(obj, name, new_value)
 
         elif isinstance(value, int):
-            changed, new_value = self.render_engine.drag_int(name, value, 1.0, NINF, INF)
+            changed, new_value = self.render_engine.drag_int(f"{name}##{id(obj)}", value, 1.0, NINF, INF)
 
             if changed:
                 setattr(obj, name, new_value)
 
         elif isinstance(value, float):
-            changed, new_value = self.render_engine.drag_float(name, value, 1.0, NINF_FLOAT, INF_FLOAT)
+            changed, new_value = self.render_engine.drag_float(f"{name}##{id(obj)}", value, 1.0, NINF_FLOAT, INF_FLOAT)
             
             if changed:
                 setattr(obj, name, new_value)
@@ -98,7 +119,7 @@ class Inspector:
                 setattr(obj, name, new_value)
 
         elif isinstance(value, Vec3):
-            self.render_engine.drag_float3(name, value, 1.0, NINF_FLOAT, INF_FLOAT)
+            self.render_engine.drag_float3(f"{name}##{id(obj)}", value, 1.0, NINF_FLOAT, INF_FLOAT)
 
         elif isinstance(value, Material):
             value.draw_inspector(self)
@@ -143,6 +164,25 @@ class Inspector:
 
                     if self.render_engine.image_button(filename, texture_id, 64, 64):
                         setattr(obj, name, texture_id)
+
+                    count += 1
+
+                    if count % columns != 0:
+                        self.render_engine.same_line()
+
+                self.render_engine.end_popup()
+
+            if self.render_engine.begin_popup("edit_texture_env"):
+                obj, name = self.texture_to_edit
+
+                columns = 4
+                count = 0
+
+                for env_id, path in self.asset_manager.env_paths.items():
+                    filename = os.path.basename(path)
+
+                    if self.render_engine.image_button(filename, env_id, 64, 64):
+                        setattr(obj, name, env_id)
 
                     count += 1
 

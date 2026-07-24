@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 from .logger import *
 from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map
 from .mesh import Mesh
@@ -14,6 +15,7 @@ class AssetManager:
         self.textures = {}
         self.texture_paths = {}
         self.env_maps = {}
+        self.env_paths = {}
 
     @staticmethod
     def _normalize_path(path):
@@ -89,6 +91,35 @@ class AssetManager:
         self.textures[path] = texture_handle
         self.texture_paths[texture_handle] = path
         return texture_handle, tex_path
+
+    def load_textures(self, path, logger):
+        start = time.perf_counter()
+        patterns = [
+            "*.png",
+            "*.jpg"
+        ]
+
+        count = 0
+        for pattern in patterns:
+            for texture in Path(path).rglob(pattern):
+                self.get_texture(texture, "assets/textures/Empty.png", logger)
+                count += 1
+
+        logger.log_info(f"Loaded {count} textures in {time.perf_counter() - start:.1f}s.")
+
+    def load_env_maps(self, path, logger):
+        start = time.perf_counter()
+        patterns = [
+            "*.exr"
+        ]
+
+        count = 0
+        for pattern in patterns:
+            for texture in Path(path).rglob(pattern):
+                self.get_env_map(texture)
+                count += 1
+
+        logger.log_info(f"Loaded {count} environment maps in {time.perf_counter() - start:.1f}s.")
     
     @staticmethod
     def _recook_env_map(engine, path, cooked_path):
@@ -122,4 +153,5 @@ class AssetManager:
             env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
 
         self.env_maps[path] = env_map
+        self.env_paths[env_map] = path
         return env_map, env_map_path

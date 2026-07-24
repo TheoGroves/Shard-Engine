@@ -23,7 +23,7 @@ def safe_update(name, callback, *args):
         logger.log_error(f"Unhandled exception in system {name}:\n{traceback.format_exc()}")
 
 try:
-    ENGINE_VERSION = "0.2.6"
+    ENGINE_VERSION = "0.2.7"
 
     # Setup Console
     console = Console()
@@ -51,6 +51,8 @@ try:
     # Setup systems
     entity_manager = EntityManager()
     asset_manager = AssetManager(render_engine, logger)
+    asset_manager.load_textures("assets/textures", logger)
+    asset_manager.load_env_maps("assets/textures", logger)
 
     transform_system = TransformSystem(entity_manager, logger)
     mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager, logger)
@@ -89,7 +91,6 @@ try:
     cam_eid, _ = entity_manager.create_entity()
     entity_manager.add_component(cam_eid, Name("Camera", "MainCamera"))
     entity_manager.add_component(cam_eid, Transform(Vec3(0,5,0), Vec3(0,0,0), Vec3(1,1,1)))
-    transform_system.set_parent(cam_eid, transform_system.get_transform(player_eid))
     entity_manager.add_component(cam_eid, Camera(True))
     entity_manager.add_component(cam_eid, FlyController())
 

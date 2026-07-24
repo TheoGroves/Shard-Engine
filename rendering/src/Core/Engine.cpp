@@ -703,7 +703,7 @@ void Engine::OpenPopup(const char* id)
 
 bool Engine::ImageButton(const char* id, GLuint texture, float width, float height)
 {
-    return ImGui::ImageButton(id, (ImTextureID)(intptr_t)texture, ImVec2(width, height));
+    return ImGui::ImageButton(id, (ImTextureID)(intptr_t)texture, ImVec2(width, height), ImVec2(0,1), ImVec2(1,0));
 }
 
 bool Engine::IsItemHovered()
