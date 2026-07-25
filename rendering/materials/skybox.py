@@ -8,7 +8,9 @@ class SkyboxMaterial(Material):
         self.exposure = 1
         self.rotation = 0
 
-        self.env, _ = asset_manager.get_env_map(hdri)
+        env, _ = asset_manager.get_env_map(hdri)
+        self.env = env["environment"]
+        self.irr = env["irradiance"]
         engine.bind_texture(self.env, ENV_MAP)
         engine.update_int(self.material, "uEnvMap", ENV_MAP)
 

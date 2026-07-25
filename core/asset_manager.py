@@ -2,7 +2,7 @@ import os
 import time
 from pathlib import Path
 from .logger import *
-from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map
+from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map, generate_irradiance
 from .mesh import Mesh
 
 class AssetManager:
@@ -124,9 +124,13 @@ class AssetManager:
     @staticmethod
     def _recook_env_map(engine, path, cooked_path):
         env_map, img, width, height, env_map_path = load_env_map(engine, path)
-        save_cooked_env_map(img, width, height, cooked_path)
 
-        return env_map, env_map_path
+        irr = generate_irradiance(img, 64, 32, samples=256)
+        save_cooked_env_map(img, width, height, 64, 32, irr, cooked_path)
+
+        irr_tex = engine.create_texture_rgb32f(irr)
+
+        return env_map, irr_tex, env_map_path
     
     def get_env_map(self, path):
         path = self._normalize_path(path)
@@ -142,16 +146,16 @@ class AssetManager:
 
             if last_exported >= last_cooked:
                 self.logger.log_error(f"Env map at {path} has been modified since last cook. Recooking.")
-                env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
+                env_map, irr_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
             else:
                 try:
-                    env_map, _ = load_cooked_env_map(self.engine, cooked_path)
+                    env_map, irr_map, _ = load_cooked_env_map(self.engine, cooked_path)
                     env_map_path = path
                 except Exception as _:
-                    env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
+                    env_map, irr_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
         else:
-            env_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
+            env_map, irr_map, env_map_path = AssetManager._recook_env_map(self.engine, path, cooked_path)
 
-        self.env_maps[path] = env_map
+        self.env_maps[path] = {"environment": env_map, "irradiance": irr_map}
         self.env_paths[env_map] = path
-        return env_map, env_map_path
+        return self.env_maps[path], env_map_path

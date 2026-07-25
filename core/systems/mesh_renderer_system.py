@@ -31,6 +31,19 @@ class MeshRendererSystem:
 
         render_engine.end_shadows()
 
+        # Fetch Env Map from skybox
+        env = None
+
+        for eid in self.entity_manager.query("MeshRenderer", "Name"):
+            entity = self.entity_manager.entities[eid]
+            mesh_renderer = entity.components["MeshRenderer"]
+            name = entity.components["Name"]
+            if name.tag == "Skybox":
+                if env is not None:
+                    self.logger.log_warning("Multiple skyboxes found. Only one skybox can be used for IBL. Use only one skybox.")
+                env = mesh_renderer.material.env
+                irr = mesh_renderer.material.irr
+
         # Render Pass
         render_engine.begin_frame()
 
@@ -47,7 +60,7 @@ class MeshRendererSystem:
                 if is_skybox:
                     mesh_renderer.material.update(render_engine, cam)
                 else:
-                    mesh_renderer.material.update(render_engine, cam, light_dir)
+                    mesh_renderer.material.update(render_engine, cam, light_dir, env, irr)
 
             if is_skybox:
                 render_engine.disable_depth_test()

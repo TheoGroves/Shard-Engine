@@ -23,7 +23,7 @@ def safe_update(name, callback, *args):
         logger.log_error(f"Unhandled exception in system {name}:\n{traceback.format_exc()}")
 
 try:
-    ENGINE_VERSION = "0.2.7"
+    ENGINE_VERSION = "0.2.8"
 
     # Setup Console
     console = Console()

@@ -61,6 +61,79 @@ def load_cooked_tex(engine, path):
 
     return tex, path
 
+def direction_to_uv(d):
+    x,y,z = d
+
+    u = np.arctan2(z, x) / (2 * np.pi) + 0.5
+    v = np.arcsin(np.clip(y, -1, 1)) / np.pi + 0.5
+
+    return np.array([u, v])
+
+def uv_to_direction(x, y, width, height):
+    u = (x / width) * 2.0 * np.pi - np.pi
+    v = (y / height) * np.pi - np.pi * 0.5
+
+    return np.array([
+        np.cos(v) * np.cos(u),
+        np.sin(v), 
+        np.cos(v) * np.sin(u)
+    ])
+
+def cosine_sample_hemisphere(n):
+    r1 = np.random.random()
+    r2 = np.random.random()
+
+    phi = 2.0 * np.pi * r1
+
+    x = np.cos(phi) * np.sqrt(r2)
+    y = np.sqrt(1.0 - r2)
+
+    z = np.sin(phi) * np.sqrt(r2)
+
+    up = np.array([0,1,0])
+
+    if abs(n[1]) > 0.99:
+        up = np.array([1,0,0])
+
+    tangent = np.cross(up, n)
+    tangent /= np.linalg.norm(tangent)
+
+    bitangent = np.cross(n,tangent)
+
+    return tangent*x + n*y + bitangent*z 
+
+def generate_irradiance(env, width, height, samples=128):
+    output = np.zeros((height, width, 3), dtype=np.float32)
+
+    for y in range(height):
+        for x in range(width):
+            n = uv_to_direction(x,y,width,height)
+
+            n /= np.linalg.norm(n)
+
+            colour = np.zeros(3)
+            weight = 0.0
+
+            for _ in range(samples):
+                l = cosine_sample_hemisphere(n)
+
+                ndotl = max(np.dot(n, l), 0.0)
+
+                colour += sample_env(env, l) * ndotl
+                weight += ndotl
+
+            output[y, x] = colour / max(weight, 1e-6)
+
+    return output
+
+def sample_env(env, direction):
+    uv = direction_to_uv(direction)
+
+    x = int(uv[0] * env.shape[1]) % env.shape[1]
+    y = np.clip(int(uv[1] * env.shape[0]), 0, env.shape[0] - 1)
+
+    return env[y,x]
+
 def load_env_map(engine, path):
     exr = OpenEXR.InputFile(path)
     dw = exr.header()['dataWindow']
@@ -82,11 +155,15 @@ def load_env_map(engine, path):
 
     return env_map, img, width, height, path
 
-def save_cooked_env_map(img, width, height, out_path):
+def save_cooked_env_map(img, width, height, irr_width, irr_height, irradiance, out_path):
     data = {
         "width": width,
         "height": height,
-        "rgb": np.asarray(img, dtype=np.float32).tobytes()
+        "rgb": np.asarray(img, dtype=np.float32).tobytes(),
+
+        "irr_width": irr_width,
+        "irr_height": irr_height,
+        "irr_rgb": irradiance.astype(np.float32).tobytes()
     }
 
     with open(out_path, "wb") as f:
@@ -101,6 +178,12 @@ def load_cooked_env_map(engine, path):
         dtype=np.float32
     ).reshape((data["height"], data["width"], 3))
 
-    tex = engine.create_texture_rgb32f(pixels)
+    irr = np.frombuffer(
+        data["irr_rgb"],
+        dtype=np.float32
+    ).reshape((data["irr_height"], data["irr_width"], 3))
 
-    return tex, path
+    tex = engine.create_texture_rgb32f(pixels)
+    irr_tex = engine.create_texture_rgb32f(irr)
+
+    return tex, irr_tex, path

@@ -25,7 +25,7 @@ class PBRMaterial(Material):
         self.uv_scale = 1.0
         engine.update_float(self.material, "uUVScale", self.uv_scale)
 
-    def update(self, engine, cam, light_dir):
+    def update(self, engine, cam, light_dir, env, irr):
         engine.bind_texture(self.albedo, ALBEDO)
         engine.update_int(self.material, "uAlbedo", ALBEDO)
 
@@ -37,6 +37,14 @@ class PBRMaterial(Material):
 
         engine.bind_texture(self.orm, ORM)
         engine.update_int(self.material, "uOrmMap", ORM)
+
+        if env is not None:
+            engine.bind_texture(env, ENV_MAP)
+            engine.update_int(self.material, "uEnvMap", ENV_MAP)
+
+        if irr is not None:
+            engine.bind_texture(irr, IRR_MAP)
+            engine.update_int(self.material, "uIrrMap", IRR_MAP)
 
         engine.bind_texture(engine.get_shadow_depth(), SHADOW_MAP)
         engine.update_int(self.material, "uShadowMap", SHADOW_MAP)

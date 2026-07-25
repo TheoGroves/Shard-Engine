@@ -6,6 +6,7 @@ uniform sampler2D uNormal;
 uniform sampler2D uHeightMap;
 uniform sampler2D uOrmMap;
 uniform sampler2D uEnvMap;
+uniform sampler2D uIrrMap;
 
 uniform sampler2D uShadowMap;
 
@@ -168,9 +169,31 @@ void main()
     float lightIntensity = 3.0;
     vec3 direct = (diffuse + specular) * NdotL * lightIntensity * (1.0-sunVisibility) * (1.0 - shadow);
 
-    vec3 ambient = albedo * ao * 0.08;
+    vec3 N = n;
+    vec2 uv;
+    uv.x = atan(N.z, N.x) / (2.0 * 3.14159265) + 0.5;
+    uv.y = asin(N.y) / 3.14159265 + 0.5;
 
-    ambient += vec3(0.1) * albedo;
+    vec2 texel = 1.0 / textureSize(uIrrMap, 0);
+
+    // FIXME: Temp fix: blur + reduce contrast so bright parts don't create highlights
+    vec3 irradiance = vec3(0.0);
+
+    for (int y = -1; y <= 1; ++y)
+    for (int x = -1; x <= 1; ++x)
+    {
+        irradiance += min(texture(uIrrMap, uv + vec2(x, y) * texel).rgb, vec3(.5));
+    }
+
+    irradiance /= 9.0;
+
+    irradiance = pow(irradiance, vec3(0.7));
+
+    vec3 diffuseIBL = irradiance * albedo;
+
+    float iblIntensity = 0.6;
+
+    vec3 ambient = diffuseIBL * kD * ao * iblIntensity;
 
     vec3 hdr = direct + ambient;
     hdr = vec3(1.0) - exp(-hdr * uTonemapExposure);
