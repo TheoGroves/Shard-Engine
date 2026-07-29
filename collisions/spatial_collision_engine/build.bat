@@ -1,2 +1,2 @@
 cmake -S . -B build -G %*
-cmake --build build
+cmake --build build --config Release

@@ -1,10 +1,13 @@
 import heapq
 from rendering import RenderEngine
+import psutil
+import os
 
 class Profiler:
     def __init__(self, render_engine: RenderEngine):
         self.render_engine = render_engine
         self.dt_history = []
+        self.process = psutil.Process(os.getpid())
 
     def update(self, dt):
         self.dt_history.append(dt)
@@ -28,4 +31,11 @@ class Profiler:
 
         self.render_engine.text(f"FPS: {avg_fps:.1f} ({avg_dt*1000:.1f}ms)")
         self.render_engine.text(f"1% Low FPS: {low_fps:.1f} ({avg_worst_dt*1000:.1f}ms)")
+
+        cpu = self.process.cpu_percent(interval=None)
+        ram = self.process.memory_info().rss / (1024 ** 2)
+
+        self.render_engine.text(f"CPU usage: {cpu:.1f}%")
+        self.render_engine.text(f"Memory used: {ram:.1f}MB")
+
         self.render_engine.end_window()

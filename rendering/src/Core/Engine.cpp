@@ -36,10 +36,9 @@ void APIENTRY Engine::GLDebug(GLenum source, GLenum type, GLuint id, GLenum seve
         sInstance->LogWarning(message);
         break;
     case GL_DEBUG_SEVERITY_LOW:
-        sInstance->LogWarning(message);
+        sInstance->LogMessage(message);
         break;
     case GL_DEBUG_SEVERITY_NOTIFICATION:
-        sInstance->LogMessage(message);
         break;
     }
 }

@@ -4,6 +4,8 @@ from core.logger import *
 PREFIX_ONLY = 0
 ENTIRE_LOG = 1
 
+MAX_LOGS = 500
+
 class Log:
     LOG_TYPES = {
         "trace":   ("[TRACE]", GREY, ENTIRE_LOG),
@@ -58,6 +60,10 @@ class Console:
                 print(f"{ANSI_BRIGHT_RED}[FATAL] {log.text} {ANSI_RESET}")
             else:
                 self.add_log(f"Recieved log of unknown type: {log.text}", "warning")
+
+
+        while len(self.logs) > MAX_LOGS:
+            self.logs.pop(0)
 
         if self.render_engine.begin_window("Console"):
             self.render_engine.begin_child("Output", 0, 300)

@@ -1,6 +1,8 @@
 import traceback
 import time
 import ctypes
+from collections import Counter
+import gc
 
 from maths.python import Vec3
 
@@ -23,7 +25,7 @@ def safe_update(name, callback, *args):
         logger.log_error(f"Unhandled exception in system {name}:\n{traceback.format_exc()}")
 
 try:
-    ENGINE_VERSION = "0.2.8"
+    ENGINE_VERSION = "0.2.9"
 
     # Setup Console
     console = Console()
@@ -135,6 +137,11 @@ try:
         safe_update("HierarchyUI", hierarchy.update)
         safe_update("InspectorUI", inspector.update, logger)
         safe_update("ProfilerUI", profiler.update, dt)
+
+        counts = Counter(type(o).__name__ for o in gc.get_objects())
+
+        #for name, count in counts.most_common(20):
+        #    logger.log_trace(f"{name}: {count}")
 
         render_engine.end_frame()
 
