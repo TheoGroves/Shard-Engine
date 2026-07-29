@@ -1,5 +1,5 @@
 from ..entity import EntityManager
-from maths.python import Vec3, length, normalize
+from shard.maths.python import Vec3, length, normalize
 
 class FlyControllerSystem:
     def __init__(self, em: EntityManager, render_engine):

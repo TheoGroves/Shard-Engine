@@ -1,9 +1,9 @@
-from collisions import raycast, solve_capsule
+from shard.collisions import raycast, solve_capsule
 
 from ..entity import EntityManager
 from ..asset_manager import AssetManager
 
-from collisions import BVH, Vec3, Mat4, get_world_triangles
+from shard.collisions import BVH, Vec3, Mat4, get_world_triangles
 
 class CollisionSystem:
     def __init__(self, entity_manager: EntityManager, asset_manager: AssetManager):

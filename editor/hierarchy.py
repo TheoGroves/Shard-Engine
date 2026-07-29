@@ -1,9 +1,9 @@
-from rendering import RenderEngine, TreeNodeFlags
-from core import EntityManager
-from core.logger import *
-from core.systems import TransformSystem
-from core.components import Name, Transform
-from maths.python import Vec3
+from shard.rendering import RenderEngine, TreeNodeFlags
+from shard.core import EntityManager
+from shard.core.logger import *
+from shard.core.systems import TransformSystem
+from shard.core.components import Name, Transform
+from shard.maths.python import Vec3
 
 class Hierarchy:
     def __init__(self, render_engine: RenderEngine, entity_manager: EntityManager, transform_system: TransformSystem):

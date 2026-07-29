@@ -1,5 +1,5 @@
-from rendering.texture_slots import *
-from rendering.materials.material import Material
+from shard.rendering.texture_slots import *
+from shard.rendering.materials.material import Material
 
 class SkyboxMaterial(Material):
     def __init__(self, engine, asset_manager, hdri: str):

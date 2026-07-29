@@ -1,5 +1,5 @@
-from rendering import RenderEngine
-from core.logger import *
+from shard.rendering import RenderEngine
+from shard.core.logger import *
 
 class ViewportUI:
     def __init__(self, render_engine: RenderEngine):

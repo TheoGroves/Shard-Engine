@@ -1,13 +1,13 @@
 import os
 
-from rendering import RenderEngine
-from rendering.materials import Material
-from core import EntityManager
+from shard.rendering import RenderEngine
+from shard.rendering.materials import Material
+from shard.core import EntityManager
 from editor.hierarchy import Hierarchy
-from core.logger import Logger
-from maths.python import Vec3
-from core.component import COMPONENT_REGISTRY
-from core.asset_manager import AssetManager
+from shard.core.logger import Logger
+from shard.maths.python import Vec3
+from shard.core.component import COMPONENT_REGISTRY
+from shard.core.asset_manager import AssetManager
 
 NINF = -2_147_483_648
 INF = 2_147_483_647

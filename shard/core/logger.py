@@ -1,5 +1,5 @@
 import sys
-from maths.python import Vec3
+from shard.maths.python import Vec3
 
 ANSI_RESET  = "\033[0m"
 ANSI_GREY   = "\033[90m"

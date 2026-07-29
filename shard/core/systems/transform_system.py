@@ -1,6 +1,6 @@
 from ..entity import EntityManager
 from shard_maths import Vec3, Mat4, model_matrix, normalize, cross, radians
-from rendering import forward_from_euler
+from shard.rendering import forward_from_euler
 
 class TransformSystem:
     def __init__(self, em: EntityManager, logger):

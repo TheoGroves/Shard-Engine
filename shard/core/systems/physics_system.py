@@ -1,5 +1,5 @@
 from ..entity import EntityManager
-from core.logger import *
+from shard.core.logger import *
 
 class PhysicsSystem:
     def __init__(self, entity_manager: EntityManager):

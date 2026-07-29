@@ -1,5 +1,5 @@
 from ..component import component
-from maths.python import Vec3
+from shard.maths.python import Vec3
 
 @component
 class LinearBody:

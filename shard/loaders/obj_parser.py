@@ -2,7 +2,7 @@ import time
 import numpy as np
 import math
 import numpy as np
-from loaders.helpers import compute_tangents, build_interleaved
+from shard.loaders.helpers import compute_tangents, build_interleaved
 
 def dot(a, b):
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]

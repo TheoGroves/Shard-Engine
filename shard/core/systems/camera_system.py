@@ -1,6 +1,6 @@
 from ..entity import EntityManager
-from rendering import Camera, update_camera_vectors
-from core.logger import *
+from shard.rendering import Camera, update_camera_vectors
+from shard.core.logger import *
 
 class CameraSystem:
     def __init__(self, entity_manager: EntityManager):

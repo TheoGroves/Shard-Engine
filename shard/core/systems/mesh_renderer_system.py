@@ -1,5 +1,5 @@
 from shard_maths import Mat4, model_matrix, Vec3, round_to
-from rendering import RenderEngine, Camera, PlayerController, PBRMaterial, SkyboxMaterial
+from shard.rendering import RenderEngine, Camera, PlayerController, PBRMaterial, SkyboxMaterial
 from ..entity import EntityManager
 from ..asset_manager import AssetManager
 

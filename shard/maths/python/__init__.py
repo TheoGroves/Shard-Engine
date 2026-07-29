@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("maths/python/Release")
+sys.path.append("shard/maths/python/Release")
 
 import os
 import configparser

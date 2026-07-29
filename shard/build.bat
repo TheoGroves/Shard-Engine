@@ -8,9 +8,6 @@ for /f "tokens=1,* delims==" %%A in (build_config.ini) do (
 
 echo Using Generator: %GENERATOR%
 
-taskkill /F /FI "WINDOWTITLE eq Shard Engine"
-timeout /t 1 /nobreak >nul
-
 pushd maths
 call build.bat "%GENERATOR%"
 if errorlevel 1 exit /b %errorlevel%
@@ -26,5 +23,4 @@ call build.bat "%GENERATOR%"
 if errorlevel 1 exit /b %errorlevel%
 popd
 
-start "Shard Engine" python main.py
 timeout /t 5

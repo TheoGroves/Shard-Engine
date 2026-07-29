@@ -1,5 +1,5 @@
 import heapq
-from rendering import RenderEngine
+from shard.rendering import RenderEngine
 import psutil
 import os
 

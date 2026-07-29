@@ -1,5 +1,5 @@
-from rendering import RenderEngine, LogLevel
-from core.logger import *
+from shard.rendering import RenderEngine, LogLevel
+from shard.core.logger import *
 
 PREFIX_ONLY = 0
 ENTIRE_LOG = 1

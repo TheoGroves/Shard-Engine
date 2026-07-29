@@ -2,7 +2,7 @@ import numpy as np
 import time
 import spatial_collision_engine as sce
 from shard_maths import Vec3
-from core.logger import *
+from shard.core.logger import *
 
 def raycast(ray_o, ray_d, bvh, triangles, logger):
     s = time.perf_counter()

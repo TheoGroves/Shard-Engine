@@ -9,5 +9,5 @@ __all__ = [
     "ViewportUI",
     "Hierarchy",
     "Inspector",
-    "Profiler"
+    "Profiler",
 ]

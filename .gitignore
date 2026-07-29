@@ -243,8 +243,8 @@ cmake_install.cmake
 assets/*
 !assets/shaders/
 !assets/shaders/**rendering/render_core/dependencies/
-/rendering/render_core/dependencies
-rendering/dependencies/
+/shard/rendering/render_core/dependencies
+shard/rendering/dependencies/
 
 #configs
 build_config.ini

@@ -1,5 +1,5 @@
 import sys
-sys.path.append("collisions/spatial_collision_engine/python")
+sys.path.append("shard/collisions/spatial_collision_engine/python")
 
 from .collision_solver import solve_capsule
 from .raycast import raycast

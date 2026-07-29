@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
-from loaders.obj_parser import parse_objs
-from loaders.helpers import build_interleaved
+from shard.loaders.obj_parser import parse_objs
+from shard.loaders.helpers import build_interleaved
 
 class Mesh:
     def __init__(self, vertices=None, indices=None, vbo=None, ibo=None, vao=None, shadow_vao=None, path=None):

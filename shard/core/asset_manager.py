@@ -2,7 +2,7 @@ import os
 import time
 from pathlib import Path
 from .logger import *
-from loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map, generate_irradiance
+from shard.loaders.texture_loader import load_texture, load_cooked_tex, save_cooked_tex, load_env_map, load_cooked_env_map, save_cooked_env_map, generate_irradiance
 from .mesh import Mesh
 
 class AssetManager:
