@@ -1,6 +1,6 @@
 import os
 
-from shard.rendering import RenderEngine
+from shard.rendering import RenderEngine, PBRMaterial
 from shard.rendering.materials import Material
 from shard.core import EntityManager
 from editor.hierarchy import Hierarchy
@@ -25,19 +25,20 @@ class Inspector:
         self.cache = {}
 
         self.texture_to_edit = None
+        self.mesh_to_edit = None
 
     def get_attributes(self, component_type, component):
         if component_type not in self.cache:
             inspect_fields = getattr(component, "__inspect__", None)
 
             if inspect_fields is not None:
-                self.cache[component_type] = list(inspect_fields)
+                self.cache[component_type] = inspect_fields
             else:
-                self.cache[component_type] = [
-                    name
+                self.cache[component_type] = {
+                    name: None
                     for name in vars(component)
                     if name != "entity"
-                ]
+                }
 
         return self.cache[component_type]
 
@@ -91,41 +92,74 @@ class Inspector:
             self.texture_to_edit = (obj, name)
             self.render_engine.open_popup("edit_texture_env")
 
-    def draw_property(self, obj, name, logger, selected_eid):
+    def edit_mesh(self, name, obj):
+        self.render_engine.text(name)
+
+        handle = getattr(obj, name)
+
+        if handle is not None:
+            mesh_path = self.asset_manager.mesh_paths[handle]
+            mesh_name = os.path.basename(mesh_path)
+
+        else:
+            mesh_name = "None"
+
+        clicked = self.render_engine.button(mesh_name, 0, 0)
+
+        if self.render_engine.is_item_hovered():
+            self.render_engine.begin_tooltip()
+
+            mesh_path = self.asset_manager.mesh_paths[handle]
+            mesh_name = os.path.basename(mesh_path)
+
+            self.render_engine.text(mesh_name)
+
+            self.render_engine.end_tooltip()
+        if clicked:
+            self.mesh_to_edit = (obj, name)
+            self.render_engine.open_popup("edit_mesh")
+
+    def draw_property(self, obj, name, field_type, logger, selected_eid):
         value = getattr(obj, name)
 
-        if isinstance(value, bool):
+        if field_type == "bool":
             changed, new_value = self.render_engine.checkbox(f"{name}##{id(obj)}", value)
 
             if changed:
                 setattr(obj, name, new_value)
 
-        elif isinstance(value, int):
+        elif field_type == "int":
             changed, new_value = self.render_engine.drag_int(f"{name}##{id(obj)}", value, 1.0, NINF, INF)
 
             if changed:
                 setattr(obj, name, new_value)
 
-        elif isinstance(value, float):
+        elif field_type == "float":
             changed, new_value = self.render_engine.drag_float(f"{name}##{id(obj)}", value, 1.0, NINF_FLOAT, INF_FLOAT)
             
             if changed:
                 setattr(obj, name, new_value)
 
-        elif isinstance(value, str):
+        elif field_type == "string":
             changed, new_value = self.render_engine.input_text(f"{name}##{selected_eid}", value)
 
             if changed:
                 setattr(obj, name, new_value)
 
-        elif isinstance(value, Vec3):
+        elif field_type == "Vec3":
             self.render_engine.drag_float3(f"{name}##{id(obj)}", value, 1.0, NINF_FLOAT, INF_FLOAT)
 
-        elif isinstance(value, Material):
-            value.draw_inspector(self)
-        
+        elif field_type == "material":
+            if value is not None:
+                value.draw_inspector(self)
+            else:
+                setattr(obj, name, PBRMaterial(self.render_engine, self.asset_manager, logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
+
+        elif field_type == "mesh":
+            self.edit_mesh(name, obj)
+
         else:
-            logger.log_warning(f"Unsupported type {type(value)} in inspector")
+            logger.log_warning(f"Unsupported field {name} type {field_type} in inspector")
 
     def update(self, logger: Logger):
         selected_eid = self.hierarchy.selected
@@ -138,8 +172,8 @@ class Inspector:
             for component_type, component_instance in entity.components.items():
                 self.render_engine.separator_text(component_type)
 
-                for field in self.get_attributes(component_type, component_instance):
-                    self.draw_property(component_instance, field, logger, selected_eid)
+                for field, field_type in self.get_attributes(component_type, component_instance).items():
+                    self.draw_property(component_instance, field, field_type, logger, selected_eid)
 
             self.render_engine.separator()
             if self.render_engine.button("Add Component", -1, 0):
@@ -188,6 +222,17 @@ class Inspector:
 
                     if count % columns != 0:
                         self.render_engine.same_line()
+
+                self.render_engine.end_popup()
+
+            if self.render_engine.begin_popup("edit_mesh"):
+                obj, name = self.mesh_to_edit
+
+                for mesh_handle, path in self.asset_manager.mesh_paths.items():
+                    filename = os.path.basename(path)
+
+                    if self.render_engine.button(filename, 0, 0):
+                        setattr(obj, name, mesh_handle)
 
                 self.render_engine.end_popup()
 

@@ -191,7 +191,7 @@ void main()
 
     vec3 diffuseIBL = irradiance * albedo;
 
-    float iblIntensity = 0.6;
+    float iblIntensity = 0.4;
 
     vec3 ambient = diffuseIBL * kD * ao * iblIntensity;
 

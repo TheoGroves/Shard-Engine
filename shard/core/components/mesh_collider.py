@@ -2,8 +2,8 @@ from ..component import component
 
 @component
 class MeshCollider:
-    __inspect__ = [
-    ]
+    __inspect__ = {
+    }
 
     def __init__(self, mesh = None):
         self.entity = None

@@ -13,5 +13,4 @@ class PhysicsSystem:
             transform = physics_object.components["Transform"]
 
             linear_body.velocity.y += gravity * dt
-            linear_body.velocity *= 0.99
             transform.pos += linear_body.velocity * dt

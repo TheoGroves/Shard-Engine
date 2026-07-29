@@ -11,6 +11,7 @@ class AssetManager:
         self.logger = logger
 
         self.mesh_handles = {}
+        self.mesh_paths = {}
         self.meshes = {}
         self.textures = {}
         self.texture_paths = {}
@@ -53,8 +54,9 @@ class AssetManager:
         mesh_id = self.engine.create_mesh(mesh.vertices, mesh.indices)
 
         self.mesh_handles[path] = mesh_id
+        self.mesh_paths[mesh_id] = path
         self.meshes[path] = mesh
-        self.logger.log_info(f"Loaded mesh {os.path.split(path)[-1]} in {(time.perf_counter()-start)*1000:.1f}ms")
+        #self.logger.log_info(f"Loaded mesh {os.path.split(path)[-1]} in {(time.perf_counter()-start)*1000:.1f}ms")
         return mesh_id, mesh
     
     @staticmethod
@@ -120,6 +122,20 @@ class AssetManager:
                 count += 1
 
         logger.log_info(f"Loaded {count} environment maps in {time.perf_counter() - start:.1f}s.")
+
+    def load_meshes(self, path, logger):
+        start = time.perf_counter()
+        patterns = [
+            "*.obj"
+        ]
+
+        count = 0
+        for pattern in patterns:
+            for path in Path(path).rglob(pattern):
+                self.get_mesh(path)
+                count += 1
+
+        logger.log_info(f"Loaded {count} meshes in {time.perf_counter() - start:.1f}s.")
     
     @staticmethod
     def _recook_env_map(engine, path, cooked_path):

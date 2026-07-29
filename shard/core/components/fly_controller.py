@@ -2,11 +2,11 @@ from ..component import component
 
 @component
 class FlyController:
-    __inspect__ = [
-        "move_speed",
-        "boost_speed",
-        "mouse_sensitivity"
-    ]
+    __inspect__ = {
+        "move_speed": "float",
+        "boost_speed": "float",
+        "mouse_sensitivity": "float"
+    }
 
     def __init__(self):
         self.current_speed = 0

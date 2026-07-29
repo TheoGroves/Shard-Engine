@@ -3,9 +3,9 @@ from shard.maths.python import Vec3
 
 @component
 class LinearBody:
-    __inspect__ = [
-        "velocity"
-    ]
+    __inspect__ = {
+        "velocity": "Vec3"
+    }
 
     def __init__(self):
         self.entity = None
