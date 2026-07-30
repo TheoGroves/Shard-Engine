@@ -217,6 +217,7 @@ class Inspector:
 
                     if self.render_engine.image_button(filename, env_id, 64, 64):
                         setattr(obj, name, env_id)
+                        setattr(obj, "irr", self.asset_manager.env_irr_map[env_id])
 
                     count += 1
 

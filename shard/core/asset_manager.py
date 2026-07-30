@@ -18,6 +18,8 @@ class AssetManager:
         self.env_maps = {}
         self.env_paths = {}
 
+        self.env_irr_map = {}
+
     @staticmethod
     def _normalize_path(path):
         return os.path.realpath(path)
@@ -174,4 +176,5 @@ class AssetManager:
 
         self.env_maps[path] = {"environment": env_map, "irradiance": irr_map}
         self.env_paths[env_map] = path
+        self.env_irr_map[env_map] = irr_map
         return self.env_maps[path], env_map_path
