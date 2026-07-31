@@ -880,6 +880,18 @@ bool Engine::ShouldClose() const
     return mWindow.ShouldClose();
 }
 
+void Engine::SetIcon(int width, int height, const std::vector<uint8_t>& pixels)
+{
+    GLFWimage icon{};
+
+    icon.width = width;
+    icon.height = height;
+    
+    icon.pixels = const_cast<unsigned char*>(pixels.data());
+
+    glfwSetWindowIcon(mWindow.GetNativeWindow(), 1, &icon);
+}
+
 void Engine::Shutdown()
 {
     this->LogMessage("Engine shutting down.");

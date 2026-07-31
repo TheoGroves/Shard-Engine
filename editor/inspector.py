@@ -166,7 +166,7 @@ class Inspector:
 
         self.render_engine.begin_window("Inspector")
 
-        if selected_eid is not None:
+        if selected_eid is not None and selected_eid in self.entity_manager.entities:
             entity = self.entity_manager.entities[selected_eid]
 
             for component_type, component_instance in entity.components.items():
@@ -196,7 +196,19 @@ class Inspector:
                 for texture_id, path in self.asset_manager.texture_paths.items():
                     filename = os.path.basename(path)
 
-                    if self.render_engine.image_button(filename, texture_id, 64, 64):
+                    clicked = self.render_engine.image_button(filename, texture_id, 64, 64)
+
+                    if self.render_engine.is_item_hovered():
+                        self.render_engine.begin_tooltip()
+
+                        tex_path = self.asset_manager.texture_paths[texture_id]
+                        tex_name = os.path.basename(tex_path)
+
+                        self.render_engine.text(tex_name)
+
+                        self.render_engine.end_tooltip()
+
+                    if clicked:
                         setattr(obj, name, texture_id)
 
                     count += 1
@@ -215,7 +227,19 @@ class Inspector:
                 for env_id, path in self.asset_manager.env_paths.items():
                     filename = os.path.basename(path)
 
-                    if self.render_engine.image_button(filename, env_id, 64, 64):
+                    clicked = self.render_engine.image_button(filename, env_id, 64, 64)
+
+                    if self.render_engine.is_item_hovered():
+                        self.render_engine.begin_tooltip()
+
+                        tex_path = self.asset_manager.env_paths[env_id]
+                        tex_name = os.path.basename(tex_path)
+
+                        self.render_engine.text(tex_name)
+
+                        self.render_engine.end_tooltip()
+
+                    if clicked:    
                         setattr(obj, name, env_id)
                         setattr(obj, "irr", self.asset_manager.env_irr_map[env_id])
 

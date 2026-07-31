@@ -18,7 +18,7 @@ from shard.rendering import RenderEngine, Viewport
 from shard.core.logger import Logger
 from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem
 
-ENGINE_VERSION = "0.4.0"
+ENGINE_VERSION = "0.4.1"
 
 class Engine:
     def __init__(self, console: Console, logger: Logger, screen_width: int, screen_height: int, render_engine: RenderEngine, viewport: Viewport, entity_manager: EntityManager, asset_manager: AssetManager, transform_system: TransformSystem, mesh_renderer_system: MeshRendererSystem, collision_system: CollisionSystem, physics_system: PhysicsSystem, camera_system: CameraSystem, fly_controller_system: FlyControllerSystem, serializer: Serializer, deserializer: Deserializer, viewport_ui: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu):

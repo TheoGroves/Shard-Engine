@@ -158,6 +158,8 @@ public:
     void HideMouse();
     void ShowMouse();
 
+    void SetIcon(int width, int height, const std::vector<uint8_t>& pixels);
+
     void Shutdown();
 
     bool ShouldClose() const;

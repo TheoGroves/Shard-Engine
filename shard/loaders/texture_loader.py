@@ -187,3 +187,10 @@ def load_cooked_env_map(engine, path):
     irr_tex = engine.create_texture_rgb32f(irr)
 
     return tex, irr_tex, path
+
+def load_icon(engine, path):
+    img = Image.open(path).convert("RGBA")
+
+    pixels = np.asarray(img, dtype=np.uint8)
+
+    engine.set_icon(img.width, img.height, pixels)

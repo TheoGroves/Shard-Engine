@@ -6,11 +6,6 @@ def snake_case(text):
     return text.lower()
 
 to_edit = """
-void Engine::CreateDockSpace()
-{
-    ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
-    ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
-}
 """
 
 generate_header = input("h/b: ").strip().lower() == "h" 

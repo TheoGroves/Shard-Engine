@@ -16,7 +16,7 @@ class PBRMaterial(Material):
         self.height, _ = asset_manager.get_texture(height, "assets/textures/EmptyHeightmap.png", logger)
         engine.bind_texture(self.height, HEIGHT_MAP)
         engine.update_int(self.material, "uHeightMap", HEIGHT_MAP)
-        engine.update_float(self.material, "uHeightScale", 0.01)
+        engine.update_float(self.material, "uHeightScale", 0.0)
 
         self.orm, _ = asset_manager.get_texture(orm, "assets/textures/EmptyORM.png", logger)
         engine.bind_texture(self.orm, ORM)

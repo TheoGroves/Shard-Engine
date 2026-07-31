@@ -158,6 +158,29 @@ PYBIND11_MODULE(shard_render_engine, m)
         .def("enable_depth_test", &Engine::EnableDepthTest)
         .def("hide_mouse", &Engine::HideMouse)
         .def("show_mouse", &Engine::ShowMouse)
+        .def("set_icon",
+        [](Engine& engine,
+            int width,
+            int height,
+            py::array_t<uint8_t, py::array::c_style | py::array::forcecast> image)
+        {
+            auto buf = image.request();
+
+            if (buf.ndim != 3 || buf.shape[2] != 4)
+            {
+                engine.LogError("Expected HxWx4 icon image");
+                return;
+            }
+
+            auto* ptr = static_cast<uint8_t*>(buf.ptr);
+
+            std::vector<uint8_t> pixels(
+                ptr,
+                ptr + width * height * 4
+            );
+
+            engine.SetIcon(width, height, pixels);
+        })
         .def("end_frame", &Engine::EndFrame)
         .def("shutdown", &Engine::Shutdown);
 

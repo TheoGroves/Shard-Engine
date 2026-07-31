@@ -6,9 +6,11 @@ class Application:
     def __init__(self):
         from .bootstrap import bootstrap
         from factories.default import build_scene
+        from shard.loaders import load_icon
 
         self.engine = bootstrap()
         self.scene = build_scene(self.engine)
+        load_icon(self.engine.render_engine, "shard/icon.png")
 
     def run(self):
         dt = 1/60
