@@ -18,36 +18,7 @@ from shard.rendering import RenderEngine, Viewport
 from shard.core.logger import Logger
 from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem
 
-ENGINE_VERSION = "0.4.1"
-
-class Engine:
-    def __init__(self, console: Console, logger: Logger, screen_width: int, screen_height: int, render_engine: RenderEngine, viewport: Viewport, entity_manager: EntityManager, asset_manager: AssetManager, transform_system: TransformSystem, mesh_renderer_system: MeshRendererSystem, collision_system: CollisionSystem, physics_system: PhysicsSystem, camera_system: CameraSystem, fly_controller_system: FlyControllerSystem, serializer: Serializer, deserializer: Deserializer, viewport_ui: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu):
-        # Constants
-        self.USER_32 = ctypes.windll.user32
-        self.PLAY_MODE = True
-
-        # Variables
-        self.console = console
-        self.logger = logger
-        self.screen_width = screen_width
-        self.screen_height = screen_height
-        self.render_engine = render_engine
-        self.viewport = viewport
-        self.entity_manager = entity_manager
-        self.asset_manager = asset_manager
-        self.transform_system = transform_system
-        self.mesh_renderer_system = mesh_renderer_system
-        self.collision_system = collision_system
-        self.physics_system = physics_system
-        self.camera_system = camera_system
-        self.fly_controller_system = fly_controller_system
-        self.serializer = serializer
-        self.deserializer = deserializer
-        self.viewport_ui = viewport_ui
-        self.hierarchy = hierarchy
-        self.inspector = inspector
-        self.profiler = profiler
-        self.main_menu = main_menu
+from shard.core.engine import Engine, ENGINE_VERSION
 
 def bootstrap():
     try:

@@ -15,6 +15,12 @@ class MainMenu:
                 if self.render_engine.button("Load Scene", 0, 0):
                     deserializer.load_scene(self.entity_manager, engine, "scenes/main.json", logger)
 
+                self.render_engine.separator()
+
+                if self.render_engine.button("Restore Previous Save", 0, 0):
+                    deserializer.restore_backup(self.entity_manager, engine, "scenes/main.json", logger)
+                    logger.log_info("Save restored.")
+
                 self.render_engine.end_menu()
 
             self.render_engine.end_menu_bar()

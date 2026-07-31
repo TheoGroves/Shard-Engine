@@ -1,6 +1,7 @@
 from collections import defaultdict
 import json
 import time
+import shutil
 
 from .component import COMPONENT_REGISTRY
 
@@ -95,12 +96,19 @@ class Serializer:
         }
 
     @staticmethod
+    def create_backup(path):
+        shutil.copy2(path, f"{path}.bak")
+
+    @staticmethod
     def save_scene(em: EntityManager, path, logger):
         start = time.perf_counter()
+        Serializer.create_backup(path)
+
         with open(path, "w") as f:
             json.dump(Serializer.serialize_scene(em), f, indent=4)
 
         logger.log_info(f"Scene saved in {(time.perf_counter()-start)*1000:.1f}ms")
+
 
 class Deserializer:
     @staticmethod
@@ -130,3 +138,9 @@ class Deserializer:
                 em.add_component_direct(entity, eid, component)
 
         logger.log_info(f"Scene loaded in {(time.perf_counter()-start)*1000:.1f}ms")
+
+    @staticmethod
+    def restore_backup(em: EntityManager, engine, path, logger):
+        shutil.copy2(f"{path}.bak", path)
+        Deserializer.load_scene(em, engine, path, logger)
+        

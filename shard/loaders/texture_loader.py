@@ -12,7 +12,7 @@ def get_asset_type(filename):
         if name.endswith(suffix):
             return suffix
 
-def load_texture(engine, path, fallback, logger):
+def load_texture(render_engine, path, fallback, logger):
     filename = path if path else fallback
     img = Image.open(filename).convert("RGBA")
 
@@ -30,7 +30,7 @@ def load_texture(engine, path, fallback, logger):
 
     pixels = np.asarray(img, dtype=np.uint8)
 
-    tex = engine.create_texture_rgba(pixels)
+    tex = render_engine.create_texture_rgba(pixels)
     return tex, filename
 
 def save_cooked_tex(src_path, out_path):
@@ -48,7 +48,7 @@ def save_cooked_tex(src_path, out_path):
     with open(out_path, "wb") as f:
         pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-def load_cooked_tex(engine, path):
+def load_cooked_tex(render_engine, path):
     with open(path, "rb") as f:
         data = pickle.load(f)
 
@@ -57,7 +57,7 @@ def load_cooked_tex(engine, path):
         dtype=np.uint8
     ).reshape((data["height"], data["width"], 4))
 
-    tex = engine.create_texture_rgba(pixels)
+    tex = render_engine.create_texture_rgba(pixels)
 
     return tex, path
 
@@ -134,7 +134,7 @@ def sample_env(env, direction):
 
     return env[y,x]
 
-def load_env_map(engine, path):
+def load_env_map(render_engine, path):
     exr = OpenEXR.InputFile(path)
     dw = exr.header()['dataWindow']
 
@@ -151,7 +151,7 @@ def load_env_map(engine, path):
     img = img.reshape((height, width, 3))
     img = np.flipud(img)
 
-    env_map = engine.create_texture_rgb32f(img)
+    env_map = render_engine.create_texture_rgb32f(img)
 
     return env_map, img, width, height, path
 

@@ -27,7 +27,7 @@ class MeshRenderer:
         mat_type = data["material"].split("#")[0]
 
         render_engine = engine.render_engine
-        asset_manager = engine.asset_manager
+        asset_manager = engine.managers.asset
         logger = engine.logger
 
         if mat_type == "PBR":

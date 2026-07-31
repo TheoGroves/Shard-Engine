@@ -23,24 +23,24 @@ class Application:
 
         finally:
             self.engine.render_engine.shutdown()
-            self.engine.console.cleanup()
+            self.engine.ui.console.cleanup()
 
     def update(self, dt):
         player_input = self.engine.render_engine.get_input()
 
-        self.safe_update("FlyController", self.engine.fly_controller_system.update, player_input, dt)
-        self.safe_update("Physics", self.engine.physics_system.update, -9.81, dt)
-        self.safe_update("Collision", self.engine.collision_system.update)
-        self.safe_update("Transform", self.engine.transform_system.update)
-        self.safe_update("Camera", self.engine.camera_system.update, self.engine.logger)
-        self.safe_update("MeshRenderer", self.engine.mesh_renderer_system.update, self.engine.render_engine, self.scene.light_dir, self.engine.camera_system.render_camera, self.engine.viewport)
+        self.safe_update("FlyController", self.engine.systems.fly_controller.update, player_input, dt)
+        self.safe_update("Physics", self.engine.systems.physics.update, -9.81, dt)
+        self.safe_update("Collision", self.engine.systems.collision.update)
+        self.safe_update("Transform", self.engine.systems.transform.update)
+        self.safe_update("Camera", self.engine.systems.camera.update, self.engine.logger)
+        self.safe_update("MeshRenderer", self.engine.systems.mesh_renderer.update, self.engine.render_engine, self.scene.light_dir, self.engine.systems.camera.render_camera, self.engine.viewport)
 
-        self.safe_update("MainMenuUI", self.engine.main_menu.update, self.engine, self.engine.serializer, self.engine.deserializer, self.engine.logger)
-        self.safe_update("ConsoleUI", self.engine.console.update, self.engine.logger)
-        self.safe_update("ViewportUI", self.engine.viewport_ui.update, self.engine.viewport, self.engine.camera_system.render_camera)
-        self.safe_update("HierarchyUI", self.engine.hierarchy.update)
-        self.safe_update("InspectorUI", self.engine.inspector.update, self.engine.logger)
-        self.safe_update("ProfilerUI", self.engine.profiler.update, dt)
+        self.safe_update("MainMenuUI", self.engine.ui.main_menu.update, self.engine, self.engine.serializer, self.engine.deserializer, self.engine.logger)
+        self.safe_update("ConsoleUI", self.engine.ui.console.update, self.engine.logger)
+        self.safe_update("ViewportUI", self.engine.ui.viewport.update, self.engine.viewport, self.engine.systems.camera.render_camera)
+        self.safe_update("HierarchyUI", self.engine.ui.hierarchy.update)
+        self.safe_update("InspectorUI", self.engine.ui.inspector.update, self.engine.logger)
+        self.safe_update("ProfilerUI", self.engine.ui.profiler.update, dt)
 
         self.engine.render_engine.end_frame()
 
