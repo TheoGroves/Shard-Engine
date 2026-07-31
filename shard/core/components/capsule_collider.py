@@ -14,3 +14,14 @@ class CapsuleCollider:
         self.height = height
         self.radius = radius
         self.offset = offset
+
+    def serialize(self):
+        return {
+            "height": self.height,
+            "radius": self.radius,
+            "offset": self.offset
+        }
+
+    @classmethod
+    def deserialize(cls, data, engine):
+        return cls(data["height"], data["radius"], data["offset"])

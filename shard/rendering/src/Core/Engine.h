@@ -139,6 +139,10 @@ public:
     bool BeginPopupContextWindow();
     void SetDragDropPayload(const char* type, int id);
     void Dummy(float width, float height);
+    bool BeginMenuBar();
+    bool BeginMenu(const char* label);
+    void EndMenu();
+    void EndMenuBar();
 
     GLFWwindow* GetNativeWindow() const;
     int GetWidth();

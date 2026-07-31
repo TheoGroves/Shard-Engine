@@ -33,6 +33,7 @@ class Application:
         self.safe_update("Camera", self.engine.camera_system.update, self.engine.logger)
         self.safe_update("MeshRenderer", self.engine.mesh_renderer_system.update, self.engine.render_engine, self.scene.light_dir, self.engine.camera_system.render_camera, self.engine.viewport)
 
+        self.safe_update("MainMenuUI", self.engine.main_menu.update, self.engine, self.engine.serializer, self.engine.deserializer, self.engine.logger)
         self.safe_update("ConsoleUI", self.engine.console.update, self.engine.logger)
         self.safe_update("ViewportUI", self.engine.viewport_ui.update, self.engine.viewport, self.engine.camera_system.render_camera)
         self.safe_update("HierarchyUI", self.engine.hierarchy.update)
@@ -45,4 +46,4 @@ class Application:
         try:
             callback(*args)
         except Exception as e:
-            self.engine.logger.log_error(f"Unhandled exception in system {name}:\n{traceback.format_exc()}")
+            self.engine.logger.log_fatal(f"Unhandled exception in system {name}:\n{traceback.format_exc()}")

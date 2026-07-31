@@ -799,6 +799,26 @@ void Engine::Dummy(float width, float height)
     return ImGui::Dummy(ImVec2(width, height));
 }
 
+bool Engine::BeginMenuBar()
+{
+    return ImGui::BeginMenuBar();
+}
+
+bool Engine::BeginMenu(const char* label)
+{
+    return ImGui::BeginMenu(label);
+}
+
+void Engine::EndMenu()
+{
+    ImGui::EndMenu();
+}
+
+void Engine::EndMenuBar()
+{
+    ImGui::EndMenuBar();
+}
+
 // Helpers
 GLFWwindow* Engine::GetNativeWindow() const
 {

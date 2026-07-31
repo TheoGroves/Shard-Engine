@@ -9,3 +9,10 @@ class MeshCollider:
         self.entity = None
 
         self.mesh = mesh
+
+    def serialize(self):
+        return {}
+
+    @classmethod
+    def deserialize(cls, data, engine):
+        return cls()

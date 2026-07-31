@@ -12,3 +12,13 @@ class Name:
 
         self.name = name
         self.tag = tag
+
+    def serialize(self):
+        return {
+            "name": self.name,
+            "tag": self.tag
+        }
+
+    @classmethod
+    def deserialize(cls, data, engine):
+        return cls(data["name"], data["tag"])

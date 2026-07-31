@@ -4,3 +4,6 @@ class Material:
 
     def draw_inspector(self, inspector):
         raise NotImplementedError
+
+    def serialize(self):
+        raise NotImplementedError

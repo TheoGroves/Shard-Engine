@@ -1,4 +1,6 @@
 from collections import defaultdict
+import json
+import time
 
 from .component import COMPONENT_REGISTRY
 
@@ -14,6 +16,8 @@ class EntityManager:
 
     def create_entity(self, forced_eid=None):
         if forced_eid is not None:
+            if forced_eid in self.entities:
+                raise ValueError(f"Entity {forced_eid} already exists.")
             eid = forced_eid
             if eid >= self._next_eid:
                 self._next_eid = eid + 1
@@ -65,3 +69,64 @@ class EntityManager:
         self.entities = {}
         self.components = defaultdict(dict)
         self._next_eid = 0
+
+class Serializer:
+    @staticmethod
+    def serialize_component(comp):
+        return {
+            "type": type(comp).__name__,
+            "data": comp.serialize()
+        }
+
+    @staticmethod
+    def serialize_entity(entity):
+        return {
+            "components": [
+                Serializer.serialize_component(comp) for comp in entity.components.values()
+            ]
+        }
+
+    @staticmethod
+    def serialize_scene(em: EntityManager):
+        return {
+            "entities": {
+                eid: Serializer.serialize_entity(entity) for eid, entity in em.entities.items()
+            }
+        }
+
+    @staticmethod
+    def save_scene(em: EntityManager, path, logger):
+        start = time.perf_counter()
+        with open(path, "w") as f:
+            json.dump(Serializer.serialize_scene(em), f, indent=4)
+
+        logger.log_info(f"Scene saved in {(time.perf_counter()-start)*1000:.1f}ms")
+
+class Deserializer:
+    @staticmethod
+    def deserialize_component(comp_data, engine):
+        comp_type = comp_data["type"]
+        comp_class = COMPONENT_REGISTRY[comp_type]
+        data = comp_data["data"]
+
+        return comp_class.deserialize(data, engine)
+
+    @staticmethod
+    def load_scene(em: EntityManager, engine, path, logger):
+        start = time.perf_counter()
+        with open(path, "r") as f:
+            data = json.load(f)
+
+        em.entities.clear()
+        em.components.clear()
+        em._next_eid = 0
+
+        for eid_str, entity_data in data["entities"].items():
+            eid = int(eid_str)
+            _, entity = em.create_entity(eid)
+
+            for comp_data in entity_data["components"]:
+                component = Deserializer.deserialize_component(comp_data, engine)
+                em.add_component_direct(entity, eid, component)
+
+        logger.log_info(f"Scene loaded in {(time.perf_counter()-start)*1000:.1f}ms")

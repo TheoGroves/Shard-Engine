@@ -14,13 +14,16 @@ class CameraSystem:
         cameras = self.entity_manager.query("Transform", "Camera")
 
         if not cameras:
-            logger.log_warning("No cameras found in scene.")
+            #logger.log_warning("No cameras found in scene.")
+            pass
 
-        if not any(self.get_camera(eid).active for eid in cameras):
-            logger.log_warning("No active cameras found in scene.")
+        elif not any(self.get_camera(eid).active for eid in cameras):
+            #logger.log_warning("No active cameras found in scene.")
+            pass
 
-        if sum(self.get_camera(eid).active for eid in cameras) > 1:
-            logger.log_warning("Several active cameras found in scene.")
+        elif sum(self.get_camera(eid).active for eid in cameras) > 1:
+            #logger.log_warning("Several active cameras found in scene.")
+            pass
 
         for eid in cameras:
             cam = self.get_camera(eid)

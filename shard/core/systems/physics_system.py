@@ -6,7 +6,7 @@ class PhysicsSystem:
         self.entity_manager = entity_manager
 
     def update(self, gravity, dt):
-        for eid in self.entity_manager.query("LinearBody"):
+        for eid in self.entity_manager.query("LinearBody", "Transform"):
             physics_object = self.entity_manager.entities[eid]
 
             linear_body = physics_object.components["LinearBody"]

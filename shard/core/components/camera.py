@@ -9,3 +9,12 @@ class Camera:
         self.entity = None
 
         self.active = active
+
+    def serialize(self):
+        return {
+            "active": self.active
+        }
+
+    @classmethod
+    def deserialize(cls, data, engine):
+        return cls(data["active"])

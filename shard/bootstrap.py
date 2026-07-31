@@ -10,17 +10,18 @@ from editor.viewport import ViewportUI
 from editor.hierarchy import Hierarchy
 from editor.inspector import Inspector
 from editor.profiler import Profiler
+from editor.main_menu import MainMenu
 
 # Core
-from shard.core import AssetManager, EntityManager
+from shard.core import AssetManager, EntityManager, Serializer, Deserializer
 from shard.rendering import RenderEngine, Viewport
 from shard.core.logger import Logger
 from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem
 
-ENGINE_VERSION = "0.3.1"
+ENGINE_VERSION = "0.4.0"
 
 class Engine:
-    def __init__(self, console: Console, logger: Logger, screen_width: int, screen_height: int, render_engine: RenderEngine, viewport: Viewport, entity_manager: EntityManager, asset_manager: AssetManager, transform_system: TransformSystem, mesh_renderer_system: MeshRendererSystem, collision_system: CollisionSystem, physics_system: PhysicsSystem, camera_system: CameraSystem, fly_controller_system: FlyControllerSystem, viewport_ui: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler):
+    def __init__(self, console: Console, logger: Logger, screen_width: int, screen_height: int, render_engine: RenderEngine, viewport: Viewport, entity_manager: EntityManager, asset_manager: AssetManager, transform_system: TransformSystem, mesh_renderer_system: MeshRendererSystem, collision_system: CollisionSystem, physics_system: PhysicsSystem, camera_system: CameraSystem, fly_controller_system: FlyControllerSystem, serializer: Serializer, deserializer: Deserializer, viewport_ui: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu):
         # Constants
         self.USER_32 = ctypes.windll.user32
         self.PLAY_MODE = True
@@ -40,10 +41,13 @@ class Engine:
         self.physics_system = physics_system
         self.camera_system = camera_system
         self.fly_controller_system = fly_controller_system
+        self.serializer = serializer
+        self.deserializer = deserializer
         self.viewport_ui = viewport_ui
         self.hierarchy = hierarchy
         self.inspector = inspector
         self.profiler = profiler
+        self.main_menu = main_menu
 
 def bootstrap():
     try:
@@ -81,14 +85,19 @@ def bootstrap():
         camera_system = CameraSystem(entity_manager)
         fly_controller_system = FlyControllerSystem(entity_manager, render_engine)
 
+        # Serialization
+        serializer = Serializer()
+        deserializer = Deserializer()
+
         # Setup UI
         viewport_ui = ViewportUI(render_engine)
         hierarchy = Hierarchy(render_engine, entity_manager, transform_system)
         inspector = Inspector(render_engine, entity_manager, hierarchy, asset_manager)
         profiler = Profiler(render_engine)
+        main_menu = MainMenu(render_engine, entity_manager)
 
         # wrapper
-        return Engine(console, logger, screen_width, screen_height, render_engine, viewport, entity_manager, asset_manager, transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, viewport_ui, hierarchy, inspector, profiler)
+        return Engine(console, logger, screen_width, screen_height, render_engine, viewport, entity_manager, asset_manager, transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, serializer, deserializer, viewport_ui, hierarchy, inspector, profiler, main_menu)
 
     except Exception as e:
         logger.log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")
