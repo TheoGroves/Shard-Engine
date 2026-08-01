@@ -2,8 +2,8 @@ from shard.rendering.texture_slots import *
 from shard.rendering.materials.material import Material
 
 class SkyboxMaterial(Material):
-    def __init__(self, engine, asset_manager, hdri: str, exposure=1.0, rotation=0.0):
-        self.material = engine.create_material("assets/shaders/skybox.frag", "assets/shaders/skybox.vert")
+    def __init__(self, render_engine, asset_manager, hdri: str, exposure=1.0, rotation=0.0):
+        self.material = render_engine.create_material("assets/shaders/skybox.frag", "assets/shaders/skybox.vert")
 
         self.exposure = exposure
         self.rotation = rotation
@@ -11,17 +11,17 @@ class SkyboxMaterial(Material):
         env, _ = asset_manager.get_env_map(hdri)
         self.env = env["environment"]
         self.irr = env["irradiance"]
-        engine.bind_texture(self.env, ENV_MAP)
-        engine.update_int(self.material, "uEnvMap", ENV_MAP)
+        render_engine.bind_texture(self.env, ENV_MAP)
+        render_engine.update_int(self.material, "uEnvMap", ENV_MAP)
 
-    def update(self, engine, cam):
-        engine.bind_texture(self.env, ENV_MAP)
-        engine.update_int(self.material, "uEnvMap", ENV_MAP)
-        engine.update_float(self.material, "uExposure", self.exposure)
-        engine.update_float(self.material, "uRotation", self.rotation)
+    def update(self, render_engine, cam):
+        render_engine.bind_texture(self.env, ENV_MAP)
+        render_engine.update_int(self.material, "uEnvMap", ENV_MAP)
+        render_engine.update_float(self.material, "uExposure", self.exposure)
+        render_engine.update_float(self.material, "uRotation", self.rotation)
 
-        engine.update_mat4(self.material, "uView", cam.get_view())
-        engine.update_mat4(self.material, "uProj", cam.get_projection())
+        render_engine.update_mat4(self.material, "uView", cam.get_view())
+        render_engine.update_mat4(self.material, "uProj", cam.get_projection())
 
     def draw_inspector(self, inspector):
         inspector.edit_texture_env("env", self)

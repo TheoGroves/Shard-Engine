@@ -30,7 +30,7 @@ class Application:
 
         self.safe_update("FlyController", self.engine.systems.fly_controller.update, player_input, dt)
         self.safe_update("Physics", self.engine.systems.physics.update, -9.81, dt)
-        self.safe_update("Collision", self.engine.systems.collision.update)
+        self.safe_update("Collision", self.engine.systems.collision.update, self.engine)
         self.safe_update("Transform", self.engine.systems.transform.update)
         self.safe_update("Camera", self.engine.systems.camera.update, self.engine.logger)
         self.safe_update("MeshRenderer", self.engine.systems.mesh_renderer.update, self.engine.render_engine, self.scene.light_dir, self.engine.systems.camera.render_camera, self.engine.viewport)

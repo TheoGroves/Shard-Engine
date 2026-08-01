@@ -169,7 +169,7 @@ def save_cooked_env_map(img, width, height, irr_width, irr_height, irradiance, o
     with open(out_path, "wb") as f:
         pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)
 
-def load_cooked_env_map(engine, path):
+def load_cooked_env_map(render_engine, path):
     with open(path, "rb") as f:
         data = pickle.load(f)
 
@@ -183,14 +183,14 @@ def load_cooked_env_map(engine, path):
         dtype=np.float32
     ).reshape((data["irr_height"], data["irr_width"], 3))
 
-    tex = engine.create_texture_rgb32f(pixels)
-    irr_tex = engine.create_texture_rgb32f(irr)
+    tex = render_engine.create_texture_rgb32f(pixels)
+    irr_tex = render_engine.create_texture_rgb32f(irr)
 
     return tex, irr_tex, path
 
-def load_icon(engine, path):
+def load_icon(render_engine, path):
     img = Image.open(path).convert("RGBA")
 
     pixels = np.asarray(img, dtype=np.uint8)
 
-    engine.set_icon(img.width, img.height, pixels)
+    render_engine.set_icon(img.width, img.height, pixels)

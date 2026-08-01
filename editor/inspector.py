@@ -104,7 +104,7 @@ class Inspector:
         else:
             mesh_name = "None"
 
-        clicked = self.render_engine.button(mesh_name, 0, 0)
+        clicked = self.render_engine.button(f"{mesh_name}##{id(obj)}", 0, 0)
 
         if self.render_engine.is_item_hovered():
             self.render_engine.begin_tooltip()
@@ -119,6 +119,25 @@ class Inspector:
             self.mesh_to_edit = (obj, name)
             self.render_engine.open_popup("edit_mesh")
 
+    def edit_mesh_path(self, name, obj):
+        self.render_engine.text(name)
+
+        path = getattr(obj, name)
+        mesh_name = os.path.basename(path)
+
+        clicked = self.render_engine.button(f"{mesh_name}##{id(obj)}", 0, 0)
+
+        if self.render_engine.is_item_hovered():
+            self.render_engine.begin_tooltip()
+
+            self.render_engine.text(mesh_name)
+
+            self.render_engine.end_tooltip()
+
+        if clicked:
+            self.mesh_to_edit = (obj, name)
+            self.render_engine.open_popup("edit_mesh_path")
+        
     def draw_property(self, obj, name, field_type, logger, selected_eid):
         value = getattr(obj, name)
 
@@ -156,7 +175,10 @@ class Inspector:
                 setattr(obj, name, PBRMaterial(self.render_engine, self.asset_manager, logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
 
         elif field_type == "mesh":
-            self.edit_mesh(name, obj)
+            if isinstance(getattr(obj, name), int):
+                self.edit_mesh(name, obj)
+            else:
+                self.edit_mesh_path(name, obj)
 
         else:
             logger.log_warning(f"Unsupported field {name} type {field_type} in inspector")
@@ -256,8 +278,19 @@ class Inspector:
                 for mesh_handle, path in self.asset_manager.mesh_paths.items():
                     filename = os.path.basename(path)
 
-                    if self.render_engine.button(filename, 0, 0):
+                    if self.render_engine.button(f"{filename}##{id(obj)}", 0, 0):
                         setattr(obj, name, mesh_handle)
+
+                self.render_engine.end_popup()
+
+            if self.render_engine.begin_popup("edit_mesh_path"):
+                obj, name = self.mesh_to_edit
+
+                for _, path in self.asset_manager.mesh_paths.items():
+                    filename = os.path.basename(path)
+
+                    if self.render_engine.button(f"{filename}##{id(obj)}", 0, 0):
+                        setattr(obj, name, path)
 
                 self.render_engine.end_popup()
 

@@ -21,19 +21,19 @@ class Mesh:
 
         if ".obj" in path:
             vertex_buffer, normal_buffer, tangent_buffer, bitangent_buffer, uv_buffer, index_buffer, normal_index_buffer, uv_index_buffer = parse_objs([path])
+
+            self.vertices, self.indices = build_interleaved(
+                vertex_buffer,
+                normal_buffer,
+                tangent_buffer,
+                bitangent_buffer,
+                uv_buffer,
+                index_buffer,
+                normal_index_buffer,
+                uv_index_buffer
+            )
         else:
             logger.log_warning(f"Attempted to load mesh with unsupported format: {path}")
-
-        self.vertices, self.indices = build_interleaved(
-            vertex_buffer,
-            normal_buffer,
-            tangent_buffer,
-            bitangent_buffer,
-            uv_buffer,
-            index_buffer,
-            normal_index_buffer,
-            uv_index_buffer
-        )
 
     @classmethod
     def deserialize(cls, data, ctx, asset_manager):
