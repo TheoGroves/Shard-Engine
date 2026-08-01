@@ -45,9 +45,7 @@ def bootstrap():
         # Setup systems
         entity_manager = EntityManager()
         asset_manager = AssetManager(render_engine, logger)
-        asset_manager.load_textures("assets/textures", logger)
-        asset_manager.load_env_maps("assets/textures", logger)
-        asset_manager.load_meshes("assets/models", logger)
+        asset_manager.load_assets("assets/textures", "assets/models")
 
         transform_system = TransformSystem(entity_manager, logger)
         mesh_renderer_system = MeshRendererSystem(entity_manager, asset_manager, logger)
