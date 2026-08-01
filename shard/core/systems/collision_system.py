@@ -64,7 +64,7 @@ class CollisionSystem:
                 engine.logger.log_debug(f"Mesh collider path on entity {eid} changed from {os.path.abspath(old_path)} -> {os.path.abspath(collider.path)}")
 
             # Generate new meshes
-            if collider.mesh is None and isinstance(collider.path, str):
+            if collider.mesh is None and isinstance(collider.path, str) and os.path.basename(collider.path).split(".")[-1] == "obj":
                 self.set_mesh(eid, collider.path)
                 self.rebuild_bvh = True
                 engine.logger.log_debug(f"Entity {eid}'s mesh collider was rebuilt.")

@@ -117,9 +117,12 @@ void Engine::UpdateMat4(int matID, const std::string& uniform, const Mat4& matri
 GLuint Engine::CreateTextureRGBA(int width, int height, const std::vector<uint8_t>& pixels)
 {
     GLuint texture;
+
+    int levels = 1 + static_cast<int>(std::floor(std::log2(std::max(width, height))));
+
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);
 
-    glTextureStorage2D(texture, 1, GL_RGBA8, width, height);
+    glTextureStorage2D(texture, levels, GL_RGBA8, width, height);
 
     glTextureSubImage2D(
         texture,
@@ -138,6 +141,14 @@ GLuint Engine::CreateTextureRGBA(int width, int height, const std::vector<uint8_
     glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Enable anisotropic filtering if available on GPU
+    if (GLEW_EXT_texture_filter_anisotropic)
+    {
+        GLfloat maxAniso = 0.0f;
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+        glTextureParameterf(texture, GL_TEXTURE_MAX_ANISOTROPY_EXT, maxAniso);
+    }
 
     return texture;
 }

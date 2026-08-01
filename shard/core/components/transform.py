@@ -1,5 +1,5 @@
 from ..component import component
-from shard_maths import Vec3, model_matrix, radians
+from shard.maths.python import Vec3, model_matrix, radians
 @component
 class Transform:
     __inspect__ = {

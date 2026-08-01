@@ -15,7 +15,12 @@ class MeshRendererSystem:
     def set_material(self, eid, material):
         self.entity_manager.entities[eid].components["MeshRenderer"].material = material
 
-    def update(self, render_engine, light_dir, cam, viewport):
+    def update(self, render_engine, cam, viewport):
+        # Get light direction from directional light
+        light_dir = Vec3(0,0,0)
+        for eid in self.entity_manager.query("DirectionalLight"):
+            light_dir = self.entity_manager.entities[eid].components["DirectionalLight"].light_dir
+
         # Shadow Pass
         render_engine.begin_shadows(Vec3(-light_dir.x, -light_dir.y, -light_dir.z), Vec3(0,0,0))
         for eid in self.entity_manager.query("MeshRenderer", "Transform"):

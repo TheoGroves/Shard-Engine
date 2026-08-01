@@ -6,6 +6,7 @@ from .linear_body import LinearBody
 from .camera import Camera
 from .name import Name
 from .fly_controller import FlyController
+from .directional_light import DirectionalLight
 
 __all__ = [
     "Name",
@@ -15,5 +16,6 @@ __all__ = [
     "MeshCollider",
     "LinearBody",
     "Camera",
-    "FlyController"
+    "FlyController",
+    "DirectionalLight"
 ]

@@ -189,6 +189,8 @@ void main()
 
     irradiance = pow(irradiance, vec3(0.7));
 
+    //irradiance = texture(uIrrMap, uv).rgb;
+
     vec3 diffuseIBL = irradiance * albedo;
 
     float iblIntensity = 0.4;

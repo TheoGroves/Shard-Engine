@@ -2,16 +2,15 @@ import traceback
 
 from shard.maths.python import Vec3
 from shard.rendering import PBRMaterial, SkyboxMaterial
-from shard.core.components import Name, Transform, MeshRenderer, MeshCollider, LinearBody, CapsuleCollider, Camera, FlyController
+from shard.core.components import Name, Transform, MeshRenderer, MeshCollider, LinearBody, CapsuleCollider, Camera, FlyController, DirectionalLight
 from shard.collisions import BVH
 
 class DefaultScene:
-    def __init__(self, skybox_eid: int, player_eid: int, cam_eid: int, warehouse_eid: int, light_dir: Vec3):
+    def __init__(self, skybox_eid: int, player_eid: int, cam_eid: int, warehouse_eid: int):
         self.skybox_eid = skybox_eid
         self.player_eid = player_eid
         self.cam_eid = cam_eid
         self.warehouse_eid = warehouse_eid
-        self.light_dir = light_dir
 
 def build_scene(engine):
     try:
@@ -22,6 +21,11 @@ def build_scene(engine):
         engine.managers.entity.add_component(skybox_eid, MeshRenderer())
         engine.systems.mesh_renderer.set_mesh(skybox_eid, "assets/models/Cube.obj")
         engine.systems.mesh_renderer.set_material(skybox_eid, SkyboxMaterial(engine.render_engine, engine.managers.asset, "assets/textures/Day-HDRI.exr"))
+
+        light_eid, _ = engine.managers.entity.create_entity()
+        engine.managers.entity.add_component(light_eid, Name("Directional Light"))
+        engine.managers.entity.add_component(light_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
+        engine.managers.entity.add_component(light_eid, DirectionalLight())
 
         player_eid, _ = engine.managers.entity.create_entity()
         engine.managers.entity.add_component(player_eid, Name("Player"))
@@ -47,13 +51,11 @@ def build_scene(engine):
         engine.systems.mesh_renderer.set_material(warehouse_eid, PBRMaterial(engine.render_engine, engine.managers.asset, engine.logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
         engine.systems.collision.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
 
-        light_dir = Vec3(-0.3, -1.0, -0.2)
-
         # Build collision BVH
         engine.bvh = BVH()
         engine.triangles = engine.systems.collision.get_collision_triangles(engine.bvh)
 
-        return DefaultScene(skybox_eid, player_eid, cam_eid, warehouse_eid, light_dir)
+        return DefaultScene(skybox_eid, player_eid, cam_eid, warehouse_eid)
     
     except Exception as e:
         engine.logger.log_fatal(f"Scene loading failed:\n{traceback.format_exc()}")

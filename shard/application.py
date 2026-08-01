@@ -33,7 +33,7 @@ class Application:
         self.safe_update("Collision", self.engine.systems.collision.update, self.engine)
         self.safe_update("Transform", self.engine.systems.transform.update)
         self.safe_update("Camera", self.engine.systems.camera.update, self.engine.logger)
-        self.safe_update("MeshRenderer", self.engine.systems.mesh_renderer.update, self.engine.render_engine, self.scene.light_dir, self.engine.systems.camera.render_camera, self.engine.viewport)
+        self.safe_update("MeshRenderer", self.engine.systems.mesh_renderer.update, self.engine.render_engine, self.engine.systems.camera.render_camera, self.engine.viewport)
 
         self.safe_update("MainMenuUI", self.engine.ui.main_menu.update, self.engine, self.engine.serializer, self.engine.deserializer, self.engine.logger)
         self.safe_update("ConsoleUI", self.engine.ui.console.update, self.engine.logger)
