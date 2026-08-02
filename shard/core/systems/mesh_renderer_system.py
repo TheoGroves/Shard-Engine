@@ -64,7 +64,7 @@ class MeshRendererSystem:
 
             if mesh_renderer.material is not None:
                 if is_skybox:
-                    mesh_renderer.material.update(render_engine, cam)
+                    mesh_renderer.material.update(render_engine, cam, light_dir)
                 else:
                     if irr is not None and env is not None:
                         mesh_renderer.material.update(render_engine, cam, light_dir, env, irr)
@@ -74,7 +74,10 @@ class MeshRendererSystem:
                 render_engine.disable_cull_face()
 
             if mesh_renderer.mesh_handle and mesh_renderer.material:
-                render_engine.draw_mesh(mesh_renderer.mesh_handle, mesh_renderer.material.material, transform.world)
+                if is_skybox and mesh_renderer.material.use_procedural: # Switch to procedural material for rendering if selected
+                    render_engine.draw_mesh(mesh_renderer.mesh_handle, mesh_renderer.material.proc_material, transform.world)
+                else:
+                    render_engine.draw_mesh(mesh_renderer.mesh_handle, mesh_renderer.material.material, transform.world)
 
             if is_skybox:
                 render_engine.enable_depth_test()

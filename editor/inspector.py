@@ -50,6 +50,14 @@ class Inspector:
         if changed:
             setattr(obj, name.split("##")[0], new_value)
 
+    def edit_bool(self, name, obj):
+        value = getattr(obj, name.split("##")[0])
+
+        changed, new_value = self.render_engine.checkbox(name, value)
+
+        if changed:
+            setattr(obj, name.split("##")[0], new_value)
+
     def edit_texture(self, name, obj):
         self.render_engine.text(name)
 

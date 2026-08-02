@@ -1,6 +1,6 @@
 #version 330 core
 
-in vec3 dir;
+in vec3 vDir;
 out vec4 color;
 
 uniform vec3 sun_dir;
@@ -167,7 +167,7 @@ void main()
 {
     vec3 cameraPos = vec3(0.0, PLANET_RADIUS + 2.0, 0.0);
 
-    vec3 viewDir = normalize(dir);
+    vec3 viewDir = normalize(vDir);
     vec3 sunDir = normalize(sun_dir);
 
     vec3 col = atmosphere(cameraPos, viewDir, sunDir);
