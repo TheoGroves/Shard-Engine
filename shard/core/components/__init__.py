@@ -7,6 +7,7 @@ from .camera import Camera
 from .name import Name
 from .fly_controller import FlyController
 from .directional_light import DirectionalLight
+from .script import Script
 
 __all__ = [
     "Name",
@@ -17,5 +18,6 @@ __all__ = [
     "LinearBody",
     "Camera",
     "FlyController",
-    "DirectionalLight"
+    "DirectionalLight",
+    "Script"
 ]

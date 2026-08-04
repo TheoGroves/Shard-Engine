@@ -16,7 +16,7 @@ from editor.main_menu import MainMenu
 from shard.core import AssetManager, EntityManager, Serializer, Deserializer
 from shard.rendering import RenderEngine, Viewport
 from shard.core.logger import Logger
-from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem
+from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem, ScriptSystem
 
 from shard.core.engine import Engine, ENGINE_VERSION
 
@@ -65,7 +65,6 @@ def bootstrap():
         profiler = Profiler(render_engine)
         main_menu = MainMenu(render_engine, entity_manager)
 
-        # wrapper
         return Engine(console, logger, screen_width, screen_height, render_engine, viewport, entity_manager, asset_manager, transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, serializer, deserializer, viewport_ui, hierarchy, inspector, profiler, main_menu)
 
     except Exception as e:

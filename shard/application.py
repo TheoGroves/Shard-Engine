@@ -16,6 +16,7 @@ class Application:
         dt = 1/60
 
         try:
+            self.engine.systems.scripting.start()
             while not self.engine.render_engine.should_close():
                 s = time.perf_counter()
                 self.update(dt)
@@ -27,6 +28,8 @@ class Application:
 
     def update(self, dt):
         player_input = self.engine.render_engine.get_input()
+
+        self.engine.systems.scripting.update()
 
         self.safe_update("FlyController", self.engine.systems.fly_controller.update, player_input, dt)
         self.safe_update("Physics", self.engine.systems.physics.update, -9.81, dt)
@@ -43,6 +46,8 @@ class Application:
         self.safe_update("ProfilerUI", self.engine.ui.profiler.update, dt)
 
         self.engine.render_engine.end_frame()
+
+        self.engine.dt = dt
 
     def safe_update(self, name, callback, *args):
         try:

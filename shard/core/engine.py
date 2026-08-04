@@ -16,9 +16,9 @@ from editor.main_menu import MainMenu
 from shard.core import AssetManager, EntityManager, Serializer, Deserializer
 from shard.rendering import RenderEngine, Viewport
 from shard.core.logger import Logger
-from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem
+from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem, ScriptSystem
 
-ENGINE_VERSION = "0.4.5"
+ENGINE_VERSION = "0.5.0"
 
 class UI:
     def __init__(self, console: Console, viewport: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu):
@@ -30,13 +30,14 @@ class UI:
         self.main_menu = main_menu
 
 class Systems:
-    def __init__(self, transform: TransformSystem, mesh_renderer: MeshRendererSystem, collision: CollisionSystem, physics: PhysicsSystem, camera: CameraSystem, fly_controller: FlyControllerSystem):
+    def __init__(self, transform: TransformSystem, mesh_renderer: MeshRendererSystem, collision: CollisionSystem, physics: PhysicsSystem, camera: CameraSystem, fly_controller: FlyControllerSystem, scripting_system: ScriptSystem):
         self.transform = transform
         self.mesh_renderer = mesh_renderer
         self.collision = collision
         self.physics = physics
         self.camera = camera
         self.fly_controller = fly_controller
+        self.scripting = scripting_system
 
 class Managers:
     def __init__(self, entity_manager: EntityManager, asset_manager: AssetManager):
@@ -57,14 +58,19 @@ class Engine:
         self.render_engine = render_engine
         self.viewport = viewport
 
-        self.systems = Systems(transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system)
-        self.ui = UI(console, viewport_ui, hierarchy, inspector, profiler, main_menu)
         self.managers = Managers(entity_manager, asset_manager)
+
+        scripting_system = ScriptSystem(entity_manager, self)
+
+        self.systems = Systems(transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, scripting_system)
+        self.ui = UI(console, viewport_ui, hierarchy, inspector, profiler, main_menu)
 
         self.serializer = serializer
         self.deserializer = deserializer
         self.bvh = None
         self.triangles = []
+
+        self.dt = 0.0
 
     def rebuild_bvh(self):
         self.triangles = self.systems.collision.get_collision_triangles(self.bvh)

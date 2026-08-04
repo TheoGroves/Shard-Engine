@@ -4,6 +4,7 @@ from .collision_system import CollisionSystem
 from .physics_system import PhysicsSystem
 from .camera_system import CameraSystem
 from .fly_controller_system import FlyControllerSystem
+from .script_system import ScriptSystem, script, ScriptingAPI
 
 __all__ = [
     "TransformSystem",
@@ -11,5 +12,8 @@ __all__ = [
     "CollisionSystem",
     "PhysicsSystem",
     "CameraSystem",
-    "FlyControllerSystem"
+    "FlyControllerSystem",
+    "ScriptSystem",
+    "script",
+    "ScriptingAPI"
 ]

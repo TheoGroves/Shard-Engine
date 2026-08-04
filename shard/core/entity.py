@@ -6,7 +6,8 @@ import shutil
 from .component import COMPONENT_REGISTRY
 
 class Entity:
-    def __init__(self):
+    def __init__(self, eid: int):
+        self.eid = eid
         self.components = {}
 
 class EntityManager:
@@ -26,7 +27,7 @@ class EntityManager:
             eid = self._next_eid
             self._next_eid += 1
 
-        entity = Entity()
+        entity = Entity(eid)
         self.entities[eid] = entity
         return eid, entity
     
