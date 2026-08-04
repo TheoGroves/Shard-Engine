@@ -41,7 +41,7 @@ def build_scene(engine):
         engine.managers.entity.add_component(cam_eid, Transform(Vec3(0,5,0), Vec3(0,0,0), Vec3(1,1,1)))
         engine.managers.entity.add_component(cam_eid, Camera(True))
         engine.managers.entity.add_component(cam_eid, FlyController())
-        engine.systems.scripting.add_script(cam_eid, "scripts/test.py")
+        engine.systems.scripting.add_script(cam_eid, "scripts/example_script.py")
 
         warehouse_eid, _ = engine.managers.entity.create_entity()
         engine.managers.entity.add_component(warehouse_eid, Name("Warehouse"))
