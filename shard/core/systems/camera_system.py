@@ -36,3 +36,5 @@ class CameraSystem:
             self.render_camera.forward = transform.world_forward
             self.render_camera.right = transform.world_right
             self.render_camera.up = transform.world_up
+            self.render_camera.near_plane = cam.near_plane
+            self.render_camera.far_plane = cam.far_plane
