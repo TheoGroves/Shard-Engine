@@ -15,6 +15,10 @@ class Transform:
         self.rot = rot
         self.scale = scale
 
+        self.last_pos = pos
+        self.displacement = Vec3(0,0,0)
+        self.velocity = Vec3(0,0,0) # Derived velocity, position is authoritative
+
         self.world_pos = pos
 
         self.forward = Vec3(0,0,1)

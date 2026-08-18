@@ -1,4 +1,4 @@
-from shard.scripting import script, ScriptingAPI, component
+from shard.scripting import script, ScriptingAPI, component, Vec3
 
 # Components store state but do not have any behaviour. 
 @component
@@ -30,6 +30,9 @@ class ExampleScript:
     # Called when play mode starts
     def start(self, entity, api: ScriptingAPI):
         api.logger.log_info(f"Hello World from entity {entity.eid}")
+        test = api.audio_engine.load_audio("assets/audio/Test.wav")
+        api.audio_engine.play(test, Vec3(0,0,0), Vec3(0,0,0))
+
 
     # Called every single frame
     def update(self, entity, api: ScriptingAPI):

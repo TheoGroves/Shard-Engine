@@ -61,9 +61,11 @@ class TransformSystem:
 
         initial.world = world
         
-    def update(self):
+    def update(self, dt):
         for eid in self.em.query("Transform"):
             transform = self.get_transform(eid)
+            transform.last_pos = transform.world_pos
+
             self.update_model_matrix(transform)
 
         for eid in self.em.query("Transform"):
@@ -77,3 +79,8 @@ class TransformSystem:
             transform.world_up      = normalize(Vec3(transform.world.m[4], transform.world.m[5], transform.world.m[6]))
 
             transform.world_pos     = Vec3(transform.world.m[12], transform.world.m[13], transform.world.m[14])
+
+            transform.displacement = transform.world_pos - transform.last_pos
+
+            d = transform.displacement
+            transform.velocity = Vec3(d.x / dt, d.y / dt, d.z / dt)

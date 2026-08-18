@@ -10,6 +10,7 @@ class ScriptingAPI:
     def __init__(self, engine):
         self.entity_manager = engine.managers.entity
         self.logger = engine.logger
+        self.audio_engine = engine.audio_engine
 
         # For advanced, engine-breaking use only
         self.__engine = engine

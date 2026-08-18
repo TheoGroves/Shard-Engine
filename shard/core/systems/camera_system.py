@@ -10,7 +10,7 @@ class CameraSystem:
     def get_camera(self, eid):
         return self.entity_manager.entities[eid].components["Camera"]
 
-    def update(self, logger):
+    def update(self, logger, audio_engine):
         cameras = self.entity_manager.query("Transform", "Camera")
 
         if not cameras:
@@ -38,3 +38,5 @@ class CameraSystem:
             self.render_camera.up = transform.world_up
             self.render_camera.near_plane = cam.near_plane
             self.render_camera.far_plane = cam.far_plane
+
+            audio_engine.set_listener(transform.world_pos, transform.velocity, transform.world_forward, transform.world_up)

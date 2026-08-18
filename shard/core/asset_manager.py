@@ -7,6 +7,15 @@ from shard.loaders.texture_loader import load_texture, load_cooked_tex, save_coo
 from .mesh import Mesh
 
 class AssetManager:
+    """**The Asset Manager**
+    
+    The Asset Manager handles loading and managing meshes and textures.
+    Assets are preprocessed here so they can be loaded directly much faster in the future.
+    The Asset Database is used to create consistent handles for assets.
+    
+    **Note:** Audio is handled separately by the **ShardAudio** library to reduce Python-C++ overhead.
+    """
+
     def __init__(self, engine, logger):
         self.render_engine = engine
         self.logger = logger

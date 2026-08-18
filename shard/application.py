@@ -14,6 +14,7 @@ class Application:
 
     def run(self):
         dt = 1/60
+        self.engine.audio_engine.initialize()
 
         try:
             self.engine.systems.scripting.start()
@@ -23,6 +24,7 @@ class Application:
                 dt = time.perf_counter() - s
 
         finally:
+            self.engine.audio_engine.shutdown()
             self.engine.render_engine.shutdown()
             self.engine.ui.console.cleanup()
 
@@ -34,8 +36,8 @@ class Application:
         self.safe_update("FlyController", self.engine.systems.fly_controller.update, player_input, dt)
         self.safe_update("Physics", self.engine.systems.physics.update, -9.81, dt)
         self.safe_update("Collision", self.engine.systems.collision.update, self.engine)
-        self.safe_update("Transform", self.engine.systems.transform.update)
-        self.safe_update("Camera", self.engine.systems.camera.update, self.engine.logger)
+        self.safe_update("Transform", self.engine.systems.transform.update, dt)
+        self.safe_update("Camera", self.engine.systems.camera.update, self.engine.logger, self.engine.audio_engine)
         self.safe_update("MeshRenderer", self.engine.systems.mesh_renderer.update, self.engine.render_engine, self.engine.systems.camera.render_camera, self.engine.viewport)
 
         self.safe_update("MainMenuUI", self.engine.ui.main_menu.update, self.engine, self.engine.serializer, self.engine.deserializer, self.engine.logger)
@@ -46,6 +48,8 @@ class Application:
         self.safe_update("ProfilerUI", self.engine.ui.profiler.update, dt)
 
         self.engine.render_engine.end_frame()
+
+        self.engine.audio_engine.cleanup()
 
         self.engine.dt = dt
 
