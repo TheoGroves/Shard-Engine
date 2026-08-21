@@ -9,8 +9,9 @@ class ExampleComponent:
         "value": "float"
     }
 
-    def __init__(self, value=0.0):
-        self.value = value
+    def __init__(self):
+        self.value = 0
+        self.source = 0
 
     # Components are responsible for their own serialization and deserialization.
     # Serialized values are then stored in a dictionary with a unique identifier which can be used to restore the data later.
@@ -32,9 +33,11 @@ class ExampleScript:
         api.logger.log_info(f"Hello World from entity {entity.eid}")
         test = api.audio_engine.load_audio("assets/audio/Test.wav")
         t = api.get_component(entity, "Transform")
-        api.audio_engine.play(test, t.world_pos, t.velocity)
-
+        source = api.audio_engine.play(test, t.world_pos, t.velocity)
+        api.get_component(entity, "ExampleComponent").source = source
 
     # Called every single frame
     def update(self, entity, api: ScriptingAPI):
-        pass
+        t = api.get_component(entity, "Transform")
+        source = api.get_component(entity, "ExampleComponent").source
+        api.audio_engine.update_source(source, t.world_pos, t.velocity)

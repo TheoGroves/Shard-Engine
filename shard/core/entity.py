@@ -38,6 +38,14 @@ class EntityManager:
         self.entities[eid].components[type_name] = component
         self.components[type_name][eid] = component
 
+    def add_component_name(self, eid, component_name):
+        component = COMPONENT_REGISTRY[component_name]()
+
+        component.entity = eid
+
+        self.entities[eid].components[component_name] = component
+        self.components[component_name][eid] = component
+
     def add_component_direct(self, entity, eid, component):
         component.entity = eid
 

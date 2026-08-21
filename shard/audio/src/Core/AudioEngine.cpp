@@ -57,7 +57,7 @@ void AudioEngine::SetListener(const Vec3& position, const Vec3& velocity, const 
     alListenerfv(AL_ORIENTATION, orientation);
 }
 
-void AudioEngine::Play(ALuint buffer, const Vec3& position, const Vec3& velocity)
+ALuint AudioEngine::Play(ALuint buffer, const Vec3& position, const Vec3& velocity)
 {
     // Create a source to play the sound from
     ALuint source;
@@ -78,6 +78,15 @@ void AudioEngine::Play(ALuint buffer, const Vec3& position, const Vec3& velocity
 
     // Add to list of sources to be deleted once the audio has finished
     sources.push_back(source);
+
+    return source;
+}
+
+void AudioEngine::UpdateSource(ALuint source, const Vec3& position, const Vec3& velocity)
+{
+    // Update position and velocity from 
+    alSourcefv(source, AL_POSITION, &position.x);
+    alSourcefv(source, AL_VELOCITY, &velocity.x);
 }
 
 void AudioEngine::Cleanup()

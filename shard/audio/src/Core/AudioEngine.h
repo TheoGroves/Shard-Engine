@@ -13,7 +13,8 @@ public:
     void Initialize();
     ALuint LoadAudio(const std::string& path);
     void SetListener(const Vec3& position, const Vec3& velocity, const Vec3& forward, const Vec3& up);
-    void Play(ALuint buffer, const Vec3& position, const Vec3& velocity);
+    ALuint Play(ALuint buffer, const Vec3& position, const Vec3& velocity);
+    void UpdateSource(ALuint source, const Vec3& position, const Vec3& velocity);
     void Cleanup();
     void Shutdown();
 private:

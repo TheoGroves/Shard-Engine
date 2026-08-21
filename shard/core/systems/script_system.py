@@ -1,9 +1,12 @@
 import importlib.util
 import os
-import sys
+from pathlib import Path
+import inspect
+import time
 
 from shard.core.entity import EntityManager, Entity
 from shard.core.components import Script
+from shard.core.component import COMPONENT_REGISTRY
 
 # User-facing api, similar to engine but stripped to the minimum requirements for scripting
 class ScriptingAPI:
@@ -45,11 +48,41 @@ class ScriptSystem:
 
         self.path_script_map = {}
 
+        # Preload scripts
+        self.preload_components()
+
     def add_script(self, eid, path: str):
         self.script_handles[self.next_handle] = path
         self.entity_manager.add_component(eid, Script(self.next_handle))
         self.next_handle += 1
         self.scripting_api.logger.log_debug(f"Loaded script at '{path}'")
+
+    def add_component(self, eid, comp_name):
+        self.scripting_api.entity_manager.add_component_name(eid, comp_name)
+
+    # Script preloading is required for user-components to be loaded immediately
+    def preload_components(self):
+        start = time.perf_counter()
+
+        package = "scripts"
+        package_path = Path(__file__).parent.parent.parent.parent / package
+
+        self.scripting_api.logger.log_info(f"{package_path}")
+
+        components_preloaded = 0
+
+        for file in package_path.glob("*.py"):
+            if file.name.startswith("_"):
+                continue
+
+            module_name = f"{package}.{file.stem}"
+            module = importlib.import_module(module_name)
+
+            for name, obj in inspect.getmembers(module, inspect.isclass):
+                if obj.__module__ == module_name and obj.__name__ in COMPONENT_REGISTRY:
+                    components_preloaded += 1
+
+        self.scripting_api.logger.log_info(f"Loaded {components_preloaded} user-made components")
 
     # Generator to lazily iterate over script components and get the module required by that script
     def get_script_components(self):

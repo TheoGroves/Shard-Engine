@@ -14,6 +14,7 @@ PYBIND11_MODULE(shard_audio, m)
         .def("load_audio", &AudioEngine::LoadAudio)
         .def("set_listener", &AudioEngine::SetListener)
         .def("play", &AudioEngine::Play)
+        .def("update_source", &AudioEngine::UpdateSource)
         .def("cleanup", &AudioEngine::Cleanup)
         .def("shutdown", &AudioEngine::Shutdown);
 }

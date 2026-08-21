@@ -36,6 +36,7 @@ def build_scene(engine):
         engine.systems.mesh_renderer.set_mesh(player_eid, "assets/models/Player.obj")
         engine.systems.mesh_renderer.set_material(player_eid, PBRMaterial(engine.render_engine, engine.managers.asset, engine.logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
         engine.systems.scripting.add_script(player_eid, "scripts/example_script.py")
+        engine.systems.scripting.add_component(player_eid, "ExampleComponent")
 
         cam_eid, _ = engine.managers.entity.create_entity()
         engine.managers.entity.add_component(cam_eid, Name("Camera", "MainCamera"))
