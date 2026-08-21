@@ -228,9 +228,7 @@ float proceduralSunFlare(vec3 viewDir, vec3 sunDir)
 
     float rays = 12.0;
 
-    vec3 up = abs(sunDir.y) < 0.99
-        ? vec3(0.0, 1.0, 0.0)
-        : vec3(1.0, 0.0, 0.0);
+    vec3 up = abs(sunDir.y) < 0.99 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
 
     vec3 tangent = normalize(cross(up, sunDir));
     vec3 bitangent = cross(sunDir, tangent);
@@ -240,30 +238,13 @@ float proceduralSunFlare(vec3 viewDir, vec3 sunDir)
 
     float azimuth = atan(y, x);
 
-    float rayPattern =
-        pow(abs(cos(azimuth * rays)), 18.0);
+    float rayPattern = pow(abs(cos(azimuth * rays)), 18.0);
 
-    float rayFalloff =
-        exp(-radial * 0.45);
+    float rayFalloff = exp(-radial * 0.45);
 
-    float spikes =
-        rayPattern * rayFalloff * 0.18;
+    float spikes = rayPattern * rayFalloff * 0.18;
 
-    float ring1 =
-        exp(-pow((radial - 2.5) * 3.0, 2.0));
-
-    float ring2 =
-        exp(-pow((radial - 5.0) * 2.0, 2.0));
-
-    float ring3 =
-        exp(-pow((radial - 9.0) * 1.2, 2.0));
-
-    float rings =
-        (ring1 * 0.06 +
-         ring2 * 0.035 +
-         ring3 * 0.02);
-
-    return corona + halo + spikes + rings;
+    return corona + halo + spikes;
 }
 
 // Clouds
@@ -491,23 +472,21 @@ void main()
 
     float sun = sunDisc(viewDir, sunDir);
 
-    if (sun > 0.0) {
-        float sun0, sun1;
+    float sun0, sun1;
 
-        raySphereIntersect(cameraPos, sunDir, ATMOS_RADIUS, sun0, sun1);
+    raySphereIntersect(cameraPos, sunDir, ATMOS_RADIUS, sun0, sun1);
 
-        vec3 sunOD = opticalDepth(cameraPos, sunDir, sun1);
+    vec3 sunOD = opticalDepth(cameraPos, sunDir, sun1);
 
-        vec3 sunTau = BETA_R * air * sunOD.x + BETA_M * aerosols * sunOD.y + BETA_O * ozone * sunOD.z;
+    vec3 sunTau = BETA_R * air * sunOD.x + BETA_M * aerosols * sunOD.y + BETA_O * ozone * sunOD.z;
 
-        vec3 sunTransmittance = exp(-sunTau);
+    vec3 sunTransmittance = exp(-sunTau);
 
-        col += sun_color * sunTransmittance * sun * 25.0;
-    }
+    col += sun_color * sunTransmittance * sun * 25.0;
 
     float flare = proceduralSunFlare(viewDir, sunDir);
 
-    col += sun_color * flare;
+    col += sun_color * flare * sunTransmittance;
 
     col = 1.0 - exp(-col * 8.0);
 

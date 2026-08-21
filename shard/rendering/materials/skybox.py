@@ -6,7 +6,7 @@ import time
 start_time = time.time()
 
 class SkyboxMaterial(Material):
-    def __init__(self, render_engine, asset_manager, hdri: str, exposure=1.0, rotation=0.0, air=1.0, aerosols=1.0, ozone=1.0, cloud_density=0.01, cloud_cover=0.5, sun_colour=Vec3(1.0,1.0,1.0)):
+    def __init__(self, render_engine, asset_manager, hdri: str, exposure=1.0, rotation=0.0, air=1.0, aerosols=1.0, ozone=1.0, cloud_density=0.05, cloud_cover=0.6, sun_colour=Vec3(1.0,1.0,1.0)):
         self.material = render_engine.create_material("assets/shaders/skybox.frag", "assets/shaders/skybox.vert")
         self.proc_material = render_engine.create_material("assets/shaders/proc_skybox.frag", "assets/shaders/skybox.vert")
 
