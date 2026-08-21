@@ -31,7 +31,8 @@ class ExampleScript:
     def start(self, entity, api: ScriptingAPI):
         api.logger.log_info(f"Hello World from entity {entity.eid}")
         test = api.audio_engine.load_audio("assets/audio/Test.wav")
-        api.audio_engine.play(test, Vec3(0,0,0), Vec3(0,0,0))
+        t = api.get_component(entity, "Transform")
+        api.audio_engine.play(test, t.world_pos, t.velocity)
 
 
     # Called every single frame

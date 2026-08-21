@@ -35,13 +35,13 @@ def build_scene(engine):
         engine.managers.entity.add_component(player_eid, CapsuleCollider(2, 1, 0))
         engine.systems.mesh_renderer.set_mesh(player_eid, "assets/models/Player.obj")
         engine.systems.mesh_renderer.set_material(player_eid, PBRMaterial(engine.render_engine, engine.managers.asset, engine.logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
+        engine.systems.scripting.add_script(player_eid, "scripts/example_script.py")
 
         cam_eid, _ = engine.managers.entity.create_entity()
         engine.managers.entity.add_component(cam_eid, Name("Camera", "MainCamera"))
         engine.managers.entity.add_component(cam_eid, Transform(Vec3(0,5,0), Vec3(0,0,0), Vec3(1,1,1)))
         engine.managers.entity.add_component(cam_eid, Camera(True))
         engine.managers.entity.add_component(cam_eid, FlyController())
-        engine.systems.scripting.add_script(cam_eid, "scripts/example_script.py")
 
         warehouse_eid, _ = engine.managers.entity.create_entity()
         engine.managers.entity.add_component(warehouse_eid, Name("Warehouse"))
