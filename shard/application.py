@@ -8,13 +8,13 @@ class Application:
         from factories.default import build_scene
         from shard.loaders import load_icon
 
+        # Clear latest log on startup
+        with open("logs/latest.log", "w") as _:
+            pass
+
         self.engine = bootstrap()
         self.scene = build_scene(self.engine)
         load_icon(self.engine.render_engine, "shard/icon.png")
-
-        # Clear latest log on startup
-        with open("latest.log", "w") as _:
-            pass
 
     def run(self):
         dt = 1/60
