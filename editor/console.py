@@ -1,5 +1,6 @@
 from shard.rendering import RenderEngine, LogLevel
 from shard.core.logger import *
+from datetime import datetime
 
 PREFIX_ONLY = 0
 ENTIRE_LOG = 1
@@ -35,7 +36,12 @@ class Console:
         self.render_engine = render_engine
 
     def add_log(self, message: str, severity: str):
-        self.logs.append(Log(message, severity))
+        log_object = Log(message, severity)
+        self.logs.append(log_object)
+
+        with open("logs/latest.log", "a") as file:
+            file.write(f"[{datetime.now().strftime('%H:%M:%S')}] {log_object.prefix} {log_object.text}\n")
+
         self.scroll_to_bottom = True
 
     def update(self, logger):

@@ -251,3 +251,5 @@ build_config.ini
 imgui.ini
 
 /shard/audio/dependencies
+
+logs
