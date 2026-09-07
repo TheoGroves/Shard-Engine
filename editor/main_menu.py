@@ -1,10 +1,12 @@
 from shard.rendering import RenderEngine
 from shard.core.entity import EntityManager, Serializer, Deserializer
+from shard.tools import PrimitiveGenerator
 
 class MainMenu:
-    def __init__(self, render_engine: RenderEngine, entity_manager: EntityManager):
+    def __init__(self, render_engine: RenderEngine, entity_manager: EntityManager, primitive_generator: PrimitiveGenerator):
         self.render_engine = render_engine
         self.entity_manager = entity_manager
+        self.primitive_generator = primitive_generator
 
     def update(self, engine, serializer: Serializer, deserializer: Deserializer, logger):
         if self.render_engine.begin_menu_bar():
@@ -21,6 +23,12 @@ class MainMenu:
                     deserializer.restore_backup(self.entity_manager, engine, "scenes/main.json", logger)
                     logger.log_info("Save restored.")
 
+                self.render_engine.end_menu()
+
+            if self.render_engine.begin_menu("Tools"):
+                if self.render_engine.button("Generate Primitives", 0, 0):
+                    self.primitive_generator.generate_quad(1)
+                    logger.log_info("Generated quad")
                 self.render_engine.end_menu()
 
             self.render_engine.end_menu_bar()

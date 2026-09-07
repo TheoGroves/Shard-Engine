@@ -5,13 +5,6 @@ from shard.rendering import PBRMaterial, SkyboxMaterial
 from shard.core.components import Name, Transform, MeshRenderer, MeshCollider, LinearBody, CapsuleCollider, Camera, FlyController, DirectionalLight, Script
 from shard.collisions import BVH
 
-class DefaultScene:
-    def __init__(self, skybox_eid: int, player_eid: int, cam_eid: int, warehouse_eid: int):
-        self.skybox_eid = skybox_eid
-        self.player_eid = player_eid
-        self.cam_eid = cam_eid
-        self.warehouse_eid = warehouse_eid
-
 def build_scene(engine):
     try:
         # Load Scene
@@ -20,23 +13,12 @@ def build_scene(engine):
         engine.managers.entity.add_component(skybox_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
         engine.managers.entity.add_component(skybox_eid, MeshRenderer())
         engine.systems.mesh_renderer.set_mesh(skybox_eid, "assets/models/Cube.obj")
-        engine.systems.mesh_renderer.set_material(skybox_eid, SkyboxMaterial(engine.render_engine, engine.managers.asset, "assets/textures/Day-HDRI.exr"))
+        engine.systems.mesh_renderer.set_material(skybox_eid, SkyboxMaterial(engine.render_engine, engine.managers.asset, "assets/textures/Sunset-HDRI.exr"))
 
         light_eid, _ = engine.managers.entity.create_entity()
         engine.managers.entity.add_component(light_eid, Name("Directional Light"))
         engine.managers.entity.add_component(light_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
         engine.managers.entity.add_component(light_eid, DirectionalLight())
-
-        player_eid, _ = engine.managers.entity.create_entity()
-        engine.managers.entity.add_component(player_eid, Name("Player"))
-        engine.managers.entity.add_component(player_eid, Transform(Vec3(0,10,0), Vec3(0,0,0), Vec3(1,1,1)))
-        engine.managers.entity.add_component(player_eid, MeshRenderer())
-        engine.managers.entity.add_component(player_eid, LinearBody())
-        engine.managers.entity.add_component(player_eid, CapsuleCollider(2, 1, 0))
-        engine.systems.mesh_renderer.set_mesh(player_eid, "assets/models/Player.obj")
-        engine.systems.mesh_renderer.set_material(player_eid, PBRMaterial(engine.render_engine, engine.managers.asset, engine.logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
-        engine.systems.scripting.add_script(player_eid, "scripts/example_script.py")
-        engine.systems.scripting.add_component(player_eid, "ExampleComponent")
 
         cam_eid, _ = engine.managers.entity.create_entity()
         engine.managers.entity.add_component(cam_eid, Name("Camera", "MainCamera"))
@@ -44,20 +26,19 @@ def build_scene(engine):
         engine.managers.entity.add_component(cam_eid, Camera(True))
         engine.managers.entity.add_component(cam_eid, FlyController())
 
-        warehouse_eid, _ = engine.managers.entity.create_entity()
-        engine.managers.entity.add_component(warehouse_eid, Name("Warehouse"))
-        engine.managers.entity.add_component(warehouse_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
-        engine.managers.entity.add_component(warehouse_eid, MeshRenderer())
-        engine.managers.entity.add_component(warehouse_eid, MeshCollider(None))
-        engine.systems.mesh_renderer.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
-        engine.systems.mesh_renderer.set_material(warehouse_eid, PBRMaterial(engine.render_engine, engine.managers.asset, engine.logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
-        engine.systems.collision.set_mesh(warehouse_eid, "assets/models/WarehouseCollider.obj")
+        plane_eid, _ = engine.managers.entity.create_entity()
+        engine.managers.entity.add_component(plane_eid, Name("Plane"))
+        engine.managers.entity.add_component(plane_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
+        engine.managers.entity.add_component(plane_eid, MeshRenderer())
+        engine.managers.entity.add_component(plane_eid, MeshCollider(None))
+        engine.systems.mesh_renderer.set_mesh(plane_eid, "assets/models/Plane.obj")
+        engine.systems.mesh_renderer.set_material(plane_eid, PBRMaterial(engine.render_engine, engine.managers.asset, engine.logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
+        engine.systems.collision.set_mesh(plane_eid, "assets/models/Plane.obj")
+
 
         # Build collision BVH
         engine.bvh = BVH()
         engine.triangles = engine.systems.collision.get_collision_triangles(engine.bvh)
-
-        return DefaultScene(skybox_eid, player_eid, cam_eid, warehouse_eid)
     
     except Exception as e:
         engine.logger.log_fatal(f"Scene loading failed:\n{traceback.format_exc()}")

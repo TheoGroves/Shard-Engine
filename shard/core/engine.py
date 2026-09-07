@@ -18,8 +18,9 @@ from shard.rendering import RenderEngine, Viewport
 from shard.core.logger import Logger
 from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem, ScriptSystem
 from shard.audio import AudioEngine
+from shard.tools import PrimitiveGenerator
 
-ENGINE_VERSION = "0.6.0"
+ENGINE_VERSION = "0.6.1"
 
 class UI:
     def __init__(self, console: Console, viewport: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu):
@@ -45,9 +46,12 @@ class Managers:
         self.entity = entity_manager
         self.asset = asset_manager
         
+class Tools:
+    def __init__(self, primitive_generator: PrimitiveGenerator):
+        self.primitive_generator = primitive_generator
 
 class Engine:
-    def __init__(self, console: Console, logger: Logger, screen_width: int, screen_height: int, render_engine: RenderEngine, audio_engine: AudioEngine, viewport: Viewport, entity_manager: EntityManager, asset_manager: AssetManager, transform_system: TransformSystem, mesh_renderer_system: MeshRendererSystem, collision_system: CollisionSystem, physics_system: PhysicsSystem, camera_system: CameraSystem, fly_controller_system: FlyControllerSystem, serializer: Serializer, deserializer: Deserializer, viewport_ui: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu):
+    def __init__(self, console: Console, logger: Logger, screen_width: int, screen_height: int, render_engine: RenderEngine, audio_engine: AudioEngine, viewport: Viewport, entity_manager: EntityManager, asset_manager: AssetManager, transform_system: TransformSystem, mesh_renderer_system: MeshRendererSystem, collision_system: CollisionSystem, physics_system: PhysicsSystem, camera_system: CameraSystem, fly_controller_system: FlyControllerSystem, serializer: Serializer, deserializer: Deserializer, viewport_ui: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu, primitive_generator: PrimitiveGenerator):
         # Constants
         self.USER_32 = ctypes.windll.user32
         self.PLAY_MODE = True
@@ -66,6 +70,8 @@ class Engine:
 
         self.systems = Systems(transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, scripting_system)
         self.ui = UI(console, viewport_ui, hierarchy, inspector, profiler, main_menu)
+
+        self.tools = Tools(primitive_generator)
 
         self.serializer = serializer
         self.deserializer = deserializer

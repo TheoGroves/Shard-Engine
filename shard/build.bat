@@ -28,4 +28,9 @@ call build.bat "%GENERATOR%"
 if errorlevel 1 exit /b %errorlevel%
 popd
 
+pushd tools
+call build.bat "%GENERATOR%"
+if errorlevel 1 exit /b %errorlevel%
+popd
+
 timeout /t 5

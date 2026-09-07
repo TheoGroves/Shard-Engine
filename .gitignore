@@ -238,6 +238,7 @@ Makefile
 cmake_install.cmake
 *.pyd
 *.pdb
+*.exp
 
 # Non-shader assets
 assets/*

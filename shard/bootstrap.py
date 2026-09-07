@@ -19,6 +19,9 @@ from shard.audio import AudioEngine
 from shard.core.logger import Logger
 from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSystem, PhysicsSystem, CameraSystem, FlyControllerSystem, ScriptSystem
 
+# Tools
+from shard.tools import PrimitiveGenerator
+
 from shard.core.engine import Engine, ENGINE_VERSION
 
 def bootstrap():
@@ -62,14 +65,17 @@ def bootstrap():
         serializer = Serializer()
         deserializer = Deserializer()
 
+        # Setup tools
+        primitive_generator = PrimitiveGenerator()
+
         # Setup UI
         viewport_ui = ViewportUI(render_engine)
         hierarchy = Hierarchy(render_engine, entity_manager, transform_system)
         inspector = Inspector(render_engine, entity_manager, hierarchy, asset_manager)
         profiler = Profiler(render_engine)
-        main_menu = MainMenu(render_engine, entity_manager)
+        main_menu = MainMenu(render_engine, entity_manager, primitive_generator)
 
-        return Engine(console, logger, screen_width, screen_height, render_engine, audio_engine, viewport, entity_manager, asset_manager, transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, serializer, deserializer, viewport_ui, hierarchy, inspector, profiler, main_menu)
+        return Engine(console, logger, screen_width, screen_height, render_engine, audio_engine, viewport, entity_manager, asset_manager, transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, serializer, deserializer, viewport_ui, hierarchy, inspector, profiler, main_menu, primitive_generator)
 
     except Exception as e:
         logger.log_fatal(f"Core engine initialization failed:\n{traceback.format_exc()}")

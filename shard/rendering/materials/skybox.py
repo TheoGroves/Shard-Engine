@@ -10,7 +10,7 @@ class SkyboxMaterial(Material):
         self.material = render_engine.create_material("assets/shaders/skybox.frag", "assets/shaders/skybox.vert")
         self.proc_material = render_engine.create_material("assets/shaders/proc_skybox.frag", "assets/shaders/skybox.vert")
 
-        self.use_procedural = False
+        self.use_procedural = True
 
         # HDRI
         self.exposure = exposure

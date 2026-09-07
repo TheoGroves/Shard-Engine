@@ -31,13 +31,13 @@ class ExampleScript:
     # Called when play mode starts
     def start(self, entity, api: ScriptingAPI):
         api.logger.log_info(f"Hello World from entity {entity.eid}")
-        test = api.audio_engine.load_audio("assets/audio/Test.wav")
-        t = api.get_component(entity, "Transform")
-        source = api.audio_engine.play(test, t.world_pos, t.velocity)
-        api.get_component(entity, "ExampleComponent").source = source
+        #test = api.audio_engine.load_audio("assets/audio/Test.wav")
+        #t = api.get_component(entity, "Transform")
+        #source = api.audio_engine.play(test, t.world_pos, t.velocity)
+        #api.get_component(entity, "ExampleComponent").source = source
 
     # Called every single frame
     def update(self, entity, api: ScriptingAPI):
         t = api.get_component(entity, "Transform")
         source = api.get_component(entity, "ExampleComponent").source
-        api.audio_engine.update_source(source, t.world_pos, t.velocity)
+        #api.audio_engine.update_source(source, t.world_pos, t.velocity)
