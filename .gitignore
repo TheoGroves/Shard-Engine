@@ -192,7 +192,7 @@ obj_tester.py
 /.vscode
 *.mesh
 *.envmap
-*.tex
+*.texture
 
 # Prerequisites
 *.d

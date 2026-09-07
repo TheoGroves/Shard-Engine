@@ -2,6 +2,7 @@ import time
 import numpy as np
 import math
 import numpy as np
+from pathlib import Path
 from shard.loaders.helpers import compute_tangents, build_interleaved
 
 def dot(a, b):
@@ -31,6 +32,10 @@ def mul(v, s):
     return (v[0]*s, v[1]*s, v[2]*s)
 
 def parse_obj(location):
+    # Defend against missing files
+    if not Path(location).is_file():
+        raise FileNotFoundError(f"No obj found at '{location}'")
+
     start = time.perf_counter()
     vertices = []
     normals = []
