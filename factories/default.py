@@ -31,9 +31,9 @@ def build_scene(engine):
         engine.managers.entity.add_component(plane_eid, Transform(Vec3(0,0,0), Vec3(0,0,0), Vec3(1,1,1)))
         engine.managers.entity.add_component(plane_eid, MeshRenderer())
         engine.managers.entity.add_component(plane_eid, MeshCollider(None))
-        engine.systems.mesh_renderer.set_mesh(plane_eid, "assets/models/Plane.obj")
+        engine.systems.mesh_renderer.set_mesh(plane_eid, "assets/models/Quad.obj")
         engine.systems.mesh_renderer.set_material(plane_eid, PBRMaterial(engine.render_engine, engine.managers.asset, engine.logger, "assets/textures/Empty.png", "assets/textures/EmptyNormal.png", "assets/textures/EmptyHeightmap.png", "assets/textures/EmptyORM.png"))
-        engine.systems.collision.set_mesh(plane_eid, "assets/models/Plane.obj")
+        engine.systems.collision.set_mesh(plane_eid, "assets/models/Quad.obj")
 
 
         # Build collision BVH

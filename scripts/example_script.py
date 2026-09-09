@@ -39,5 +39,5 @@ class ExampleScript:
     # Called every single frame
     def update(self, entity, api: ScriptingAPI):
         t = api.get_component(entity, "Transform")
-        source = api.get_component(entity, "ExampleComponent").source
+        #source = api.get_component(entity, "ExampleComponent").source
         #api.audio_engine.update_source(source, t.world_pos, t.velocity)

@@ -1,6 +1,7 @@
 from shard.rendering import RenderEngine
 from shard.core.entity import EntityManager, Serializer, Deserializer
 from shard.tools import PrimitiveGenerator
+import time
 
 class MainMenu:
     def __init__(self, render_engine: RenderEngine, entity_manager: EntityManager, primitive_generator: PrimitiveGenerator):
@@ -27,8 +28,13 @@ class MainMenu:
 
             if self.render_engine.begin_menu("Tools"):
                 if self.render_engine.button("Generate Primitives", 0, 0):
+                    start = time.perf_counter()
                     self.primitive_generator.generate_quad(1)
-                    logger.log_info("Generated quad")
+                    self.primitive_generator.generate_cube(1)
+                    self.primitive_generator.generate_sphere(0.5, 3)
+                    self.primitive_generator.generate_cylinder(0.5, 2, 3)
+                    logger.log_info(f"Generated primitives in {(time.perf_counter()-start)*1000:.1f}ms")
+
                 self.render_engine.end_menu()
 
             self.render_engine.end_menu_bar()
