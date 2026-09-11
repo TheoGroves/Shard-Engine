@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import inspect
 import time
+from functools import partial
 
 from shard.core.entity import EntityManager, Entity
 from shard.core.components import Script
@@ -34,8 +35,19 @@ class ScriptingAPI:
     def dt(self):
         return self.__engine.dt
 
-def script(cls):
+    @property
+    def player_input(self):
+        return self.__engine.player_input
+
+def script(cls=None, *, requires=None):
+    if cls is None:
+        return partial(script, requires=requires)
+
+    if requires is None:
+        requires = []
+
     cls.__is_script__ = True
+    cls.__requires__ = requires
     return cls
 
 class ScriptSystem:
@@ -44,15 +56,29 @@ class ScriptSystem:
         self.scripting_api = ScriptingAPI(engine)
 
         self.script_handles = {}
+        self.path_handle_map = {}
         self.next_handle = 0
 
         self.path_script_map = {}
 
-        # Preload scripts
-        self.preload_components()
+        # Preload scripts and components
+        self.preload()
 
+
+    # Assign a path to a script handle when requested during preloading, returns whether script was preloaded or not
+    def preload_script(self, path):
+        if path in self.path_handle_map:
+            self.scripting_api.logger.log_debug("Script already loaded at '{path}'")
+            return False
+
+        self.script_handles[self.next_handle] = path
+        self.path_handle_map[path] = self.next_handle
+        self.next_handle += 1
+        return True
+        
     def add_script(self, eid, path: str):
         self.script_handles[self.next_handle] = path
+        self.path_handle_map[path] = self.next_handle
         self.entity_manager.add_component(eid, Script(self.next_handle))
         self.next_handle += 1
         self.scripting_api.logger.log_debug(f"Loaded script at '{path}'")
@@ -61,7 +87,7 @@ class ScriptSystem:
         self.scripting_api.entity_manager.add_component_name(eid, comp_name)
 
     # Script preloading is required for user-components to be loaded immediately
-    def preload_components(self):
+    def preload(self):
         start = time.perf_counter()
 
         package = "scripts"
@@ -70,6 +96,7 @@ class ScriptSystem:
         self.scripting_api.logger.log_info(f"{package_path}")
 
         components_preloaded = 0
+        scripts_preloaded = 0
 
         for file in package_path.glob("*.py"):
             if file.name.startswith("_"):
@@ -78,11 +105,14 @@ class ScriptSystem:
             module_name = f"{package}.{file.stem}"
             module = importlib.import_module(module_name)
 
+            if self.preload_script(str(file)):
+                scripts_preloaded += 1
+
             for name, obj in inspect.getmembers(module, inspect.isclass):
                 if obj.__module__ == module_name and obj.__name__ in COMPONENT_REGISTRY:
                     components_preloaded += 1
 
-        self.scripting_api.logger.log_info(f"Loaded {components_preloaded} user-made components")
+        self.scripting_api.logger.log_info(f"Pre-loaded {components_preloaded} user-made components and {scripts_preloaded} user-made scripts")
 
     # Generator to lazily iterate over script components and get the module required by that script
     def get_script_components(self):
@@ -114,6 +144,21 @@ class ScriptSystem:
 
             yield entity, script_cls
 
+    def validate_scripts(self):
+        # Validate that every entity with scripts has all required components
+        for entity, script in self.get_script_components():
+            failed = False
+            missing_components = []
+
+            for req in script.__requires__:
+                if not req in entity.components:
+                    failed = True
+                    missing_components.append(req)
+
+            if failed:
+                for missing in missing_components:
+                    self.scripting_api.logger.log_error(f"The script '{script.__name__}' on entity '{self.scripting_api.get_component(entity, "Name").name}' requires the component '{missing}'")
+                    
     # start() callback: runs on start of play mode
     def start(self):
         for entity, script_cls in self.get_script_components():

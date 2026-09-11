@@ -26,7 +26,8 @@ class ExampleComponent:
 
 # Scripts are stateless behaviours executed by entities.
 # Persistent data should be stored in a component attached to the entity and requested using the ScriptingAPI
-@script
+# Scripts can require components by specifying requirements in a list. If no requirements are necessary the decorator an just be '@script'
+@script(requires=["ExampleComponent"])
 class ExampleScript:
     # Called when play mode starts
     def start(self, entity, api: ScriptingAPI):

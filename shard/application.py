@@ -35,6 +35,10 @@ class Application:
     def update(self, dt):
         player_input = self.engine.render_engine.get_input()
 
+        self.engine.player_input = player_input
+
+        self.engine.systems.scripting.validate_scripts()
+
         self.engine.systems.scripting.update()
 
         self.safe_update("FlyController", self.engine.systems.fly_controller.update, player_input, dt)

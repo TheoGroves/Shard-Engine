@@ -2,6 +2,7 @@ from collections import defaultdict
 import json
 import time
 import shutil
+from pathlib import Path
 
 from .component import COMPONENT_REGISTRY
 
@@ -113,7 +114,10 @@ class Serializer:
     @staticmethod
     def save_scene(em: EntityManager, path, logger):
         start = time.perf_counter()
-        Serializer.create_backup(path)
+
+        # Defend against first-time saves
+        if Path(path).exists():
+            Serializer.create_backup(path)
 
         with open(path, "w") as f:
             json.dump(Serializer.serialize_scene(em), f, indent=4)
@@ -133,6 +137,11 @@ class Deserializer:
     @staticmethod
     def load_scene(em: EntityManager, engine, path, logger):
         start = time.perf_counter()
+
+        # Defend against non-existent saves
+        if not Path(path).exists():
+            logger.log_warning(f"'{path}' does not exist. Please make a save first.")
+
         with open(path, "r") as f:
             data = json.load(f)
 

@@ -80,5 +80,7 @@ class Engine:
 
         self.dt = 0.0
 
+        self.player_input = None
+
     def rebuild_bvh(self):
         self.triangles = self.systems.collision.get_collision_triangles(self.bvh)
