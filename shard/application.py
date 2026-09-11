@@ -13,6 +13,9 @@ class Application:
             pass
 
         self.engine = bootstrap()
+
+        self.engine.generate_primitives()
+
         self.scene = build_scene(self.engine)
         load_icon(self.engine.render_engine, "shard/icon.png")
 

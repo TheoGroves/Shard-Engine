@@ -73,7 +73,7 @@ def bootstrap():
         hierarchy = Hierarchy(render_engine, entity_manager, transform_system)
         inspector = Inspector(render_engine, entity_manager, hierarchy, asset_manager)
         profiler = Profiler(render_engine)
-        main_menu = MainMenu(render_engine, entity_manager, primitive_generator)
+        main_menu = MainMenu(render_engine, entity_manager)
 
         return Engine(console, logger, screen_width, screen_height, render_engine, audio_engine, viewport, entity_manager, asset_manager, transform_system, mesh_renderer_system, collision_system, physics_system, camera_system, fly_controller_system, serializer, deserializer, viewport_ui, hierarchy, inspector, profiler, main_menu, primitive_generator)
 

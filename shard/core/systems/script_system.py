@@ -157,7 +157,7 @@ class ScriptSystem:
 
             if failed:
                 for missing in missing_components:
-                    self.scripting_api.logger.log_error(f"The script '{script.__name__}' on entity '{self.scripting_api.get_component(entity, "Name").name}' requires the component '{missing}'")
+                    self.scripting_api.logger.log_error(f"The script '{script.__name__}' on entity '{self.scripting_api.get_component(entity, 'Name').name}' requires the component '{missing}'")
                     
     # start() callback: runs on start of play mode
     def start(self):

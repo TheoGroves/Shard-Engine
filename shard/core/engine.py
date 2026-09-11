@@ -82,5 +82,12 @@ class Engine:
 
         self.player_input = None
 
+    def generate_primitives(self):
+        self.tools.primitive_generator.generate_quad(1)
+        self.tools.primitive_generator.generate_cube(1)
+        # TODO: Implement proper sphere and cylinder generation - crashes engine when loading empty obj files
+        #self.tools.primitive_generator.generate_sphere(0.5, 3)
+        #self.tools.primitive_generator.generate_cylinder(0.5, 2, 3)
+
     def rebuild_bvh(self):
         self.triangles = self.systems.collision.get_collision_triangles(self.bvh)
