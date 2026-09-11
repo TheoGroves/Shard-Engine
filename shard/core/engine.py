@@ -20,7 +20,7 @@ from shard.core.systems import TransformSystem, MeshRendererSystem, CollisionSys
 from shard.audio import AudioEngine
 from shard.tools import PrimitiveGenerator
 
-ENGINE_VERSION = "0.6.1"
+ENGINE_VERSION = "0.6.2"
 
 class UI:
     def __init__(self, console: Console, viewport: ViewportUI, hierarchy: Hierarchy, inspector: Inspector, profiler: Profiler, main_menu: MainMenu):
