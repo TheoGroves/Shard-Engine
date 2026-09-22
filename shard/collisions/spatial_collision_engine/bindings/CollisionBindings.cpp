@@ -30,7 +30,8 @@ PYBIND11_MODULE(spatial_collision_engine, m)
     py::class_<RayHit>(m, "RayHit")
         .def(py::init<Vec3, int>())
         .def_readwrite("point", &RayHit::point)
-        .def_readwrite("tri_index", &RayHit::triIndex);
+        .def_readwrite("tri_index", &RayHit::triIndex)
+        .def_readwrite("distance", &RayHit::distance);
 
     m.def("raycast", &Raycast);
 

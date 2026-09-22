@@ -49,6 +49,7 @@ RayHit Raycast(const Vec3& origin, const Vec3& dir, const std::vector<Triangle>&
     RayHit rayHit;
     rayHit.point = origin;
     rayHit.triIndex = -1;
+    rayHit.distance = -1.0f;
     Triangle hitTri;
 
     std::vector<int> candidates = bvh.Query(Minimum(origin, origin + dir * 1000), Maximum(origin, origin + dir * 1000));
@@ -62,6 +63,7 @@ RayHit Raycast(const Vec3& origin, const Vec3& dir, const std::vector<Triangle>&
             bestT = t;
             rayHit.point = origin + dir * t;
             rayHit.triIndex = triIndex;
+            rayHit.distance = t;
         }
     }
 

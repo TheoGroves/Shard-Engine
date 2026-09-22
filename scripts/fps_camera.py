@@ -13,13 +13,15 @@ class FirstPersonCameraComponent:
         self.current_speed = 5.0
         self.normal_speed = 5.0
         self.boost_speed = 10.0
+        self.grounded = False
 
     def serialize(self):
         return {
             "sensitivity": self.sensitivity,
             "current_speed": self.current_speed,
             "normal_speed": self.normal_speed,
-            "boost_speed": self.boost_speed
+            "boost_speed": self.boost_speed,
+            "grounded": self.grounded
         }
 
     @classmethod
@@ -55,7 +57,13 @@ class FirstPersonCameraScript:
         move_dir.y = 0
         move_dir = normalize(move_dir)
 
-        if api.player_input.jump:
+        point, _, dist = api.raycast(t.pos, Vec3(0, -1, 0))
+
+        grounded = False
+        if 0.0 < dist < 1.2:
+            grounded = True
+
+        if api.player_input.jump and grounded:
             linear.velocity.y = 5
 
         if length(move_dir) > 0.0:

@@ -6,7 +6,7 @@ from shard.collisions import raycast, solve_capsule
 from ..entity import EntityManager
 from ..asset_manager import AssetManager
 
-from shard.collisions import BVH, Vec3, Mat4, get_world_triangles
+from shard.collisions import BVH, Vec3, Mat4, get_world_triangles, raycast
 
 class CollisionSystem:
     def __init__(self, entity_manager: EntityManager, asset_manager: AssetManager):
@@ -49,6 +49,9 @@ class CollisionSystem:
         collider = self.entity_manager.entities[eid].components["MeshCollider"]
         collider.mesh = mesh
         collider.path = mesh_path
+
+    def raycast(self, origin, dir, logger):
+        return raycast(origin, dir, self.bvh, self.triangles, logger)
 
     def update(self, engine):
         # Rebuild bvh when any uninitialized meshes have been created/meshes have been changed

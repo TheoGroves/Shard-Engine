@@ -26,6 +26,10 @@ class ScriptingAPI:
             case Entity():
                 return entity.components.get(comp_name)
         
+    def raycast(self, origin, dir):
+        """Returns point (Vec3), triangle index (int) and distance (float)"""
+        return self.__engine.raycast(origin, dir)
+        
     @property
     def engine(self):
         self.logger.log_warning("get_engine() is intended for advanced use only and can break the engine when used improperly. Prefer the provided ScriptingAPI instead.")

@@ -91,3 +91,6 @@ class Engine:
 
     def rebuild_bvh(self):
         self.triangles = self.systems.collision.get_collision_triangles(self.bvh)
+
+    def raycast(self, origin, dir):
+        return self.systems.collision.raycast(origin, dir, self.logger)

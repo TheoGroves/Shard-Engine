@@ -8,6 +8,7 @@ struct RayHit
 {
     Vec3 point;
     int triIndex;
+    float distance;
 };
 
 float RayTriangleIntersection(const Vec3& origin, const Vec3& dir, const Vec3& v0, const Vec3& v1, const Vec3& v2);
