@@ -2,7 +2,7 @@
 
 #include <GL/glew.h>
 #include "Mat4.h"
-#include "Vec3.h"
+#include "Vec4.h"
 #include "Rendering/Shader.h"
 #include <string>
 

@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <cfloat>
 #include "CollisionSolver.h"
-#include "Vec3.h"
+#include "Vec4.h"
 #include "CollisionData.h"
 #include "Geometry.h"
 #include "BVH.h"

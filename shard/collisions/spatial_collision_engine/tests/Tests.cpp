@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include "Vec3.h"
+#include "Vec4.h"
 #include "CollisionSolver.h"
 #include "Geometry.h"
 #include "BVH.h"

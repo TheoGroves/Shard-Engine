@@ -1,7 +1,7 @@
 #pragma once
 
 #include <numbers>
-#include "Vec3.h"
+#include "Vec4.h"
 #include "Mat4.h"
 
 constexpr float degToRad = std::numbers::pi_v<float> / 180.0f;

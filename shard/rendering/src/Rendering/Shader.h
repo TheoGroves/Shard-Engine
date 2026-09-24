@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <string>
 #include "Mat4.h"
-#include "Vec3.h"
+#include "Vec4.h"
 
 class Shader
 {

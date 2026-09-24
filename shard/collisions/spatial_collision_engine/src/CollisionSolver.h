@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "Vec3.h"
+#include "Vec4.h"
 #include "CollisionData.h"
 #include "Geometry.h"
 #include "BVH.h"

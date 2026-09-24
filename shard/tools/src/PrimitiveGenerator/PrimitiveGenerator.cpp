@@ -1,5 +1,5 @@
 #include "PrimitiveGenerator.h"
-#include "Vec3.h"
+#include "Vec4.h"
 #include <string_view>
 #include <vector>
 

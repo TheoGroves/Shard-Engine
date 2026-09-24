@@ -3,7 +3,7 @@
 #include <cmath>
 #include <array>
 #include <immintrin.h>
-#include "Vec3.h"
+#include "Vec4.h"
 
 // Column-major Mat4
 struct alignas(16) Mat4
@@ -225,9 +225,9 @@ inline Mat4 Ortho(float left, float right, float bottom, float top, float near, 
 
 inline Mat4 LookAt(Vec3 eye, Vec3 target, Vec3 up)
 {
-    Vec3 f = Normalize(target - eye);
-    Vec3 r = Normalize(Cross(f, up));
-    Vec3 u = Normalize(Cross(r, f));
+    Vec3 f = (target - eye).Normalized();
+    Vec3 r = (Cross(f, up)).Normalized();
+    Vec3 u = (Cross(r, f)).Normalized();
 
     Mat4 matrix = Mat4::Identity();
 

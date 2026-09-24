@@ -25,6 +25,23 @@ endif()
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
+find_program(NASM_EXECUTABLE nasm REQUIRED)
+
+set(VEC4_ASM ${CMAKE_CURRENT_SOURCE_DIR}/src/vec4.asm)
+set(VEC4_OBJ ${CMAKE_CURRENT_BINARY_DIR}/vec4.obj)
+
+add_custom_command(
+    OUTPUT ${VEC4_OBJ}
+    COMMAND ${NASM_EXECUTABLE}
+            -f win64
+            ${VEC4_ASM}
+            -o ${VEC4_OBJ}
+    DEPENDS ${VEC4_ASM}
+    COMMENT "Assembling vec4.asm"
+)
+
+add_custom_target(vec4_asm DEPENDS ${VEC4_OBJ})
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
     execute_process(
@@ -43,7 +60,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
     pybind11_add_module(shard_maths
         bindings/MathsBindings.cpp
+        ${VEC4_OBJ}
     )
+
+    add_dependencies(shard_maths vec4_asm)
 
     target_link_libraries(shard_maths PRIVATE maths)
 

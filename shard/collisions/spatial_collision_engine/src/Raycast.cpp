@@ -1,7 +1,7 @@
 #include <cmath>
 #include <unordered_set>
 #include "Raycast.h"
-#include "Vec3.h"
+#include "Vec4.h"
 #include "Geometry.h"
 #include "BVH.h"
 

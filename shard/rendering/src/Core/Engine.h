@@ -13,7 +13,7 @@
 #include "Rendering/Material.h"
 #include "Rendering/Shadowmapper.h"
 #include "Mat4.h"
-#include "Vec3.h"
+#include "Vec4.h"
 #include "Core/Input.h"
 
 struct ShaderState

@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(spatial_collision_workspace LANGUAGES CXX)
-
-add_subdirectory("../../maths" "${CMAKE_CURRENT_BINARY_DIR}/maths")
+project(spatial_collision_workspace LANGUAGES CXX ASM_NASM)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_subdirectory("../../maths" "${CMAKE_CURRENT_BINARY_DIR}/maths")
 
 execute_process(
     COMMAND python -c "import pybind11; print(pybind11.get_cmake_dir())"
@@ -22,26 +22,55 @@ endif()
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
-add_library(spatial_core STATIC 
-    src/BVH.cpp 
-    src/Raycast.cpp 
-    src/CollisionSolver.cpp 
-)
-target_include_directories(spatial_core PUBLIC ${CMAKE_SOURCE_DIR}/src)
-
-target_link_libraries(spatial_core PUBLIC maths)
-
-pybind11_add_module(spatial_collision_engine MODULE 
-    bindings/CollisionBindings.cpp 
-)
-target_link_libraries(spatial_collision_engine PRIVATE spatial_core)
-
-set_target_properties(spatial_collision_engine PROPERTIES 
-    LIBRARY_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/python"
-    LIBRARY_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/python"
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_SOURCE_DIR}/python"
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_SOURCE_DIR}/python"
+add_library(vec4_asm STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../maths/src/vec4.asm
 )
 
-add_executable(engine_tests tests/Tests.cpp)
-target_link_libraries(engine_tests PRIVATE spatial_core)
+target_include_directories(vec4_asm PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../maths/src
+)
+
+add_library(spatial_core STATIC
+    src/BVH.cpp
+    src/Raycast.cpp
+    src/CollisionSolver.cpp
+)
+
+target_include_directories(spatial_core PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../maths/src
+)
+
+target_link_libraries(spatial_core PUBLIC
+    vec4_asm
+)
+
+pybind11_add_module(spatial_collision_engine MODULE
+    bindings/CollisionBindings.cpp
+)
+
+target_link_libraries(spatial_collision_engine PRIVATE
+    spatial_core
+)
+
+set_target_properties(spatial_collision_engine PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY_DEBUG
+        "${CMAKE_SOURCE_DIR}/python"
+
+    LIBRARY_OUTPUT_DIRECTORY_RELEASE
+        "${CMAKE_SOURCE_DIR}/python"
+
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG
+        "${CMAKE_SOURCE_DIR}/python"
+
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE
+        "${CMAKE_SOURCE_DIR}/python"
+)
+
+add_executable(engine_tests
+    tests/Tests.cpp
+)
+
+target_link_libraries(engine_tests PRIVATE
+    spatial_core
+)
