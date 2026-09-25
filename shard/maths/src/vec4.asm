@@ -87,7 +87,7 @@ vec4_dot:
     load_xmm
 
     ; call vdpps on loaded terms (vector dot-product packed single-precision)
-    vdpps xmm0, xmm0, xmm1, 0x71 ; return in xmm0
+    vdpps xmm0, xmm0, xmm1, 0xFF ; return in xmm0
     ret
 
 vec4_cross:
@@ -123,7 +123,7 @@ vec4_length:
     movaps xmm1, [rcx]
 
     ; result of dot product with self is length squared
-    vdpps xmm0, xmm0, xmm1, 0xF1
+    vdpps xmm0, xmm0, xmm1, 0xFF
 
     xorps xmm2, xmm2
     comiss xmm0, xmm2
@@ -150,11 +150,9 @@ vec4_length:
     ret
 
 vec4_normalize:
-    push r8
     sub rsp, 40
     call vec4_length
     add rsp, 40
-    pop r8
 
     xorps xmm2, xmm2
     comiss xmm0, xmm2
@@ -163,12 +161,12 @@ vec4_normalize:
     shufps xmm0, xmm0, 0x00
     movaps xmm1, [rcx]
     vdivps xmm1, xmm1, xmm0
-    movaps [r8], xmm1
+    movaps [rdx], xmm1
     ret
 
 .zero:
     vxorps xmm1, xmm1, xmm1
-    movaps [r8], xmm1
+    movaps [rdx], xmm1
     ret
 
 vec4_minimum:

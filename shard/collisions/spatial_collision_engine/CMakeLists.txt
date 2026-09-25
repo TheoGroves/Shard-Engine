@@ -6,7 +6,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_subdirectory("../../maths" "${CMAKE_CURRENT_BINARY_DIR}/maths")
+add_subdirectory(
+    "../../maths"
+    "${CMAKE_CURRENT_BINARY_DIR}/maths"
+)
 
 execute_process(
     COMMAND python -c "import pybind11; print(pybind11.get_cmake_dir())"
@@ -22,14 +25,6 @@ endif()
 set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
-add_library(vec4_asm STATIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../maths/src/vec4.asm
-)
-
-target_include_directories(vec4_asm PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../maths/src
-)
-
 add_library(spatial_core STATIC
     src/BVH.cpp
     src/Raycast.cpp
@@ -38,11 +33,10 @@ add_library(spatial_core STATIC
 
 target_include_directories(spatial_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../maths/src
 )
 
 target_link_libraries(spatial_core PUBLIC
-    vec4_asm
+    maths
 )
 
 pybind11_add_module(spatial_collision_engine MODULE
