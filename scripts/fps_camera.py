@@ -14,6 +14,8 @@ class FirstPersonCameraComponent:
         self.normal_speed = 5.0
         self.boost_speed = 10.0
         self.grounded = False
+        self.mouse_hidden = True
+        self.escape_last_frame = False
 
     def serialize(self):
         return {
@@ -38,6 +40,18 @@ class FirstPersonCameraScript:
 
         t = api.get_component(entity, "Transform")
         linear = api.get_component(entity, "LinearBody")
+
+        if api.player_input.escape:
+            if not controller.escape_last_frame:
+                controller.mouse_hidden = not controller.mouse_hidden
+            controller.escape_last_frame = True
+        else:
+            controller.escape_last_frame = False
+
+        if controller.mouse_hidden:
+            api.hide_mouse()
+        else:
+            api.show_mouse()
 
         move_dir = Vec3(0,0,0)
 
@@ -69,8 +83,9 @@ class FirstPersonCameraScript:
         if length(move_dir) > 0.0:
             t.pos = t.pos + normalize(move_dir) * controller.current_speed * api.dt
 
-        t.rot.y -= api.player_input.mouse_dx * controller.sensitivity
-        t.rot.x -= api.player_input.mouse_dy * controller.sensitivity
+        if controller.mouse_hidden:
+            t.rot.y -= api.player_input.mouse_dx * controller.sensitivity
+            t.rot.x -= api.player_input.mouse_dy * controller.sensitivity
 
         if t.rot.x > 90: t.rot.x = 90
         if t.rot.x < -90: t.rot.x = -90

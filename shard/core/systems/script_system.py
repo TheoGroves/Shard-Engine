@@ -29,6 +29,12 @@ class ScriptingAPI:
     def raycast(self, origin, dir):
         """Returns point (Vec3), triangle index (int) and distance (float)"""
         return self.__engine.raycast(origin, dir)
+
+    def hide_mouse(self):
+        self.__engine.render_engine.hide_mouse()
+
+    def show_mouse(self):
+        self.__engine.render_engine.show_mouse()
         
     @property
     def engine(self):
