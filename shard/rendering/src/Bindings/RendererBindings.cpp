@@ -16,6 +16,8 @@ PYBIND11_MODULE(shard_render_engine, m)
     py::class_<Engine>(m, "Engine")
         .def(py::init<>())
         .def("initialize", &Engine::Initialize)
+        .def("set_theme", &Engine::SetTheme)
+        .def("get_theme", &Engine::GetTheme)
 
         .def("create_mesh", 
             [](Engine& engine,
@@ -269,4 +271,8 @@ PYBIND11_MODULE(shard_render_engine, m)
         .value("SpanFullWidth", ImGuiTreeNodeFlags_SpanFullWidth)
         .value("SpanAllColumns", ImGuiTreeNodeFlags_SpanAllColumns)
         .export_values();
+
+    py::enum_<Theme>(m, "Theme")
+        .value("Light", Theme::Light)
+        .value("Dark", Theme::Dark);
 }

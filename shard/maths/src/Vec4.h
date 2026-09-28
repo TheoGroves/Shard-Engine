@@ -3,7 +3,7 @@
 #include "vec4_asm.h"
 
 class Vec4 {
-protected:
+public:
     // Union means x, y, z, w occupy the same memory locations as the vec4_raw does
     union {
         vec4_raw m_data;

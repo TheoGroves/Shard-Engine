@@ -233,6 +233,39 @@ Input Engine::GetInput()
     return input;
 }
 
+void Engine::SetTheme(Theme theme)
+{
+    switch (theme) {
+        case Theme::Light:
+        {
+            this->LogMessage("Theme set to Light mode");
+            ImGui::StyleColorsLight();
+            auto& colours = ImGui::GetStyle().Colors;
+
+            break;
+        }
+
+        case Theme::Dark:
+        {
+            this->LogMessage("Theme set to Dark mode");
+            ImGui::StyleColorsDark();
+            auto& colours = ImGui::GetStyle().Colors;
+
+            break;
+        }
+
+        default:
+            return;
+    }
+
+    mTheme = theme;
+}
+
+Theme Engine::GetTheme()
+{
+    return mTheme;
+}
+
 bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std::string title)
 {
     sInstance = this;
@@ -271,7 +304,11 @@ bool Engine::Initialize(unsigned int screenWidth, unsigned int screenHeight, std
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-    ImGui::StyleColorsDark();
+    ImFont* customDefaultFont = io.Fonts->AddFontFromFileTTF("assets/fonts/GoogleSansCode.ttf", 15.0f);
+
+    // Initialize with light theme
+    mTheme = Theme::Light;
+    SetTheme(mTheme);
 
     ImGui_ImplGlfw_InitForOpenGL(GetNativeWindow(), true);
     ImGui_ImplOpenGL3_Init("#version 460 core");

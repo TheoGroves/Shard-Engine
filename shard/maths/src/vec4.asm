@@ -186,7 +186,7 @@ vec4_maximum:
 vec4_round:
     movaps xmm0, [rcx]
     roundps xmm0, xmm0, 0
-    movaps [r8], xmm0
+    movaps [rdx], xmm0
     ret
 
 vec4_radians:
@@ -195,7 +195,7 @@ vec4_radians:
     shufps xmm1, xmm1, 0x00
 
     vmulps xmm2, xmm0, xmm1
-    movaps [r8], xmm2
+    movaps [rdx], xmm2
 
     ret
 
@@ -205,6 +205,6 @@ vec4_degrees:
     shufps xmm1, xmm1, 0x00
 
     vmulps xmm2, xmm0, xmm1
-    movaps [r8], xmm2
+    movaps [rdx], xmm2
     
     ret

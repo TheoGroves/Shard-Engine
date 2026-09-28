@@ -1,4 +1,4 @@
-from .shard_renderer import Camera, forward_from_euler, update_camera_vectors, Input, PlayerController, LogEntry, LogLevel, Viewport, TreeNodeFlags
+from .shard_renderer import Camera, forward_from_euler, update_camera_vectors, Input, PlayerController, LogEntry, LogLevel, Viewport, TreeNodeFlags, Theme
 from .shard_renderer import Engine as RenderEngine
 from .materials import PBRMaterial, SkyboxMaterial
 __all__ = [
@@ -13,5 +13,6 @@ __all__ = [
     "LogEntry", 
     "LogLevel",
     "Viewport",
-    "TreeNodeFlags"
+    "TreeNodeFlags",
+    "Theme"
 ]

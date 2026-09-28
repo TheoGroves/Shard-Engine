@@ -244,6 +244,7 @@ cmake_install.cmake
 assets/*
 !assets/shaders/
 !assets/shaders/**rendering/render_core/dependencies/
+!assets/fonts/
 /shard/rendering/render_core/dependencies
 shard/rendering/dependencies/
 

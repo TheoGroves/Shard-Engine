@@ -1,4 +1,4 @@
-from .Release.shard_render_engine import Engine, Camera, forward_from_euler, update_camera_vectors, Input, PlayerController, LogEntry, LogLevel, Viewport, TreeNodeFlags 
+from .Release.shard_render_engine import Engine, Camera, forward_from_euler, update_camera_vectors, Input, PlayerController, LogEntry, LogLevel, Viewport, TreeNodeFlags, Theme
 
 __all__ = [
     "Engine",
@@ -10,5 +10,6 @@ __all__ = [
     "LogEntry",
     "LogLevel",
     "Viewport",
-    "TreeNodeFlags"
+    "TreeNodeFlags",
+    "Theme"
 ]

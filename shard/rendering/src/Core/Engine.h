@@ -48,6 +48,12 @@ struct LogEntry
     std::string text;
 };
 
+enum class Theme
+{
+    Light,
+    Dark
+};
+
 class Engine
 {
 public:
@@ -69,6 +75,9 @@ public:
     void BindTexture(GLuint texture, GLuint unit);
 
     Input GetInput();
+
+    void SetTheme(Theme theme);
+    Theme GetTheme();
 
     bool Initialize(unsigned int screenWidth, unsigned int screenHeight, std::string title);
     
@@ -179,6 +188,8 @@ private:
 
     Shader mShader;
     ShaderState mCurrentShader;
+
+    Theme mTheme;
 
     std::vector<LogEntry> mPendingLogs;
 
