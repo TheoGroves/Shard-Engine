@@ -6,7 +6,7 @@ import time
 from functools import partial
 
 from shard.core.entity import EntityManager, Entity
-from shard.core.components import Script
+from shard.core.components import Script, Name, Transform
 from shard.core.component import COMPONENT_REGISTRY
 
 # User-facing api, similar to engine but stripped to the minimum requirements for scripting
@@ -25,6 +25,15 @@ class ScriptingAPI:
                 return self.entity_manager.entities[entity].components.get(comp_name)
             case Entity():
                 return entity.components.get(comp_name)
+
+    def create_entity(self, name: str = "Empty", tag: str = "None"):
+        eid, entity = self.entity_manager.create_entity()
+        self.entity_manager.add_component_direct(entity, eid, Name(name, tag))
+        self.entity_manager.add_component_direct(entity, eid, Transform())
+        return eid
+
+    def add_component(self, eid):
+        self.entity_manager.add_component(eid, )
         
     def raycast(self, origin, dir):
         """Returns point (Vec3), triangle index (int) and distance (float)"""

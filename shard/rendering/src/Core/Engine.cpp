@@ -242,6 +242,25 @@ void Engine::SetTheme(Theme theme)
             ImGui::StyleColorsLight();
             auto& colours = ImGui::GetStyle().Colors;
 
+            colours[ImGuiCol_Button]              = ImVec4(0.90f, 0.82f, 0.95f, 1.0f);
+            colours[ImGuiCol_ButtonHovered]       = ImVec4(0.85f, 0.75f, 0.92f, 1.0f);
+            colours[ImGuiCol_ButtonActive]        = ImVec4(0.78f, 0.65f, 0.85f, 1.0f);
+
+            colours[ImGuiCol_Header]              = ImVec4(0.92f, 0.85f, 0.96f, 1.0f);
+            colours[ImGuiCol_HeaderHovered]       = ImVec4(0.85f, 0.75f, 0.92f, 1.0f); 
+            colours[ImGuiCol_HeaderActive]        = ImVec4(0.78f, 0.65f, 0.85f, 1.0f); 
+
+            colours[ImGuiCol_CheckMark]           = ImVec4(0.55f, 0.40f, 0.70f, 1.0f);
+            colours[ImGuiCol_SliderGrab]          = ImVec4(0.78f, 0.68f, 0.88f, 1.0f);
+            colours[ImGuiCol_SliderGrabActive]    = ImVec4(0.65f, 0.52f, 0.78f, 1.0f); 
+
+            colours[ImGuiCol_Tab]                 = ImVec4(0.95f, 0.92f, 0.97f, 1.0f);
+            colours[ImGuiCol_TabHovered]          = ImVec4(0.88f, 0.80f, 0.93f, 1.0f); 
+            colours[ImGuiCol_TabSelected]         = ImVec4(0.82f, 0.72f, 0.90f, 1.0f);
+            colours[ImGuiCol_TabSelectedOverline] = ImVec4(0.60f, 0.45f, 0.75f, 1.0f);
+            colours[ImGuiCol_TabDimmed]           = ImVec4(0.97f, 0.95f, 0.98f, 1.0f);
+            colours[ImGuiCol_TabDimmedSelected]   = ImVec4(0.88f, 0.82f, 0.93f, 1.0f); 
+
             break;
         }
 
