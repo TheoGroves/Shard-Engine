@@ -11,7 +11,7 @@ from shard.core.component import COMPONENT_REGISTRY
 
 # User-facing api, similar to engine but stripped to the minimum requirements for scripting
 class ScriptingAPI:
-    def __init__(self, engine):
+    def __init__(self, engine: Engine):
         self.entity_manager = engine.managers.entity
         self.logger = engine.logger
         self.audio_engine = engine.audio_engine
@@ -32,8 +32,8 @@ class ScriptingAPI:
         self.entity_manager.add_component_direct(entity, eid, Transform())
         return eid
 
-    def add_component(self, eid):
-        self.entity_manager.add_component(eid, )
+    def add_component(self, eid, component):
+        self.entity_manager.add_component(eid, component)
         
     def raycast(self, origin, dir):
         """Returns point (Vec3), triangle index (int) and distance (float)"""
