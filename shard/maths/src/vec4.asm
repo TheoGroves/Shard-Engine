@@ -1,6 +1,7 @@
 default rel
 
 section .data
+    align 16
     ; store 0.5 and 1.5 for newton-raphson 
     const_0_5: dd 0.5
     const_1_5: dd 1.5
@@ -31,8 +32,8 @@ section .text
 
 ; compile-time macro replaces all instances of load_xmm with code
 %macro load_xmm 0
-    movaps xmm0, [rcx]
-    movaps xmm1, [rdx]
+    vmovaps xmm0, [rcx]
+    vmovaps xmm1, [rdx]
 %endmacro
 
 ; 1st = rcx, 2nd = rdx
@@ -43,7 +44,7 @@ vec4_add:
     ; add all terms at once
     vaddps xmm2, xmm0, xmm1
     
-    movaps [r8], xmm2
+    vmovaps [r8], xmm2
     ret
 
 vec4_sub:
@@ -53,33 +54,33 @@ vec4_sub:
     ; subtract all terms at once
     vsubps xmm2, xmm0, xmm1
 
-    movaps [r8], xmm2
+    vmovaps [r8], xmm2
     ret
 
 ; scalar multiplication
 vec4_mul_s:
-    movaps xmm0, [rcx]
-    movss xmm1, [rdx]
-    shufps xmm1, xmm1, 0x00 ; shuffles term 0 into terms 0 1 2 and 3
+    vmovaps xmm0, [rcx]
+    vmovss xmm1, [rdx]
+    vshufps xmm1, xmm1, xmm1, 0x00 ; shuffles term 0 into terms 0 1 2 and 3
 
     ; multiply all terms at once
     vmulps xmm2, xmm0, xmm1
 
     ; return result in r8
-    movaps [r8], xmm2
+    vmovaps [r8], xmm2
     ret
 
 ; scalar division
 vec4_div_s:
-    movaps xmm0, [rcx]
-    movss xmm1, [rdx]
-    shufps xmm1, xmm1, 0x00 ; shuffles term 0 into terms 0 1 2 and 3
+    vmovaps xmm0, [rcx]
+    vmovss xmm1, [rdx]
+    vshufps xmm1, xmm1, xmm1, 0x00 ; shuffles term 0 into terms 0 1 2 and 3
 
     ; divide all terms at once
     vdivps xmm2, xmm0, xmm1
 
     ; return result in r8
-    movaps [r8], xmm2
+    vmovaps [r8], xmm2
     ret
 
 vec4_dot:
@@ -95,17 +96,17 @@ vec4_cross:
     load_xmm
 
     ; shuffle left side of subtraction
-    movaps xmm2, xmm0
-    shufps xmm2, xmm2, 0xC9
+    vmovaps xmm2, xmm0
+    vshufps xmm2, xmm2, xmm2, 0xC9
 
-    movaps xmm3, xmm1
-    shufps xmm3, xmm3, 0xD2
+    vmovaps xmm3, xmm1
+    vshufps xmm3, xmm3, xmm3, 0xD2
 
     vmulps xmm2, xmm2, xmm3
 
     ; shuffle right side of subtraction
-    shufps xmm0, xmm0, 0xD2
-    shufps xmm1, xmm1, 0xC9
+    vshufps xmm0, xmm0, xmm0, 0xD2
+    vshufps xmm1, xmm1, xmm1, 0xC9
 
     vmulps xmm0, xmm0, xmm1
 
@@ -114,30 +115,30 @@ vec4_cross:
     vandps xmm2, xmm2, [cross_mask]
 
     ; return result of cross product in r8
-    movaps [r8], xmm2
+    vmovaps [r8], xmm2
     ret
 
 vec4_length:
     ; load self twice
-    movaps xmm0, [rcx]
-    movaps xmm1, [rcx]
+    vmovaps xmm0, [rcx]
+    vmovaps xmm1, [rcx]
 
     ; result of dot product with self is length squared
     vdpps xmm0, xmm0, xmm1, 0xFF
 
-    xorps xmm2, xmm2
-    comiss xmm0, xmm2
+    vxorps xmm2, xmm2, xmm2
+    vcomiss xmm0, xmm2
     je .zero
 
-    rsqrtss xmm1, xmm0
+    vrsqrtss xmm1, xmm1, xmm0
 
     ; perform one iteration of newton-raphson to improve accuracy
-    movss xmm2, [const_0_5]
+    vmovss xmm2, [const_0_5]
     vmulss xmm2, xmm2, xmm0
     vmulss xmm2, xmm2, xmm1
     vmulss xmm2, xmm2, xmm1
 
-    movss xmm3, [const_1_5]
+    vmovss xmm3, [const_1_5]
     vsubss xmm3, xmm3, xmm2
     vmulss xmm1, xmm1, xmm3
 
@@ -150,61 +151,73 @@ vec4_length:
     ret
 
 vec4_normalize:
+    ; align stack and call length of vec4 returned in xmm0
     sub rsp, 40
     call vec4_length
     add rsp, 40
 
-    xorps xmm2, xmm2
-    comiss xmm0, xmm2
-    je .zero
+    ; set xmm2 to 0 and compare with xmm0
+    vxorps xmm2, xmm2, xmm2
+    vcomiss xmm0, xmm2
+    je .zero ; safety check for zero-length vectors
 
-    shufps xmm0, xmm0, 0x00
-    movaps xmm1, [rcx]
-    vdivps xmm1, xmm1, xmm0
-    movaps [rdx], xmm1
+    ; broadcast scalar in xmm0 to all lanes
+    vshufps xmm0, xmm0, xmm0, 0x00
+    vmovaps xmm1, [rcx] ; load vector at mem in rcx into xmm1
+    vdivps xmm1, xmm1, xmm0 ; divide xmm1 by xmm0 and store in xmm1
+    vmovaps [rdx], xmm1 ; store at mem in rdx for return
     ret
 
 .zero:
-    vxorps xmm1, xmm1, xmm1
-    movaps [rdx], xmm1
+    vxorps xmm1, xmm1, xmm1 ; zero vector in xmm1 and return in mem at rdx
+    vmovaps [rdx], xmm1
     ret
 
 vec4_minimum:
-    movaps xmm0, [rcx]
-    movaps xmm1, [rdx]
+    ; perform minimum on vectors at rcx and rdx and return result in r8
+    vmovaps xmm0, [rcx]
+    vmovaps xmm1, [rdx]
     vminps xmm2, xmm0, xmm1
-    movaps [r8], xmm2
+    vmovaps [r8], xmm2
     ret
 
 vec4_maximum:
-    movaps xmm0, [rcx]
-    movaps xmm1, [rdx]
+    ; perform maximum on vectors at rcx and rdx and return result in r8
+    vmovaps xmm0, [rcx]
+    vmovaps xmm1, [rdx]
     vmaxps xmm2, xmm0, xmm1
-    movaps [r8], xmm2
+    vmovaps [r8], xmm2
     ret
 
 vec4_round:
-    movaps xmm0, [rcx]
-    roundps xmm0, xmm0, 0
-    movaps [rdx], xmm0
+    ; round vector at rcx to 0 decimal places and return in rdx
+    vmovaps xmm0, [rcx]
+    vroundps xmm0, xmm0, 0
+    vmovaps [rdx], xmm0
     ret
 
 vec4_radians:
-    movaps xmm0, [rcx]
-    movss xmm1, [const_deg2rad]
-    shufps xmm1, xmm1, 0x00
+    ; load vector at rcx to xmm0
+    vmovaps xmm0, [rcx]
+    ; move deg2rad const to xmm1 and broadcast to all lanes
+    vmovss xmm1, [const_deg2rad]
+    vshufps xmm1, xmm1, xmm1, 0x00
 
+    ; perform multiplication between vector (xmm0) and deg2rad const (xmm1) and return in rdx
     vmulps xmm2, xmm0, xmm1
-    movaps [rdx], xmm2
+    vmovaps [rdx], xmm2
 
     ret
 
 vec4_degrees:
-    movaps xmm0, [rcx]
-    movss xmm1, [const_rad2deg]
-    shufps xmm1, xmm1, 0x00
+    ; load vector at rcx to xmm0
+    vmovaps xmm0, [rcx]
+    ; move rad2deg const to xmm1 and broadcast to all lanes
+    vmovss xmm1, [const_rad2deg]
+    vshufps xmm1, xmm1, xmm1, 0x00
 
+    ; perform multiplication between vector (xmm0) and rad2deg const (xmm1) and return in rdx
     vmulps xmm2, xmm0, xmm1
-    movaps [rdx], xmm2
+    vmovaps [rdx], xmm2
     
     ret

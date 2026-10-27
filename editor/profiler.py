@@ -7,12 +7,16 @@ class Profiler:
     def __init__(self, render_engine: RenderEngine):
         self.render_engine = render_engine
         self.dt_history = []
+        self.dt_history_long = []
         self.process = psutil.Process(os.getpid())
 
     def update(self, dt):
         self.dt_history.append(dt)
+        self.dt_history_long.append(dt)
         if len(self.dt_history) > 200:
             self.dt_history.pop(0)
+        if len(self.dt_history_long) > 5000:
+            self.dt_history_long.pop(0)
 
         total_frames = len(self.dt_history)
         if total_frames == 0:
@@ -27,10 +31,14 @@ class Profiler:
         avg_worst_dt = sum(worst_frames) / count
         low_fps = 1.0 / avg_worst_dt
 
+        dt_long = sum(self.dt_history_long) / len(self.dt_history_long)
+        fps_long = 1.0 / dt_long
+
         self.render_engine.begin_window("Profiler")
 
-        self.render_engine.text(f"FPS: {avg_fps:.1f} ({avg_dt*1000:.1f}ms)")
-        self.render_engine.text(f"1% Low FPS: {low_fps:.1f} ({avg_worst_dt*1000:.1f}ms)")
+        self.render_engine.text(f"FPS: {avg_fps:.1f} ({avg_dt*1000:.2f}ms)")
+        self.render_engine.text(f"1% Low FPS: {low_fps:.1f} ({avg_worst_dt*1000:.2f}ms)")
+        self.render_engine.text(f"Long-term FPS: {fps_long:.1f} ({dt_long*1000000:.0f}us)")
 
         cpu = self.process.cpu_percent(interval=None)
         ram = self.process.memory_info().rss / (1024 ** 2)
